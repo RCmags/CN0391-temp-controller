@@ -6,6 +6,7 @@ enum SERIAL_TYPE {
 	FILTER,
 	TARGET
 };
+
 // add communication timeout
 void sendSerialOutput( float measure[], float target[], uint8_t output_flag ) {
 	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
@@ -54,17 +55,13 @@ uint8_t readSerialInputs( float num_arr[] ) {
 	// -- state --
 	static uint8_t output_flag = FILTER; 	// keep enum definitions encapsulated 
 
-	// buffer
-	char buffer[N_CHAR]; 
-
 	if( Serial.available() > 0 ) {
-		// clear buffer [necessary if string changes length]
-		constexpr int N_BYTE = sizeof(buffer);
-		memset(buffer, 0, N_BYTE);
+		// buffer
+		char buffer[N_CHAR] = {0}; 
 
 		// get data
-		const char end = '\n'; 		// string end character; provided by serial input | IMPORTANT
-		int num_read = Serial.readBytesUntil(end, buffer, N_CHAR); 
+		const char END = '\n'; 		// string end character; provided by serial input | IMPORTANT
+		int num_read = Serial.readBytesUntil(END, buffer, N_CHAR); 
 
 		// capture output type
 		if( strcmp(buffer, "raw") == 0 ) {
@@ -83,3 +80,5 @@ uint8_t readSerialInputs( float num_arr[] ) {
 	
 	return output_flag;
 }
+
+
