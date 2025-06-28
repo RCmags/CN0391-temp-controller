@@ -22,7 +22,7 @@ static void PIDcontroller::updateTimeStep() {
 
 PIDcontroller::PIDcontroller(
 		float _kp   , float _ki   , float _kd, 
-		float _omax , float _omin , 
+		float _omax , float _omin , float _imax, float _imin, 
 		float _alpha, float _beta ) 
 {
 	gain_p = _kp;
@@ -30,6 +30,8 @@ PIDcontroller::PIDcontroller(
 	gain_d = _kd;
 	out_max = _omax;
 	out_min = _omin;
+	in_max = _imax;
+	in_min = _imin;
 	alpha = LIMIT(_alpha);
 	beta = LIMIT(_beta);
 }
@@ -53,9 +55,18 @@ void PIDcontroller::setPIDGains(float kp, float ki, float kd) {
 	gain_d = kd;
 }
 
-void PIDcontroller::setLimits(float omax, float omin) {
-	out_max = omax;
-	out_min = omin;
+void PIDcontroller::setOutputLimits(float omax, float omin) {
+	if( omax > omin ) {
+		out_max = omax;
+		out_min = omin;
+	}
+}
+
+void PIDcontroller::setInputLimits(float imax, float imin) {
+	if( in_max > in_min ) {
+		in_max = imax;
+		in_min = imin;
+	}
 }
 
 void PIDcontroller::setFilterGains(float _alpha, float _beta) {

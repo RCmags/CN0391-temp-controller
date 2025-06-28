@@ -4,12 +4,17 @@
 #include "src/KalmanFilter1D/KalmanFilter1D.h"
 #include "Constants.h"
 
+// 10k pull down resistor
+
 /* NOTE: 
 	- Open "README.md" to understand how to use code.
 	- See "Constants.h" to configure program.
 */
 void setup() {
-	Serial.begin(BAUD_RATE); 
+	Serial.begin(BAUD_RATE); // output to mention connection established / enable other code if so
+	Serial.flush();
+	
+	Serial.println("Began connection");
 
 	// configure sensor and board
 	float temp_av[NUM_PORT];
@@ -17,6 +22,8 @@ void setup() {
 
 	setupControllers(temp_av, stype);
 	setupFilters(temp_av);
+	
+	Serial.println("Calibrated");
 }
 
 void loop() {
@@ -30,6 +37,6 @@ void loop() {
 
 	// return measurements
 	updateOutputFilters(measure);
-	serialOutput(measure, target, output_flag);
+	sendSerialOutput(measure, target, output_flag);
 }
 

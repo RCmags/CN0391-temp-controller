@@ -12,6 +12,8 @@ class PIDcontroller {
     float gain_d;
     float out_max;
     float out_min;
+    float in_max;
+    float in_min;
     float alpha;
     float beta;
 
@@ -34,12 +36,15 @@ class PIDcontroller {
   	PIDcontroller() {} // manually set coefficients
   	
     PIDcontroller(float, float, float, 
-                  float, float, 
+                  float, float, float, float,
                   float, float);
 	
 	// setters
 	void setPIDGains(float, float, float);
-	void setLimits(float, float);
+	
+	void setOutputLimits(float, float);
+	void setInputLimits(float, float);
+	
 	void setFilterGains(float, float);
 	void setFilterGains(float);
 

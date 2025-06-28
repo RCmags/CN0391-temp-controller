@@ -11,12 +11,13 @@ sensor shield. "N_ENABLED" Must match the number of enabled PID_COEFF parameters
 // Number of channels from which data is received, and for which PID controllers are enabled.
 constexpr int 	N_ENABLED 	= 2;
 
-/* PID coefficients: */
-//						kp, ki, kd, max, min, alpha, beta
-#define PID_COEFF_1		15, 0.25, 15, 1, 0, 0.5, 0.05
-#define PID_COEFF_2 	5, 0.025, 20, 1, 0, 0.5, 0.05
-//#define PID_COEFF_3 	15, 0.25, 15, 1, 0, 0.5, 0.05
-//#define PID_COEFF_4 	15, 0.25, 15, 1, 0, 0.5, 0.05
+/* Default PID coefficients: [required] */
+//                                 PID       |   OUTPUT   |   INPUT    |  FILTER
+//                          kp,   ki,    kd  | omax, omin | imax, imin | alpha, beta
+#define PID_COEFF_1_DEF	    15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
+#define PID_COEFF_2_DEF     1,    0.010, 20,   1,    0,     100,  0,     0.5,   0.05
+//#define PID_COEFF_3_DEF     15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
+//#define PID_COEFF_4_DEF     15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
 
 /* PID output pins: */
 //					diginal pin
@@ -52,3 +53,4 @@ constexpr int 	N_CHAR  	= 40;	// maximum allowed characters in serial input buff
 // NOTE: NUM_PORT defined in "BasicCN0391.h"
 
 #endif
+

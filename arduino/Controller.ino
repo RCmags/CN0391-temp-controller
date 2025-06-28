@@ -3,17 +3,17 @@
 // use preprocessor macros to program controllers in seperate file.
 
 PIDcontroller controller[] = {
-	#ifdef PID_COEFF_1
-		PIDcontroller(PID_COEFF_1), 
+	#ifdef PID_COEFF_1_DEF
+		PIDcontroller(PID_COEFF_1_DEF), 
 	#endif
-	#ifdef PID_COEFF_2
-		PIDcontroller(PID_COEFF_2), 
+	#ifdef PID_COEFF_2_DEF
+		PIDcontroller(PID_COEFF_2_DEF), 
 	#endif
-	#ifdef PID_COEFF_3
-		PIDcontroller(PID_COEFF_3), 
+	#ifdef PID_COEFF_3_DEF
+		PIDcontroller(PID_COEFF_3_DEF), 
 	#endif
-	#ifdef PID_COEFF_4
-		PIDcontroller(PID_COEFF_4), 
+	#ifdef PID_COEFF_4_DEF
+		PIDcontroller(PID_COEFF_4_DEF), 
 	#endif
 };
 
@@ -77,7 +77,9 @@ void setupControllers( float temp_av[], char stype[] ) {
 
 	// set filter states	
 	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
-		float temp_norm = normalizeTemp( temp_av[ch] );
+		//float temp_norm = normalizeTemp( temp_av[ch] );
+		float temp_norm = temp_av[ch];
+		
 		controller[ch].setState( temp_norm );		// initalized to normalized average
 		signal[ch].setup();
 	}
@@ -96,8 +98,10 @@ void updateControllers( float target[], float measure[] ) {
 
 	// controller
 	for( int ch = 0; ch < N_ENABLED; ch += 1 ) { 	
-		float meas_norm = normalizeTemp( measure[ch] );		// use normalized input
-		float targ_norm = normalizeTemp( target[ch] );
+		//float meas_norm = normalizeTemp( measure[ch] );		// use normalized input
+		//float targ_norm = normalizeTemp( target[ch] );
+		float meas_norm = measure[ch];
+		float targ_norm = target[ch];
 
 		controller[ch].update( targ_norm, meas_norm );
 		signal[ch].update( controller[ch].output() ); 		// send Pulse Frequency modulated signal

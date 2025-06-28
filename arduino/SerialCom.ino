@@ -6,8 +6,8 @@ enum SERIAL_TYPE {
 	FILTER,
 	TARGET
 };
-
-void serialOutput( float measure[], float target[], uint8_t output_flag ) {
+// add communication timeout
+void sendSerialOutput( float measure[], float target[], uint8_t output_flag ) {
 	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
 		
 		if( output_flag == FILTER) {				// filtered measure
@@ -22,9 +22,9 @@ void serialOutput( float measure[], float target[], uint8_t output_flag ) {
 		
 		if( (ch+1) < N_ENABLED ) {					// do not print if last entry
 			Serial.print(","); 	
-		}
+		} // add delimited data for seperate blocks of real time data? -> mixed and raw
 	}
-	Serial.println();
+	Serial.println();	// send data 
 }
 
 	// parse string of numbers: num1, num2, num3 ...
