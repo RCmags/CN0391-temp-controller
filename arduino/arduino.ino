@@ -14,8 +14,8 @@ void setup() {
 	Serial.begin(BAUD_RATE); // output to mention connection established / enable other code if so
 	Serial.flush();
 	
-	Serial.println("Began connection");
-
+	Serial.println("Established connection");
+	
 	// configure sensor and board
 	float temp_av[NUM_PORT];
 	char stype[] = {SENSOR_TYPE};

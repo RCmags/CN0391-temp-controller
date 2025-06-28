@@ -12,10 +12,10 @@ sensor shield. "N_ENABLED" Must match the number of enabled PID_COEFF parameters
 constexpr int 	N_ENABLED 	= 2;
 
 /* Default PID coefficients: [required] */
-//                                 PID       |   OUTPUT   |   INPUT    |  FILTER
+//                                 PID       |   OUTPUT   | INPUT (C)  |  FILTER
 //                          kp,   ki,    kd  | omax, omin | imax, imin | alpha, beta
 #define PID_COEFF_1_DEF	    15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
-#define PID_COEFF_2_DEF     1,    0.010, 20,   1,    0,     100,  0,     0.5,   0.05
+#define PID_COEFF_2_DEF     0.75, 0.010, 8,    1,    0,     100,  0,     0.5,   0.05
 //#define PID_COEFF_3_DEF     15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
 //#define PID_COEFF_4_DEF     15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
 

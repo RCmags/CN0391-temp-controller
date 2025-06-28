@@ -6,16 +6,19 @@
 
 class PIDcontroller {
   private:
-   	// Parameters
+   	// Parameters:
+   		// pid
     float gain_p;
     float gain_i;
     float gain_d;
-    float out_max;
-    float out_min;
-    float in_max;
-    float in_min;
+		// filter
     float alpha;
     float beta;
+		// limits
+    float out_max;
+    float out_min;
+    float in_scale;
+    float in_offset;
 
 	// variables
 		// timer
@@ -30,6 +33,7 @@ class PIDcontroller {
 
 	//==== functions ====
 	void updateFilter(float);
+	float normalize(float);
 
   public:
   	// constructors

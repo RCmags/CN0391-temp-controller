@@ -49,11 +49,6 @@ KalmanFilter1D filter[] = {
 
 //----------------- PID CONTROLLER FUNCTIONS
 
-float normalizeTemp( float input ) {
-	constexpr float SLOPE = 1.0/(TEMP_MAX - TEMP_MIN);
-	return (input - TEMP_MIN)*SLOPE;
-}
-
 void setupControllers( float temp_av[], char stype[] ) {
 	// set state
 	CN391_setup(stype);
@@ -77,10 +72,7 @@ void setupControllers( float temp_av[], char stype[] ) {
 
 	// set filter states	
 	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
-		//float temp_norm = normalizeTemp( temp_av[ch] );
-		float temp_norm = temp_av[ch];
-		
-		controller[ch].setState( temp_norm );		// initalized to normalized average
+		controller[ch].setState( temp_av[ch] );		// initalized to normalized average
 		signal[ch].setup();
 	}
 }
@@ -97,13 +89,8 @@ void updateControllers( float target[], float measure[] ) {
 	CN391_getThermocoupleTemps(measure);
 
 	// controller
-	for( int ch = 0; ch < N_ENABLED; ch += 1 ) { 	
-		//float meas_norm = normalizeTemp( measure[ch] );		// use normalized input
-		//float targ_norm = normalizeTemp( target[ch] );
-		float meas_norm = measure[ch];
-		float targ_norm = target[ch];
-
-		controller[ch].update( targ_norm, meas_norm );
+	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
+		controller[ch].update( target[ch], measure[ch] );
 		signal[ch].update( controller[ch].output() ); 		// send Pulse Frequency modulated signal
 	}
 }

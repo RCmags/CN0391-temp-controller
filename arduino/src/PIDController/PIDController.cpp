@@ -25,19 +25,22 @@ PIDcontroller::PIDcontroller(
 		float _omax , float _omin , float _imax, float _imin, 
 		float _alpha, float _beta ) 
 {
+	// pid
 	gain_p = _kp;
 	gain_i = _ki;
 	gain_d = _kd;
-	out_max = _omax;
-	out_min = _omin;
-	in_max = _imax;
-	in_min = _imin;
+	
+	// filter
 	alpha = LIMIT(_alpha);
 	beta = LIMIT(_beta);
+	
+	// limits 
+	setOutputLimits(_omax, _omin);
+	setInputLimits(_imax, _imin);
 }
 
 
-//==== public functions ====
+//==== functions ====
 
 void PIDcontroller::updateFilter(float input) {
 	// smoother
@@ -47,12 +50,17 @@ void PIDcontroller::updateFilter(float input) {
 	dx_dt += beta * dx/dt;
 }
 
+float PIDcontroller::normalize(float input) {
+	return input*in_scale - in_offset;
+}
 
 // parameter setters
-void PIDcontroller::setPIDGains(float kp, float ki, float kd) {
-	gain_p = kp;
-	gain_i = ki;
-	gain_d = kd;
+void PIDcontroller::setInputLimits(float imax, float imin) {
+	if( imax > imin ) {
+		// pre-calculate constants
+		in_scale = 1.0/(imax - imin);
+		in_offset = imin * in_scale;
+	}
 }
 
 void PIDcontroller::setOutputLimits(float omax, float omin) {
@@ -62,11 +70,10 @@ void PIDcontroller::setOutputLimits(float omax, float omin) {
 	}
 }
 
-void PIDcontroller::setInputLimits(float imax, float imin) {
-	if( in_max > in_min ) {
-		in_max = imax;
-		in_min = imin;
-	}
+void PIDcontroller::setPIDGains(float kp, float ki, float kd) {
+	gain_p = kp;
+	gain_i = ki;
+	gain_d = kd;
 }
 
 void PIDcontroller::setFilterGains(float _alpha, float _beta) {
@@ -85,26 +92,31 @@ void PIDcontroller::setState(float input) {
   _output = 0;
   integral = 0;
   dx_dt = 0;
-  xvar = input;
+  xvar = normalize(input);
 }
 
 void PIDcontroller::update( float target, float measure ) {
+	// normalize
+	target = normalize(target);
+	measure = normalize(measure);
+
 	// filter
 	updateFilter(measure);    	
+
   	// Sum components
     float error = target - xvar;
-  
+
     float integral_new = integral + gain_i*error*dt;
-    
+
     float output = gain_p*error + integral_new - gain_d*dx_dt; // ignore target derivative
 
     // update output
     if( output > out_max ) {   // saturate output 
       output = out_max;
-    
+
     } else if ( output < out_min ) {
       output = out_min;
-    
+
     } else {		           	// Prevent integral windup
       integral = integral_new; 	// out_min < output < out_max
     }

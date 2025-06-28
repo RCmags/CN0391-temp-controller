@@ -31,7 +31,7 @@ void sendSerialOutput( float measure[], float target[], uint8_t output_flag ) {
 void parseNumbers( char buffer[], float num_arr[] ) { 
 	// Split string
 	char* pointer;
-	const char delim[] = ",";			// delimiter is string | IMPORTANT
+	const char delim[] = ",";			// INPUT delimiter is string | IMPORTANT
 	pointer = strtok(buffer, delim); 
 	
 	int index = 0;
