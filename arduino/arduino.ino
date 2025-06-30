@@ -12,8 +12,8 @@
 */
 void setup() {
 	Serial.begin(BAUD_RATE); // output to mention connection established / enable other code if so
+	delay(1000);
 	Serial.flush();
-	
 	Serial.println("Established connection");
 	
 	// configure sensor and board

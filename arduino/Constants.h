@@ -41,9 +41,6 @@ constexpr int 	N_ENABLED 	= 2;
 
 //======================================
 
-// Normalize temperature measurements for PID controller:
-constexpr float TEMP_MAX 	= 100; 	// Degrees C 
-constexpr float TEMP_MIN 	= 0;	// Degrees C
 constexpr int 	N_AVERAGE 	= 10;	// Number of measurements to average when initializing filters
 
 // Serial communication:

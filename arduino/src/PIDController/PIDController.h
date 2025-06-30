@@ -59,11 +59,16 @@ class PIDcontroller {
 	// controller functions
     void setState(float);
     void update(float, float);
-    
+	
     // getter functions
 	float output();
 	float filter();
 	float deriv();
+	
+	void getPIDgains( float []);
+	void getFilterGains( float [] );
+	void getOutputLimits( float [] );
+	void getInputLimits(float [] );
 };
 
 #endif

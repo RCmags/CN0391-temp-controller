@@ -137,3 +137,30 @@ float PIDcontroller::filter() {
 	return xvar;
 }
 
+
+void PIDcontroller::getPIDgains( float output[] ) {
+	output[0] = gain_p;
+	output[1] = gain_i;
+	output[2] = gain_d;
+}
+
+void PIDcontroller::getFilterGains( float output[] ) {
+	output[0] = alpha;
+	output[1] = beta;
+}
+
+void PIDcontroller::getOutputLimits( float output[] ) {
+	output[0] = out_max;
+	output[1] = out_min;
+}
+
+void PIDcontroller::getInputLimits( float output[] ) {
+	// undo conversion
+	float in_min = in_offset / in_scale;
+	float in_max = in_min + 1.0/in_scale;
+	// limits
+	output[0] = in_max;
+	output[1] = in_min;
+}
+
+
