@@ -3,17 +3,17 @@
 // use preprocessor macros to program controllers in seperate file.
 
 PIDcontroller controller[] = {
-	#ifdef PID_COEFF_1_DEF
-		PIDcontroller(PID_COEFF_1_DEF), 
+	#ifdef PID_COEFF_1
+		PIDcontroller(PID_COEFF_1), 
 	#endif
-	#ifdef PID_COEFF_2_DEF
-		PIDcontroller(PID_COEFF_2_DEF), 
+	#ifdef PID_COEFF_2
+		PIDcontroller(PID_COEFF_2), 
 	#endif
-	#ifdef PID_COEFF_3_DEF
-		PIDcontroller(PID_COEFF_3_DEF), 
+	#ifdef PID_COEFF_3
+		PIDcontroller(PID_COEFF_3), 
 	#endif
-	#ifdef PID_COEFF_4_DEF
-		PIDcontroller(PID_COEFF_4_DEF), 
+	#ifdef PID_COEFF_4
+		PIDcontroller(PID_COEFF_4), 
 	#endif
 };
 

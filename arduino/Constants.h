@@ -11,13 +11,15 @@ sensor shield. "N_ENABLED" Must match the number of enabled PID_COEFF parameters
 // Number of channels from which data is received, and for which PID controllers are enabled.
 constexpr int 	N_ENABLED 	= 2;
 
+// NOTE: NUM_PORT defined in "BasicCN0391.h"
+
 /* Default PID coefficients: [required] */
-//                                 PID       |   OUTPUT   | INPUT (C)  |  FILTER
-//                          kp,   ki,    kd  | omax, omin | imax, imin | alpha, beta
-#define PID_COEFF_1_DEF	    15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
-#define PID_COEFF_2_DEF     0.75, 0.010, 8,    1,    0,     100,  0,     0.5,   0.05
-//#define PID_COEFF_3_DEF     15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
-//#define PID_COEFF_4_DEF     15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
+//                             PID       |   OUTPUT   | INPUT (C)  |  FILTER
+//                      kp,   ki,    kd  | omax, omin | imax, imin | alpha, beta
+#define PID_COEFF_1	    15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
+#define PID_COEFF_2     0.75, 0.010, 8,    1,    0,     100,  0,     0.5,   0.05
+//#define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0
+//#define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0
 
 /* PID output pins: */
 //					diginal pin
@@ -26,18 +28,22 @@ constexpr int 	N_ENABLED 	= 2;
 //#define PID_PIN_3		4
 //#define PID_PIN_4		5
 
-/* Output signal coefficients: */
-// 						error, noise
-#define FILT_COEFF_1	1, 0.1
-#define FILT_COEFF_2	1, 0.1
-//#define FILT_COEFF_3	1, 0.1
-//#define FILT_COEFF_4	1, 0.1
+// NOTE: Pins 10, 11, 12, and 13, are for SPI. Reserved. 
 
-/* Sensor types */
+/* Default Output signal coefficients: */
+// 						error, noise
+#define FILT_COEFF_1	1.0,   0.1
+#define FILT_COEFF_2	1.0,   0.1
+//#define FILT_COEFF_3	1.0,   0.1
+//#define FILT_COEFF_4	1.0,   0.1
+
+/* Default Sensor types */
 // 			Options: 	T, J, K, E, S, R, N, B
 #define SENSOR_TYPE 	'N', 'N', 'N', 'N'
 
 // NOTE: Type 'N' sensors are thermocouple wires. 
+// ^ variables should be able to be changed. need to set sensor types. 
+// ^ runtime breaks when channels have no sensor. Need to detect when sensor is missing. 
 
 //======================================
 
@@ -46,8 +52,6 @@ constexpr int 	N_AVERAGE 	= 10;	// Number of measurements to average when initia
 // Serial communication:
 constexpr int 	BAUD_RATE	= 9600;	// speed of serial communication. MUST match value in "main.py"
 constexpr int 	N_CHAR  	= 40;	// maximum allowed characters in serial input buffer
-
-// NOTE: NUM_PORT defined in "BasicCN0391.h"
 
 #endif
 

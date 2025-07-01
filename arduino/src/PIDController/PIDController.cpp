@@ -138,7 +138,7 @@ float PIDcontroller::filter() {
 }
 
 
-void PIDcontroller::getPIDgains( float output[] ) {
+void PIDcontroller::getPIDGains( float output[] ) {
 	output[0] = gain_p;
 	output[1] = gain_i;
 	output[2] = gain_d;

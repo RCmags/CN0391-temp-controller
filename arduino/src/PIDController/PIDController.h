@@ -65,7 +65,7 @@ class PIDcontroller {
 	float filter();
 	float deriv();
 	
-	void getPIDgains( float []);
+	void getPIDGains( float []);
 	void getFilterGains( float [] );
 	void getOutputLimits( float [] );
 	void getInputLimits(float [] );

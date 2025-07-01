@@ -15,10 +15,17 @@ class KalmanFilter1D {
 		float var = 1;
 
 	public:
-		KalmanFilter1D(float, float);
+		KalmanFilter1D( float, float );	// coefficients are not adjustable
 
-		void setState(float);
-		void update(float);
+		// setter
+		void setState( float );
+		void setGains( float, float );
+
+		// getter
+		void getGains( float[] );
+
+		// filter
+		void update( float );
 		float value();
 };
 
