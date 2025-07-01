@@ -192,7 +192,7 @@ void parseStringCommand( String input, uint8_t* output_flag, float target[] ) {
 			
 			if( str_channel == "all" && parseIsGood ) {
 				Serial.println(str_channel);
-				
+			
 				if( isTarget && nvalue == 4 ) { // change all target temps
 					Serial.println(function);
 					printNumbers(numbers, 0, nvalue);
@@ -201,7 +201,7 @@ void parseStringCommand( String input, uint8_t* output_flag, float target[] ) {
 					target[1] = numbers[1];
 					target[2] = numbers[2];
 					target[3] = numbers[3];
-				} 
+				}
 			}
 			
 			else if( channel >= 0 && channel <= 3 && nfound >= 4 && parseIsGood ) { // valid channels
@@ -249,9 +249,11 @@ uint8_t readSerialInputs( float target[] ) {
 	if( Serial.available() > 0 ) {
 		String input = Serial.readString(); // cannot use line ending
 		parseStringCommand(input, &output_flag, target);
-		
+		//
 		Serial.print("flag: ");
 		Serial.println(output_flag);
 	}
 	return output_flag;
 }
+
+
