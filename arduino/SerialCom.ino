@@ -30,7 +30,7 @@ void sendSerialOutput( float measure[], float target[], uint8_t output_flag ) {
 
 //-----
 
-constexpr int INPUTS_MAX = 5; // <command> <param1> <param2> <param3> <param4> //target has max 4 inputs
+constexpr int INPUTS_MAX = 6; // <command> <channel> <param1> <param2> <param3> <param4> 
 
 
 	// parse string of numbers: num1, num2, num3 ...
@@ -67,86 +67,42 @@ enum CHANNEL {
 	CH0,	// 0
 	CH1,	// 1
 	CH2,	// 2
-	CH3		// 3
+	CH3,	// 3
+	CH_ALL	// 4
 };
 
 enum FUNCTION {
 	// getters
+		// output
 	GET_FILTER,			// 0
 	GET_RAW,			// 1
 	GET_TARGET,			// 2
-	
-		// PID
-	GET_PID_CH0,		// 3
-	GET_PID_CH1,		// 4
-	GET_PID_CH2,		// 5
-	GET_PID_CH3,		// 6
-	
-	GET_IN_LIMIT_CH0,	// 7
-	GET_IN_LIMIT_CH1,	// 8
-	GET_IN_LIMIT_CH2,	// 9
-	GET_IN_LIMIT_CH3,	// 10
-	
-	GET_OUT_LIMIT_CH0,	// 11
-	GET_OUT_LIMIT_CH1,	// 12
-	GET_OUT_LIMIT_CH2,	// 13
-	GET_OUT_LIMIT_CH3,	// 14
-	
+		// pid
+	GET_PID,			// 3
+	GET_IN_LIMIT,		// 4
+	GET_OUT_LIMIT,		// 5
 		// filters
-	GET_AB_FILTER_CH0,	// 15
-	GET_AB_FILTER_CH1,	// 16
-	GET_AB_FILTER_CH2,	// 17
-	GET_AB_FILTER_CH3,	// 18
-	
-	GET_K_FILTER_CH0,	// 19
-	GET_K_FILTER_CH1,	// 20
-	GET_K_FILTER_CH2,	// 21
-	GET_K_FILTER_CH3,	// 22
-	
+	GET_AB_FILTER,		// 6
+	GET_K_FILTER,		// 7
+
 	// setters
 		// targets
-	SET_TARGET_CH0,		// 23
-	SET_TARGET_CH1,		// 24
-	SET_TARGET_CH2,		// 25
-	SET_TARGET_CH3,		// 26
-	SET_TARGET_ALL,		// 27
-	
+	SET_TARGET,			// 8
 		// pid
-	SET_PID_CH0,		// 28
-	SET_PID_CH1,		// 29
-	SET_PID_CH2,		// 30
-	SET_PID_CH3,		// 31
-	
-	SET_IN_LIMIT_CH0,	// 32
-	SET_IN_LIMIT_CH1,	// 33
-	SET_IN_LIMIT_CH2,	// 34
-	SET_IN_LIMIT_CH3,	// 35
-	
-	SET_OUT_LIMIT_CH0,	// 36
-	SET_OUT_LIMIT_CH1,	// 37
-	SET_OUT_LIMIT_CH2,	// 38
-	SET_OUT_LIMIT_CH3,	// 39
-	
+	SET_PID,			// 9
+	SET_IN_LIMIT,		// 10
+	SET_OUT_LIMIT,		// 11
 		// filter
-	SET_AB_FILTER_CH0,	// 40
-	SET_AB_FILTER_CH1,	// 41
-	SET_AB_FILTER_CH2,	// 42
-	SET_AB_FILTER_CH3,	// 43
-	
-	SET_K_FILTER_CH0,	// 44
-	SET_K_FILTER_CH1,	// 45
-	SET_K_FILTER_CH2,	// 46
-	SET_K_FILTER_CH3,	// 47
-	
-	SET_K_FILTER_STATE_CH0,	// 48
-	SET_K_FILTER_STATE_CH1,	// 49
-	SET_K_FILTER_STATE_CH2,	// 50
-	SET_K_FILTER_STATE_CH3	// 51
+	SET_AB_FILTER,		// 12
+	SET_K_FILTER,		// 13
+	SET_K_FILTER_STATE	// 14
 };
+
+//---
 
 void printNumbers( float arr[], const uint8_t END ) {
 	const uint8_t END_DELIM = END - 1;
-	
+	// elements
 	for( uint8_t i = 0; i < END; i += 1 ) {
 		Serial.print( arr[i] );
 		if( i < END_DELIM ) {
@@ -242,13 +198,14 @@ uint8_t readSerialInputs( float target[] ) {
 		uint8_t ninput = parseNumbers(buffer, input);
 		
 		// apply available functions
-		float function = input[0];
-		float* parameter = input + 1;
+		int function = input[0];		// truncate
+		int channel = input[1];			// truncate
+		float* parameter = input + 2;
 		
 		// getters
 		if( ninput == 1 ) {
 			
-			// state output || can be used to capture temperature readings (avoid state)
+			// state output | can be used to capture temperature readings (avoid state)
 			if( function == GET_FILTER ) {
 				output_flag = FILTER;
 			}
@@ -258,204 +215,90 @@ uint8_t readSerialInputs( float target[] ) {
 			else if( function == GET_TARGET ) {
 				output_flag = TARGET;
 			}
-			
-			// PID controller
-				// gains
-			else if( function == GET_PID_CH0 ) {
-				printPIDCoeff(0);
-			}
-			else if( function == GET_PID_CH1 ) {
-				printPIDCoeff(1);
-			}
-			else if( function == GET_PID_CH2 ) {
-				printPIDCoeff(2);
-			}
-			else if( function == GET_PID_CH3 ) {
-				printPIDCoeff(3);
-			}
-			
-				// input limits
-			else if( function == GET_IN_LIMIT_CH0 ) {
-				printInLimits(0); 
-			}
-			else if( function == GET_IN_LIMIT_CH1 ) {
-				printInLimits(1); 
-			}
-			else if( function == GET_IN_LIMIT_CH2 ) {
-				printInLimits(2); 
-			}
-			else if( function == GET_IN_LIMIT_CH3 ) {
-				printInLimits(3); 
-			}
-			
-				// output limits
-			else if( function == GET_OUT_LIMIT_CH0 ) {
-				printOutLimits(0); 
-			}
-			else if( function == GET_OUT_LIMIT_CH1 ) {
-				printOutLimits(1); 
-			}
-			else if( function == GET_OUT_LIMIT_CH2 ) {
-				printOutLimits(2); 
-			}
-			else if( function == GET_OUT_LIMIT_CH3 ) {
-				printOutLimits(3); 
-			}
-			
-			// Filters
-				// Alpha-beta filters
-			else if( function == GET_AB_FILTER_CH0 ) {
-				printAlphaBetaCoeff(0);
-			}
-			else if( function == GET_AB_FILTER_CH1 ) {
-				printAlphaBetaCoeff(1);
-			}
-			else if( function == GET_AB_FILTER_CH2 ) {
-				printAlphaBetaCoeff(2);
-			}
-			else if( function == GET_AB_FILTER_CH3 ) {
-				printAlphaBetaCoeff(3);
-			}
-			
-				// Kalman Filters
-			else if( function == GET_K_FILTER_CH0 ) {
-				printKalmanCoeff(0);
-			}
-			else if( function == GET_K_FILTER_CH1 ) {
-				printKalmanCoeff(1);
-			}
-			else if( function == GET_K_FILTER_CH2 ) {
-				printKalmanCoeff(2);
-			}
-			else if( function == GET_K_FILTER_CH3 ) {
-				printKalmanCoeff(3);
-			}
 		}
 		
-		// setters
-		else if( ninput == 2 ) {
-		
-			// target values (per channel)
-			if( function == SET_TARGET_CH0 ) {
-				target[0] = parameter[0];
-			}
-			else if( function == SET_TARGET_CH1 ) {
-				target[1] = parameter[0];
-			}
-			else if( function == SET_TARGET_CH2 ) {
-				target[2] = parameter[0];
-			}
-			else if( function == SET_TARGET_CH3 ) {
-				target[3] = parameter[0];
-			}
-			
-			// alpha-beta filter (1 input):
-			else if( function == SET_AB_FILTER_CH0 ) {
-				controller[0].setFilterGains( parameter[0] );
-			}
-			else if( function == SET_AB_FILTER_CH1 ) {
-				controller[1].setFilterGains( parameter[1] );
-			}
-			else if( function == SET_AB_FILTER_CH2 ) {
-				controller[2].setFilterGains( parameter[2] );
-			}
-			else if( function == SET_AB_FILTER_CH3 ) {
-				controller[3].setFilterGains( parameter[3] );
-			}
-			
-			// kalman filter (set state)
-			else if( function == SET_K_FILTER_STATE_CH0 ) {
-				filter[0].setState( parameter[0] );
-			}
-			else if( function == SET_K_FILTER_STATE_CH1 ) {
-				filter[1].setState( parameter[0] );
-			}
-			else if( function == SET_K_FILTER_STATE_CH2 ) {
-				filter[2].setState( parameter[0] );
-			}
-			else if( function == SET_K_FILTER_STATE_CH3 ) {
-				filter[3].setState( parameter[0] );
-			}
-		}
- 
-		else if( ninput == 4 ) {
-		
-			// PID coefficients
-			if( function == SET_PID_CH0 ) {
-				controller[0].setPIDGains( parameter[0], parameter[1], parameter[2] );
-			}
-			else if( function == SET_PID_CH1 ) {
-				controller[1].setPIDGains( parameter[0], parameter[1], parameter[2] );
-			}
-			else if( function == SET_PID_CH2 ) {
-				controller[2].setPIDGains( parameter[0], parameter[1], parameter[2] );
-			}
-			else if( function == SET_PID_CH3 ) {
-				controller[3].setPIDGains( parameter[0], parameter[1], parameter[2] );
-			}
-		}
-		
-		else if( ninput == 3 ) {
-			// pid inputs
-			if( function == SET_IN_LIMIT_CH0 ) {
-				controller[0].setInputLimits( parameter[0], parameter[1] );
-			}
-			else if( function == SET_IN_LIMIT_CH1 ) {
-				controller[1].setInputLimits( parameter[0], parameter[1] );
-			}
-			else if( function == SET_IN_LIMIT_CH2 ) {
-				controller[2].setInputLimits( parameter[0], parameter[1] );
-			}
-			else if( function == SET_IN_LIMIT_CH3 ) {
-				controller[3].setInputLimits( parameter[0], parameter[1] );
-			}
-			
-			// pid outputs
-			else if( function == SET_OUT_LIMIT_CH0 ) {
-				controller[0].setOutputLimits( parameter[0], parameter[1] );
-			}
-			else if( function == SET_OUT_LIMIT_CH1 ) {
-				controller[1].setOutputLimits( parameter[0], parameter[1] );
-			}
-			else if( function == SET_OUT_LIMIT_CH2 ) {
-				controller[2].setOutputLimits( parameter[0], parameter[1] );
-			}
-			else if( function == SET_OUT_LIMIT_CH3 ) {
-				controller[3].setOutputLimits( parameter[0], parameter[1] );
-			}
-			
-			// filters (2 parameters)
-				// alpha-beta 
-			else if( function == SET_AB_FILTER_CH0 ) {
-				controller[0].setFilterGains( parameter[0], parameter[1] );
-			}
-			else if( function == SET_AB_FILTER_CH1 ) {
-				controller[1].setFilterGains( parameter[0], parameter[1] );
-			}
-			else if( function == SET_AB_FILTER_CH2 ) {
-				controller[2].setFilterGains( parameter[0], parameter[1] );
-			}
-			else if( function == SET_AB_FILTER_CH3 ) {
-				controller[3].setFilterGains( parameter[0], parameter[1] );
-			}
-			
-				// kalman filter [gains]
-			else if( function == SET_K_FILTER_CH0 ) {
-				filter[0].setGains( parameter[0], parameter[1] );
-			}
-			else if( function == SET_K_FILTER_CH1 ) {
-				filter[1].setGains( parameter[0], parameter[1] );
-			}
-			else if( function == SET_K_FILTER_CH2 ) {
-				filter[2].setGains( parameter[0], parameter[1] );
-			}
-			else if( function == SET_K_FILTER_CH3 ) {
-				filter[3].setGains( parameter[0], parameter[1] );
-			}
-		}
+			// check valid channel
+		if( channel == CH0 || channel == CH1 || channel == CH2 || channel == CH3 ) {
 
+			if( ninput == 2 ) {
+				// PID controller
+					// gains
+				if( function == GET_PID ) {
+					printPIDCoeff(channel);
+				}
+				
+					// input limits
+				else if( function == GET_IN_LIMIT ) {
+					printInLimits(channel); 
+				}
+				
+					// output limits
+				else if( function == GET_OUT_LIMIT ) {
+					printOutLimits(channel); 
+				}
+				
+				// Filters
+					// Alpha-beta filters
+				else if( function == GET_AB_FILTER ) {
+					printAlphaBetaCoeff(channel);
+				}
+				
+					// Kalman Filters
+				else if( function == GET_K_FILTER ) {
+					printKalmanCoeff(channel);
+				}
+			}
+			
+			// setters
+			else if( ninput == 3 ) {
+			
+				// target values (per channel)
+				if( function == SET_TARGET ) {
+					target[channel] = parameter[0];
+				}
+				
+				// alpha-beta filter (1 input):
+				else if( function == SET_AB_FILTER ) {
+					controller[channel].setFilterGains( parameter[0] );
+				}
+				
+				// kalman filter (set state)
+				else if( function == SET_K_FILTER_STATE ) {
+					filter[channel].setState( parameter[0] );
+				}
+			}
+	 		
+			else if( ninput == 4 ) {
+				// pid inputs
+				if( function == SET_IN_LIMIT ) {
+					controller[channel].setInputLimits( parameter[0], parameter[1] );
+				}
+				
+				// pid outputs
+				else if( function == SET_OUT_LIMIT ) {
+					controller[channel].setOutputLimits( parameter[0], parameter[1] );
+				}
+				
+				// filters (2 parameters)
+					// alpha-beta 
+				else if( function == SET_AB_FILTER ) {
+					controller[channel].setFilterGains( parameter[0], parameter[1] );
+				}
+				
+					// kalman filter [gains]
+				else if( function == SET_K_FILTER ) {
+					filter[channel].setGains( parameter[0], parameter[1] );
+				}
+			}
+			
+			// PID coefficients
+			else if( ninput == 5 && function == SET_PID ) {
+				controller[channel].setPIDGains( parameter[0], parameter[1], parameter[2] );
+			}
+		}
+		
 		// target value for all channels
-		else if( ninput == 5 && function == SET_TARGET_ALL ) {
+		if( ninput == 6 && function == SET_TARGET && channel == CH_ALL ) {
 			target[0] = parameter[0];
 			target[1] = parameter[1];
 			target[2] = parameter[2];
@@ -465,3 +308,4 @@ uint8_t readSerialInputs( float target[] ) {
 	
 	return output_flag;
 }
+

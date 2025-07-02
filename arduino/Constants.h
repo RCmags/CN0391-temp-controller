@@ -18,8 +18,8 @@ constexpr int 	N_ENABLED 	= 4;
 //                      kp,   ki,    kd  | omax, omin | imax, imin | alpha, beta
 #define PID_COEFF_1	    15,   0.25,  20,   1,    0,     100,  0,     0.5,   0.05
 #define PID_COEFF_2     0.75, 0.010, 8,    1,    0,     100,  0,     0.5,   0.05
-#define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   1.0,  0.0,   0.0,   0.0
-#define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   1.0,  0.0,   0.0,   0.0
+#define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   5.0,  0.0,   0.0,   0.0
+#define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   5.0,  0.0,   0.0,   0.0
 
 /* PID output pins: */
 //					diginal pin
