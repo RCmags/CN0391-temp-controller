@@ -16,10 +16,10 @@ constexpr int 	N_ENABLED 	= 4;
 /* Default PID coefficients: [required] */
 //                             PID       |   OUTPUT   | INPUT (C)  |  FILTER
 //                      kp,   ki,    kd  | omax, omin | imax, imin | alpha, beta
-#define PID_COEFF_1	    15,   0.25,  15,   1,    0,     100,  0,     0.5,   0.05
+#define PID_COEFF_1	    15,   0.25,  20,   1,    0,     100,  0,     0.5,   0.05
 #define PID_COEFF_2     0.75, 0.010, 8,    1,    0,     100,  0,     0.5,   0.05
-#define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0
-#define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0
+#define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   1.0,  0.0,   0.0,   0.0
+#define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   1.0,  0.0,   0.0,   0.0
 
 /* PID output pins: */
 //					diginal pin
@@ -33,9 +33,9 @@ constexpr int 	N_ENABLED 	= 4;
 /* Default Output signal coefficients: */
 // 						error, noise
 #define FILT_COEFF_1	1.0,   0.1
-#define FILT_COEFF_2	1.0,   0.1
-#define FILT_COEFF_3	1.0,   0.1
-#define FILT_COEFF_4	1.0,   0.1
+#define FILT_COEFF_2	1.1,   0.2
+#define FILT_COEFF_3	1.2,   0.3
+#define FILT_COEFF_4	1.3,   0.4
 
 /* Default Sensor types */
 // 			Options: 	T, J, K, E, S, R, N, B
