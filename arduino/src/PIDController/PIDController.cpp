@@ -104,11 +104,11 @@ void PIDcontroller::update( float target, float measure ) {
 	updateFilter(measure);    	
 
   	// Sum components
-    float error = target - xvar;
+    float error = target - filter();
 
     float integral_new = integral + gain_i*error*dt;
 
-    float output = gain_p*error + integral_new - gain_d*dx_dt; // ignore target derivative
+    float output = gain_p*error + integral_new - gain_d*deriv(); // ignore target derivative
 
     // update output
     if( output > out_max ) {   // saturate output 

@@ -63,6 +63,13 @@ uint8_t parseNumbers( char buffer[], float num_arr[] ) {
 
 //-----
 
+enum CHANNEL {
+	CH0,	// 0
+	CH1,	// 1
+	CH2,	// 2
+	CH3		// 3
+};
+
 enum FUNCTION {
 	// getters
 	GET_FILTER,			// 0
@@ -97,11 +104,44 @@ enum FUNCTION {
 	GET_K_FILTER_CH3,	// 22
 	
 	// setters
+		// targets
 	SET_TARGET_CH0,		// 23
 	SET_TARGET_CH1,		// 24
 	SET_TARGET_CH2,		// 25
 	SET_TARGET_CH3,		// 26
 	SET_TARGET_ALL,		// 27
+	
+		// pid
+	SET_PID_CH0,		// 28
+	SET_PID_CH1,		// 29
+	SET_PID_CH2,		// 30
+	SET_PID_CH3,		// 31
+	
+	SET_IN_LIMIT_CH0,	// 32
+	SET_IN_LIMIT_CH1,	// 33
+	SET_IN_LIMIT_CH2,	// 34
+	SET_IN_LIMIT_CH3,	// 35
+	
+	SET_OUT_LIMIT_CH0,	// 36
+	SET_OUT_LIMIT_CH1,	// 37
+	SET_OUT_LIMIT_CH2,	// 38
+	SET_OUT_LIMIT_CH3,	// 39
+	
+		// filter
+	SET_AB_FILTER_CH0,	// 40
+	SET_AB_FILTER_CH1,	// 41
+	SET_AB_FILTER_CH2,	// 42
+	SET_AB_FILTER_CH3,	// 43
+	
+	SET_K_FILTER_CH0,	// 44
+	SET_K_FILTER_CH1,	// 45
+	SET_K_FILTER_CH2,	// 46
+	SET_K_FILTER_CH3,	// 47
+	
+	SET_K_FILTER_STATE_CH0,	// 48
+	SET_K_FILTER_STATE_CH1,	// 49
+	SET_K_FILTER_STATE_CH2,	// 50
+	SET_K_FILTER_STATE_CH3	// 51
 };
 
 void printNumbers( float arr[], const uint8_t END ) {
@@ -295,7 +335,7 @@ uint8_t readSerialInputs( float target[] ) {
 		// setters
 		else if( ninput == 2 ) {
 		
-			// PID target values
+			// target values (per channel)
 			if( function == SET_TARGET_CH0 ) {
 				target[0] = parameter[0];
 			}
@@ -308,55 +348,120 @@ uint8_t readSerialInputs( float target[] ) {
 			else if( function == SET_TARGET_CH3 ) {
 				target[3] = parameter[0];
 			}
+			
+			// alpha-beta filter (1 input):
+			else if( function == SET_AB_FILTER_CH0 ) {
+				controller[0].setFilterGains( parameter[0] );
+			}
+			else if( function == SET_AB_FILTER_CH1 ) {
+				controller[1].setFilterGains( parameter[1] );
+			}
+			else if( function == SET_AB_FILTER_CH2 ) {
+				controller[2].setFilterGains( parameter[2] );
+			}
+			else if( function == SET_AB_FILTER_CH3 ) {
+				controller[3].setFilterGains( parameter[3] );
+			}
+			
+			// kalman filter (set state)
+			else if( function == SET_K_FILTER_STATE_CH0 ) {
+				filter[0].setState( parameter[0] );
+			}
+			else if( function == SET_K_FILTER_STATE_CH1 ) {
+				filter[1].setState( parameter[0] );
+			}
+			else if( function == SET_K_FILTER_STATE_CH2 ) {
+				filter[2].setState( parameter[0] );
+			}
+			else if( function == SET_K_FILTER_STATE_CH3 ) {
+				filter[3].setState( parameter[0] );
+			}
+		}
+ 
+		else if( ninput == 4 ) {
+		
+			// PID coefficients
+			if( function == SET_PID_CH0 ) {
+				controller[0].setPIDGains( parameter[0], parameter[1], parameter[2] );
+			}
+			else if( function == SET_PID_CH1 ) {
+				controller[1].setPIDGains( parameter[0], parameter[1], parameter[2] );
+			}
+			else if( function == SET_PID_CH2 ) {
+				controller[2].setPIDGains( parameter[0], parameter[1], parameter[2] );
+			}
+			else if( function == SET_PID_CH3 ) {
+				controller[3].setPIDGains( parameter[0], parameter[1], parameter[2] );
+			}
 		}
 		
+		else if( ninput == 3 ) {
+			// pid inputs
+			if( function == SET_IN_LIMIT_CH0 ) {
+				controller[0].setInputLimits( parameter[0], parameter[1] );
+			}
+			else if( function == SET_IN_LIMIT_CH1 ) {
+				controller[1].setInputLimits( parameter[0], parameter[1] );
+			}
+			else if( function == SET_IN_LIMIT_CH2 ) {
+				controller[2].setInputLimits( parameter[0], parameter[1] );
+			}
+			else if( function == SET_IN_LIMIT_CH3 ) {
+				controller[3].setInputLimits( parameter[0], parameter[1] );
+			}
+			
+			// pid outputs
+			else if( function == SET_OUT_LIMIT_CH0 ) {
+				controller[0].setOutputLimits( parameter[0], parameter[1] );
+			}
+			else if( function == SET_OUT_LIMIT_CH1 ) {
+				controller[1].setOutputLimits( parameter[0], parameter[1] );
+			}
+			else if( function == SET_OUT_LIMIT_CH2 ) {
+				controller[2].setOutputLimits( parameter[0], parameter[1] );
+			}
+			else if( function == SET_OUT_LIMIT_CH3 ) {
+				controller[3].setOutputLimits( parameter[0], parameter[1] );
+			}
+			
+			// filters (2 parameters)
+				// alpha-beta 
+			else if( function == SET_AB_FILTER_CH0 ) {
+				controller[0].setFilterGains( parameter[0], parameter[1] );
+			}
+			else if( function == SET_AB_FILTER_CH1 ) {
+				controller[1].setFilterGains( parameter[0], parameter[1] );
+			}
+			else if( function == SET_AB_FILTER_CH2 ) {
+				controller[2].setFilterGains( parameter[0], parameter[1] );
+			}
+			else if( function == SET_AB_FILTER_CH3 ) {
+				controller[3].setFilterGains( parameter[0], parameter[1] );
+			}
+			
+				// kalman filter [gains]
+			else if( function == SET_K_FILTER_CH0 ) {
+				filter[0].setGains( parameter[0], parameter[1] );
+			}
+			else if( function == SET_K_FILTER_CH1 ) {
+				filter[1].setGains( parameter[0], parameter[1] );
+			}
+			else if( function == SET_K_FILTER_CH2 ) {
+				filter[2].setGains( parameter[0], parameter[1] );
+			}
+			else if( function == SET_K_FILTER_CH3 ) {
+				filter[3].setGains( parameter[0], parameter[1] );
+			}
+		}
+
+		// target value for all channels
 		else if( ninput == 5 && function == SET_TARGET_ALL ) {
 			target[0] = parameter[0];
 			target[1] = parameter[1];
 			target[2] = parameter[2];
 			target[3] = parameter[3];
-		} 
-		
-		
+		}
 	}
 	
 	return output_flag;
 }
-
-
-
-//----------------- SERIAL PARAMETER CHANGES
-/*
-void testFunc() {
-	controller[0].setPIDGains(0,0,0); // can cross-reference global objects
-}*/
-
-
-/*
-void printParameters( void(*func_get)(float []), const uint8_t ch, const uint8_t num, const char label[] ) {
-	float data[num];
-	func_get(data);
-	
-	Serial.print("label");
-	Serial.print(ch);
-	Serial.print(": ");
-	
-	printNumbers(data, num);
-}*/
-
-//#define GET_PID_GAINS(ch) []( float x[] ) -> void { controller[ch].getPIDGains(x); }
-// [] (int x) -> bool { return (x == 0); }
-// auto func_get = []( float x[] ) { controller[ch].getPIDGains(x); };
-
-/*
-void printPIDGains(const uint8_t CH) {
-	auto func_get = []( float x[] ) { controller[0].getPIDGains(x); };
-	printParameters(func_get, 3, CH);
-}
-
-void printInLimits(const uint8_t CH) {
-	auto func_get = [CH]( float x[] ) { controller[CH].getInputLimits(x); };
-	printParameters(func_get, 2, CH);
-}*/
-
-//-----
