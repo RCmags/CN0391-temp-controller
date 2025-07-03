@@ -61,7 +61,7 @@ void PIDcontroller::setInputLimits(float imax, float imin) {
 		in_scale = 1.0/(imax - imin);
 		in_offset = imin * in_scale;
 	} else {
-		in_scale = 1;
+		in_scale = 0;
 		in_offset = 0;
 	}
 }
@@ -159,11 +159,16 @@ void PIDcontroller::getOutputLimits( float output[] ) {
 
 void PIDcontroller::getInputLimits( float output[] ) {
 	// undo conversion
-	float in_min = in_offset / in_scale;
-	float in_max = in_min + 1.0/in_scale;
-	// limits
-	output[0] = in_max;
-	output[1] = in_min;
+	if( in_scale != 0 ) {
+		float in_min = in_offset / in_scale;
+		float in_max = in_min + 1.0/in_scale;
+		// limits
+		output[0] = in_max;
+		output[1] = in_min;
+	} else {
+		output[0] = 0;
+		output[1] = 0;
+	}
 }
 
 
