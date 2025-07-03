@@ -6,11 +6,11 @@ constexpr uint8_t NUM_PORT = 4; // Global constant | Number of ports available i
 // setters
 uint8_t setType( char );
 char setTypeInv(uint8_t);
-
 void setPortType( uint8_t, uint8_t );
 
 // getters
 void CN391_getPortType( char [] );
+bool CN391_checkPortType( char );
 
 // initialize module
 void CN391_setup( char[] );

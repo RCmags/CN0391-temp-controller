@@ -1,6 +1,9 @@
 //#include "src/BasicCN0391/BasicCN0391.h"
 #include "Commands.h"
 
+// NOTE: use F() macro to drastically reduce RAM usage. 
+// See: https://support.arduino.cc/hc/en-us/articles/360013825179-Reduce-the-size-and-memory-usage-of-your-sketch
+
 //--------------- 
 
 	// parse string of numbers: num1, num2, num3 ...
@@ -40,7 +43,7 @@ void printArray( number_t arr[], const uint8_t END ) {
 	for( uint8_t i = 0; i < END; i += 1 ) {
 		Serial.print( arr[i] );
 		if( i < END_DELIM ) {
-			Serial.print(", "); // use space?
+			Serial.print( F(", ") ); // use space?
 		}
 	}
 	Serial.println();
@@ -56,9 +59,9 @@ void printPIDCoeff(const uint8_t ch) {
 	float data[NUM];
 	controller[ch].getPIDGains(data);
 	// show label
-	Serial.print("PID_");
+	Serial.print( F("PID_") );
 	Serial.print(ch);
-	Serial.print(": ");
+	Serial.print( F(": ") );
 	// show values
 	printArray(data, NUM);
 }
@@ -69,9 +72,9 @@ void printInLimits(const uint8_t ch) {
 	float data[NUM];
 	controller[ch].getInputLimits(data);
 	// show label
-	Serial.print("IN_LIMIT_");
+	Serial.print( F("IN_LIMIT_") );
 	Serial.print(ch);
-	Serial.print(": ");
+	Serial.print( F(": ") );
 	// show values
 	printArray(data, NUM);
 }
@@ -82,9 +85,9 @@ void printOutLimits(const uint8_t ch) {
 	float data[NUM];
 	controller[ch].getOutputLimits(data);
 	// show label
-	Serial.print("OUT_LIMIT_");
+	Serial.print( F("OUT_LIMIT_") );
 	Serial.print(ch);
-	Serial.print(": ");
+	Serial.print( F(": ") );
 	// show values
 	printArray(data, NUM);
 }
@@ -95,9 +98,9 @@ void printAlphaBetaCoeff(const uint8_t ch) {
 	float data[NUM];
 	controller[ch].getFilterGains(data);
 	// show label
-	Serial.print("AB_FILTER_");
+	Serial.print( F("AB_FILTER_") );
 	Serial.print(ch);
-	Serial.print(": ");
+	Serial.print( F(": ") );
 	// show values
 	printArray(data, NUM);
 }
@@ -108,9 +111,9 @@ void printKalmanCoeff(const uint8_t ch) {
 	float data[NUM];
 	filter[ch].getGains(data);
 	// show label
-	Serial.print("K_FILTER_");
+	Serial.print( F("K_FILTER_") );
 	Serial.print(ch);
-	Serial.print(": ");
+	Serial.print( F(": ") );
 	// show values
 	printArray(data, NUM);
 }
@@ -148,7 +151,7 @@ void readSerialInputs( float target[], float measure[] ) {
 			
 			// state output | can be used to capture temperature readings (avoid state)
 			if( function == GET_FILTER ) {
-				Serial.print("FILTER: ");
+				Serial.print( F("FILTER: ") );
 				float data[] = { filter[0].value(), 
 				                 filter[1].value(), 
 				                 filter[2].value(),
@@ -156,16 +159,16 @@ void readSerialInputs( float target[], float measure[] ) {
 				printArray(data, NUM_PORT); // NUM_PORT
 			}
 			else if( function == GET_RAW ) {
-				Serial.print("RAW: ");
+				Serial.print( F("RAW: ") );
 				printArray(measure, NUM_PORT); // NUM_PORT
 			}
 			else if( function == GET_TARGET ) {
-				Serial.print("TARGET: ");
+				Serial.print( F("TARGET: ") );
 				printArray(target, NUM_PORT); // NUM_PORT
 			}
 			
 			else if( function == GET_SENSOR_TYPE ) {
-				Serial.print("SENSOR_TYPES: ");
+				Serial.print( F("SENSOR_TYPES: ") );
 				char data[NUM_PORT]; 
 				CN391_getPortType(data);
 				printArray(data, NUM_PORT); // NUM_PORT
@@ -284,11 +287,44 @@ void readSerialInputs( float target[], float measure[] ) {
 //--------------- 
 
 // need to check if connection is established. setup ping function. 
-/*
-uint8_t readSerialInputs2( float target[] ) {
-	
-	while( Serial.available() > 0 ) {
-		// run multiple commands at once
+
+void readSensorTypes() {
+	Serial.println( F("WAITING-TYPES") );
+
+	bool loop = true;
+	while( loop ) {
+		//Serial.println("Waiting for command");
+		//delay(1000);
+		
+		if( Serial.available() > 0 ) {
+			//Serial.println("Received types");
+		
+			constexpr char END = '\n';
+			char buffer[N_ENABLED] = {0};
+			uint8_t num_read = Serial.readBytesUntil(END, buffer, N_CHAR); 
+			
+			//Serial.println(num_read);
+			
+			if( num_read == 4 ) {
+				
+				uint8_t ch;
+				for( ch = 0; ch < N_ENABLED; ch += 1 ) {
+					char type = buffer[ch];
+					bool isValid = CN391_checkPortType( type );
+					//Serial.print(type);
+					
+					if( !isValid ) {
+						break;
+						Serial.println( F("INVALID-TYPES") );
+					}
+ 				}
+ 				
+ 				if( ch == N_ENABLED ) {
+ 					loop = false;
+ 					Serial.println( F("RECEIVED-TYPES") );
+ 				}
+			}
+		}
 	}
 }
-*/
+

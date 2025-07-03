@@ -81,6 +81,11 @@ void setPortType( uint8_t ch, uint8_t type ) {
 	}
 }
 
+bool CN391_checkPortType(char type) {
+	return type == 'T' || type == 'J' || type == 'K' || type == 'E' ||
+	       type == 'S' || type == 'R' || type == 'N' || type == 'B' ;
+}
+
 void CN391_getPortType( char types[] ) {
 	for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 		types[ch] = setTypeInv( sensor_types[ch] );
