@@ -9,9 +9,10 @@
 	// parse string of numbers: num1, num2, num3 ...
 uint8_t parseNumbers( char buffer[], float num_arr[] ) { 
 	// Split string
+	constexpr char DELIM[] = ",";			// INPUT delimiter is string | IMPORTANT
+	
 	char* pointer;
-	const char delim[] = ",";			// INPUT delimiter is string | IMPORTANT
-	pointer = strtok(buffer, delim); 
+	pointer = strtok(buffer, DELIM); 
 	
 	uint8_t index = 0;
 	while( (pointer != nullptr) && (index < INPUTS_MAX) ) {
@@ -28,7 +29,7 @@ uint8_t parseNumbers( char buffer[], float num_arr[] ) {
 		index += 1; // update index based on commas (fixed array position)
 		
 		// last call
-		pointer = strtok(nullptr, delim);
+		pointer = strtok(nullptr, DELIM);
 	}
 	return index;
 }
@@ -255,72 +256,55 @@ void readSerialInputs( float target[], float measure[] ) {
 			}
 		}
 		
-		
-		if( ninput == 6 && channel == CH_ALL ) {
-			
+		if( ninput == 6 && function == SET_TARGET && channel == CH_ALL ) {
 			// target value for all channels
-			if( function == SET_TARGET ) {
-				target[0] = parameter[0];
-				target[1] = parameter[1];
-				target[2] = parameter[2];
-				target[3] = parameter[3];
-			}
-			
-			// sensor types
-			else if( function == SET_SENSOR_TYPE ) {
-				char data[] = { uint8_t(parameter[0]),
-				                uint8_t(parameter[1]),
-				                uint8_t(parameter[2]),
-				                uint8_t(parameter[3]) };
-				printArray(data, 4);
-				/*
-				char data2[] = {'J', 'J', 'J', 'J'};
-				CN391_setup(data2);
-				delay(500); // wait for sensor to update [blocking]
-				*/
-				// ^ The above blocks execution 
-			}
+			target[0] = parameter[0];
+			target[1] = parameter[1];
+			target[2] = parameter[2];
+			target[3] = parameter[3];
 		}
 	}
 }
 
 //--------------- 
 
-// need to check if connection is established. setup ping function. 
-
-void readSensorTypes() {
+void readSensorTypes( char stype[] ) {
 	Serial.println( F("WAITING-TYPES") );
-
-	bool loop = true;
+	
+	// Wait until data is received
+	bool loop = true;	// enter loop by default
 	while( loop ) {
-		//Serial.println("Waiting for command");
-		//delay(1000);
-		
+	
 		if( Serial.available() > 0 ) {
-			//Serial.println("Received types");
-		
+			// capture character array: 	[TYPE, TYPE, TYPE, TYPE]
 			constexpr char END = '\n';
 			char buffer[N_ENABLED] = {0};
 			uint8_t num_read = Serial.readBytesUntil(END, buffer, N_CHAR); 
 			
-			//Serial.println(num_read);
-			
-			if( num_read == 4 ) {
+			if( num_read == N_ENABLED ) {
+				// exit loop
+				if( strcmp(buffer, "exit") == 0 ) { // special command to use default values
+					Serial.println( F("DEFAULT-TYPES") );
+					break;
+				}
 				
+				// check characters
 				uint8_t ch;
 				for( ch = 0; ch < N_ENABLED; ch += 1 ) {
 					char type = buffer[ch];
 					bool isValid = CN391_checkPortType( type );
-					//Serial.print(type);
 					
+					// indicate result
 					if( !isValid ) {
 						break;
 						Serial.println( F("INVALID-TYPES") );
+					} else {
+						stype[ch] = type;
 					}
  				}
- 				
+ 				// succesful data
  				if( ch == N_ENABLED ) {
- 					loop = false;
+ 					loop = false;	// exit loop
  					Serial.println( F("RECEIVED-TYPES") );
  				}
 			}

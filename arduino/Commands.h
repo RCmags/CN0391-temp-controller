@@ -22,7 +22,6 @@ enum FUNCTION {
 		// filters
 	GET_AB_FILTER,		// 6
 	GET_K_FILTER,		// 7
-
 	// setters
 		// targets
 	SET_TARGET,			// 8
@@ -34,10 +33,8 @@ enum FUNCTION {
 	SET_AB_FILTER,		// 12
 	SET_K_FILTER,		// 13
 	SET_K_FILTER_STATE,	// 14
-	
-	// sensor
-	SET_SENSOR_TYPE,	// 15
-	GET_SENSOR_TYPE		// 16
+		// sensor
+	GET_SENSOR_TYPE		// 15
 };
 
 // need python script to convert string to number for serial commands. 
