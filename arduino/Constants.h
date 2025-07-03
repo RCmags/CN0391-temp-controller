@@ -42,7 +42,7 @@ sensor shield. "N_ENABLED" Must match the number of enabled PID_COEFF parameters
 /* Default Sensor types */
 // 			Options: 	T, J, K, E, S, R, N, B
 #define SENSOR_TYPE 	'N',  'N',  'N',  'N'    // must change on the fly
-//#define SENSOR_TYPE 	'J',  'J',  'N',  'N'    // must change on the fly
+//#define SENSOR_TYPE 	'K',  'J',  'N',  'B'    // must change on the fly
 
 // NOTE: Type 'N' sensors are thermocouple wires. 
 // ^ variables should be able to be changed. need to set sensor types. 

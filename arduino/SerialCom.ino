@@ -34,7 +34,7 @@ uint8_t parseNumbers( char buffer[], float num_arr[] ) {
 //--------------- 
 
 template <typename number_t>
-void printNumbers( number_t arr[], const uint8_t END ) {
+void printArray( number_t arr[], const uint8_t END ) {
 	const uint8_t END_DELIM = END - 1;
 	// elements
 	for( uint8_t i = 0; i < END; i += 1 ) {
@@ -60,7 +60,7 @@ void printPIDCoeff(const uint8_t ch) {
 	Serial.print(ch);
 	Serial.print(": ");
 	// show values
-	printNumbers(data, NUM);
+	printArray(data, NUM);
 }
 
 void printInLimits(const uint8_t ch) {
@@ -73,7 +73,7 @@ void printInLimits(const uint8_t ch) {
 	Serial.print(ch);
 	Serial.print(": ");
 	// show values
-	printNumbers(data, NUM);
+	printArray(data, NUM);
 }
 
 void printOutLimits(const uint8_t ch) {
@@ -86,7 +86,7 @@ void printOutLimits(const uint8_t ch) {
 	Serial.print(ch);
 	Serial.print(": ");
 	// show values
-	printNumbers(data, NUM);
+	printArray(data, NUM);
 }
 
 void printAlphaBetaCoeff(const uint8_t ch) {
@@ -99,7 +99,7 @@ void printAlphaBetaCoeff(const uint8_t ch) {
 	Serial.print(ch);
 	Serial.print(": ");
 	// show values
-	printNumbers(data, NUM);
+	printArray(data, NUM);
 }
 
 void printKalmanCoeff(const uint8_t ch) {
@@ -112,7 +112,7 @@ void printKalmanCoeff(const uint8_t ch) {
 	Serial.print(ch);
 	Serial.print(": ");
 	// show values
-	printNumbers(data, NUM);
+	printArray(data, NUM);
 }
 
 //--------------- 
@@ -153,22 +153,22 @@ void readSerialInputs( float target[], float measure[] ) {
 				                 filter[1].value(), 
 				                 filter[2].value(),
 				                 filter[3].value() };
-				printNumbers(data, NUM_PORT); // NUM_PORT
+				printArray(data, NUM_PORT); // NUM_PORT
 			}
 			else if( function == GET_RAW ) {
 				Serial.print("RAW: ");
-				printNumbers(measure, NUM_PORT); // NUM_PORT
+				printArray(measure, NUM_PORT); // NUM_PORT
 			}
 			else if( function == GET_TARGET ) {
 				Serial.print("TARGET: ");
-				printNumbers(target, NUM_PORT); // NUM_PORT
+				printArray(target, NUM_PORT); // NUM_PORT
 			}
 			
 			else if( function == GET_SENSOR_TYPE ) {
 				Serial.print("SENSOR_TYPES: ");
-				int data[NUM_PORT]; 
+				char data[NUM_PORT]; 
 				CN391_getPortType(data);
-				printNumbers(data, NUM_PORT); // NUM_PORT
+				printArray(data, NUM_PORT); // NUM_PORT
 			}
 		}
 		
@@ -252,12 +252,31 @@ void readSerialInputs( float target[], float measure[] ) {
 			}
 		}
 		
-		// target value for all channels
-		if( ninput == 6 && function == SET_TARGET && channel == CH_ALL ) {
-			target[0] = parameter[0];
-			target[1] = parameter[1];
-			target[2] = parameter[2];
-			target[3] = parameter[3];
+		
+		if( ninput == 6 && channel == CH_ALL ) {
+			
+			// target value for all channels
+			if( function == SET_TARGET ) {
+				target[0] = parameter[0];
+				target[1] = parameter[1];
+				target[2] = parameter[2];
+				target[3] = parameter[3];
+			}
+			
+			// sensor types
+			else if( function == SET_SENSOR_TYPE ) {
+				char data[] = { uint8_t(parameter[0]),
+				                uint8_t(parameter[1]),
+				                uint8_t(parameter[2]),
+				                uint8_t(parameter[3]) };
+				printArray(data, 4);
+				/*
+				char data2[] = {'J', 'J', 'J', 'J'};
+				CN391_setup(data2);
+				delay(500); // wait for sensor to update [blocking]
+				*/
+				// ^ The above blocks execution 
+			}
 		}
 	}
 }

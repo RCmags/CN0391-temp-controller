@@ -57,28 +57,28 @@ void setupControllers( float temp_av[], char stype[] ) {
 	delay(1000); 						// add enough delay to ensure board is on
 
 	// Calculate calibration average
-	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
+	for( uint8_t ch = 0; ch < N_ENABLED; ch += 1 ) {
 		temp_av[ch] = 0;				// must initialize to zero
 	}
 	
-	for( int i = 0; i < N_AVERAGE; i += 1) {
+	for( uint8_t i = 0; i < N_AVERAGE; i += 1) {
 		float tcTemp[NUM_PORT]; 
 		CN391_getThermocoupleTemps(tcTemp);
 	
-		for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
+		for( uint8_t ch = 0; ch < N_ENABLED; ch += 1 ) {
 			temp_av[ch] += tcTemp[ch] / float(N_AVERAGE);
 		}
 	}
 
 	// set filter states	
-	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
+	for( uint8_t ch = 0; ch < N_ENABLED; ch += 1 ) {
 		controller[ch].setState( temp_av[ch] );		// initalized to normalized average
 		signal[ch].setup();
 	}
 }
 
 void setupFilters( float temp_av[] ) {
-	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
+	for( uint8_t ch = 0; ch < N_ENABLED; ch += 1 ) {
 		filter[ch].setState( temp_av[ch] ); 		// initialize filters to current state
 	}
 }
@@ -88,7 +88,7 @@ void updateControllers( float target[], float measure[] ) {
 	PIDcontroller::updateTimeStep();
 
 	// controller
-	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
+	for( uint8_t ch = 0; ch < N_ENABLED; ch += 1 ) {
 		controller[ch].update( target[ch], measure[ch] );
 		signal[ch].update( controller[ch].output() ); 		// send Pulse Frequency modulated signal
 	}
@@ -96,7 +96,7 @@ void updateControllers( float target[], float measure[] ) {
 
 void updateOutputFilters( float measure[] ) {
 	// filter raw values for serial data
-	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {
+	for( uint8_t ch = 0; ch < N_ENABLED; ch += 1 ) {
 		filter[ch].update( measure[ch] );
 	}
 }

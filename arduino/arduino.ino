@@ -19,7 +19,7 @@ void setup() {
 	
 	// configure sensor and board
 	float temp_av[NUM_PORT];
-	char stype[] = {SENSOR_TYPE}; // -> need to change in real time
+	char stype[] = {SENSOR_TYPE}; // -> need to change during start. Add character read loop. Wait for until specified. 
 
 	setupControllers(temp_av, stype);
 	setupFilters(temp_av); 
