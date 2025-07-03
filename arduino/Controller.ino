@@ -86,7 +86,6 @@ void setupFilters( float temp_av[] ) {
 void updateControllers( float target[], float measure[] ) {
 	// update state
 	PIDcontroller::updateTimeStep();
-	CN391_getThermocoupleTemps(measure);
 
 	// controller
 	for( int ch = 0; ch < N_ENABLED; ch += 1 ) {

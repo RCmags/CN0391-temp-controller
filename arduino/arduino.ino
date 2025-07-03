@@ -11,32 +11,34 @@
 	- See "Constants.h" to configure program.
 */
 void setup() {
-	Serial.begin(BAUD_RATE); // output to mention connection established / enable other code if so
+	// enable serial communication
+	Serial.begin(BAUD_RATE); 
 	delay(1000);
 	Serial.flush();
-	Serial.println("Established connection");
+	Serial.println("CONNECTED");
 	
 	// configure sensor and board
 	float temp_av[NUM_PORT];
-	char stype[] = {SENSOR_TYPE};
+	char stype[] = {SENSOR_TYPE}; // -> need to change in real time
 
 	setupControllers(temp_av, stype);
-	setupFilters(temp_av);
-	
-	Serial.println("Calibrated");
+	setupFilters(temp_av); 
+	Serial.println("CALIBRATED");
 }
 
 void loop() {
+	// read sensors
+	float measure[NUM_PORT];
+	CN391_getThermocoupleTemps(measure);
+
 	// get target state
-	static float target[N_ENABLED] = {0}; 			// target temperature | initialized at zero
-	uint8_t output_flag = readSerialInputs(target); // state output; default to filter
+	static float target[N_ENABLED] = {PID_TARGET}; 	// target temperature
+	readSerialInputs(target, measure);
 
 	// adjust output
-	float measure[NUM_PORT];
 	updateControllers(target, measure);
 
 	// return measurements
 	updateOutputFilters(measure);
-	sendSerialOutput(measure, target, output_flag);
 }
 

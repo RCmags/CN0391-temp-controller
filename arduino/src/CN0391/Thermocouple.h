@@ -43,16 +43,16 @@
 extern "C" {
 #endif
 
-enum
+enum thermocouple_t
 {
-        TYPE_T = 0x00,
-        TYPE_J,
-        TYPE_K,
-        TYPE_E,
-        TYPE_S,
-        TYPE_R,
-        TYPE_N,
-        TYPE_B
+	TYPE_T = 0x00,
+	TYPE_J,
+	TYPE_K,
+	TYPE_E,
+	TYPE_S,
+	TYPE_R,
+	TYPE_N,
+	TYPE_B
 };
 
 typedef struct _temp_range

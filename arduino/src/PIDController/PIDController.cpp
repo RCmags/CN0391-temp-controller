@@ -60,6 +60,9 @@ void PIDcontroller::setInputLimits(float imax, float imin) {
 		// pre-calculate constants
 		in_scale = 1.0/(imax - imin);
 		in_offset = imin * in_scale;
+	} else {
+		in_scale = 1;
+		in_offset = 0;
 	}
 }
 

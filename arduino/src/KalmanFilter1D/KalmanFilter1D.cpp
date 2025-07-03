@@ -9,8 +9,13 @@ KalmanFilter1D::KalmanFilter1D( float _error, float _qval ) {
 
 // setters
 void KalmanFilter1D::setGains( float _error, float _qval) {
-	var_measure = _error*_error;
-	qval = _qval;
+	if( _error > 0 && _qval > 0 ) {
+		var_measure = _error*_error;
+		qval = _qval;
+	} else {
+		var_measure = 1; // default values
+		qval = 0;
+	}
 }
 
 void KalmanFilter1D::setState( float input ) {

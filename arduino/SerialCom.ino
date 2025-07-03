@@ -1,37 +1,7 @@
-//----------------- SERIAL COMMUNICATION FUNCTIONS 
+//#include "src/BasicCN0391/BasicCN0391.h"
+#include "Commands.h"
 
-// Commands used to retrieve data from serial
-enum SERIAL_TYPE {
-	RAW,
-	FILTER,
-	TARGET
-};
-
-// add communication timeout
-void sendSerialOutput( float measure[], float target[], uint8_t output_flag ) {
-	for( uint8_t ch = 0; ch < N_ENABLED; ch += 1 ) {
-		
-		if( output_flag == FILTER) {				// filtered measure
-			Serial.print( filter[ch].value() ); 
-		
-		} else if ( output_flag == RAW ) {			// raw measure
-			Serial.print( measure[ch] );
-		
-		} else if ( output_flag == TARGET ) {		// target value
-			Serial.print( target[ch] );
-		}
-		
-		if( (ch+1) < N_ENABLED ) {					// do not print if last entry
-			Serial.print(","); 	
-		} // add delimited data for seperate blocks of real time data? -> mixed and raw
-	}
-	Serial.println();	// send data 
-}
-
-//-----
-
-constexpr int INPUTS_MAX = 6; // <command> <channel> <param1> <param2> <param3> <param4> 
-
+//--------------- 
 
 	// parse string of numbers: num1, num2, num3 ...
 uint8_t parseNumbers( char buffer[], float num_arr[] ) { 
@@ -61,58 +31,24 @@ uint8_t parseNumbers( char buffer[], float num_arr[] ) {
 }
 
 
-//-----
+//--------------- 
 
-enum CHANNEL {
-	CH0,	// 0
-	CH1,	// 1
-	CH2,	// 2
-	CH3,	// 3
-	CH_ALL	// 4
-};
-
-enum FUNCTION {
-	// getters
-		// output
-	GET_FILTER,			// 0
-	GET_RAW,			// 1
-	GET_TARGET,			// 2
-		// pid
-	GET_PID,			// 3
-	GET_IN_LIMIT,		// 4
-	GET_OUT_LIMIT,		// 5
-		// filters
-	GET_AB_FILTER,		// 6
-	GET_K_FILTER,		// 7
-
-	// setters
-		// targets
-	SET_TARGET,			// 8
-		// pid
-	SET_PID,			// 9
-	SET_IN_LIMIT,		// 10
-	SET_OUT_LIMIT,		// 11
-		// filter
-	SET_AB_FILTER,		// 12
-	SET_K_FILTER,		// 13
-	SET_K_FILTER_STATE	// 14
-};
-
-//---
-
-void printNumbers( float arr[], const uint8_t END ) {
+template <typename number_t>
+void printNumbers( number_t arr[], const uint8_t END ) {
 	const uint8_t END_DELIM = END - 1;
 	// elements
 	for( uint8_t i = 0; i < END; i += 1 ) {
 		Serial.print( arr[i] );
 		if( i < END_DELIM ) {
-			Serial.print(",");
+			Serial.print(", "); // use space?
 		}
 	}
 	Serial.println();
 }
 
-//----- 
+//--------------- 
+
+//--
 
 void printPIDCoeff(const uint8_t ch) {
 	// get data
@@ -179,23 +115,28 @@ void printKalmanCoeff(const uint8_t ch) {
 	printNumbers(data, NUM);
 }
 
-//-----
+//--------------- 
 
-uint8_t readSerialInputs( float target[] ) {
-	// -- state --
-	static uint8_t output_flag = FILTER; 	// keep enum definitions encapsulated 
+// -- state --
+//static uint8_t output_flag = FILTER; 	// keep enum definitions encapsulated 
+// must make global state. make read commands independent of loop
 
-	if( Serial.available() > 0 ) {
-		// buffer
-		char buffer[N_CHAR] = {0}; 
-
+void readSerialInputs( float target[], float measure[] ) { 
+	
+	if( Serial.available() > 0 ) { // change to while to ensure multiple readings -> add timeout
 		// get data
 		constexpr char END = '\n'; 		// string end character; provided by serial input | IMPORTANT
+		
+		char buffer[N_CHAR] = {0};
 		uint8_t num_read = Serial.readBytesUntil(END, buffer, N_CHAR); 
 		
 		// convert to number array
 		float input[INPUTS_MAX] = {-1}; // default value
 		uint8_t ninput = parseNumbers(buffer, input);
+		
+		if(ninput == 0) { // exit function if no useful data
+			return;	
+		}
 		
 		// apply available functions
 		int function = input[0];		// truncate
@@ -207,13 +148,27 @@ uint8_t readSerialInputs( float target[] ) {
 			
 			// state output | can be used to capture temperature readings (avoid state)
 			if( function == GET_FILTER ) {
-				output_flag = FILTER;
+				Serial.print("FILTER: ");
+				float data[] = { filter[0].value(), 
+				                 filter[1].value(), 
+				                 filter[2].value(),
+				                 filter[3].value() };
+				printNumbers(data, NUM_PORT); // NUM_PORT
 			}
 			else if( function == GET_RAW ) {
-				output_flag = RAW;
+				Serial.print("RAW: ");
+				printNumbers(measure, NUM_PORT); // NUM_PORT
 			}
 			else if( function == GET_TARGET ) {
-				output_flag = TARGET;
+				Serial.print("TARGET: ");
+				printNumbers(target, NUM_PORT); // NUM_PORT
+			}
+			
+			else if( function == GET_SENSOR_TYPE ) {
+				Serial.print("SENSOR_TYPES: ");
+				int data[NUM_PORT]; 
+				CN391_getPortType(data);
+				printNumbers(data, NUM_PORT); // NUM_PORT
 			}
 		}
 		
@@ -305,7 +260,16 @@ uint8_t readSerialInputs( float target[] ) {
 			target[3] = parameter[3];
 		}
 	}
-	
-	return output_flag;
 }
 
+//--------------- 
+
+// need to check if connection is established. setup ping function. 
+/*
+uint8_t readSerialInputs2( float target[] ) {
+	
+	while( Serial.available() > 0 ) {
+		// run multiple commands at once
+	}
+}
+*/
