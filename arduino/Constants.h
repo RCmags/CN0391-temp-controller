@@ -34,29 +34,28 @@ sensor shield. "N_ENABLED" Must match the number of enabled PID_COEFF parameters
 #define FILT_COEFF_3	0.0,   0.0
 #define FILT_COEFF_4	0.0,   0.0
 
-
 /* Default PID target temperatures: [required] */
 //                      ch0 | ch1 | ch2 | ch3
 #define PID_TARGET      0,    0,    0,    0
 
 /* Default Sensor types */
 // 			Options: 	T, J, K, E, S, R, N, B
-#define SENSOR_TYPE 	'N',  'N',  'N',  'N'    // must change on the fly
-//#define SENSOR_TYPE 	'K',  'J',  'N',  'B'    // must change on the fly
+#define SENSOR_TYPE 	'N',  'N',  'N',  'N'
 
 // NOTE: Type 'N' sensors are thermocouple wires. 
-// ^ variables should be able to be changed. need to set sensor types. 
-// ^ runtime breaks when channels have no sensor. Need to detect when sensor is missing. 
 
 //======================================
 
-constexpr int 	N_ENABLED 	= 4;	// Number of channels from which data is received and PID controllers are enabled.
-constexpr int 	N_AVERAGE 	= 10;	// Number of measurements to average when initializing filters
+// Sensors:
+constexpr int 	N_ENABLED   = 4;    // Channels from which data is received and PID is enabled.
+constexpr int 	N_AVERAGE   = 10;   // Number of measurements to average when initializing filters
 
 // Serial communication:
-constexpr int 	BAUD_RATE	 = 9600;	// speed of serial communication. MUST match value in "main.py"
-constexpr int 	N_CHAR  	 = 40;	  	// maximum allowed characters in serial input buffer
-constexpr int   INPUTS_MAX = 6;     	// <command> <channel> <param1> <param2> <param3> <param4> 
+constexpr int 	BAUD_RATE   = 9600; // speed of serial communication. MUST match value in "main.py"
+constexpr int 	BUFFER_SIZE = 40;   // maximum allowed characters in serial input buffer
+constexpr int   INPUTS_MAX  = 6;    // <command> <channel> <param1> <param2> <param3> <param4> 
+
+#define  DELIM_CHAR ","	            // character used to split serial commands; Wrap with ""
 
 #endif
 

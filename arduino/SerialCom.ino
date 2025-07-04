@@ -9,10 +9,10 @@
 	// parse string of numbers: num1, num2, num3 ...
 uint8_t parseNumbers( char buffer[], float num_arr[] ) { 
 	// Split string
-	constexpr char DELIM[] = ",";			// INPUT delimiter is string | IMPORTANT
+	//constexpr char DELIM[] = ",";			// INPUT delimiter is string | IMPORTANT
 	
 	char* pointer;
-	pointer = strtok(buffer, DELIM); 
+	pointer = strtok(buffer, DELIM_CHAR); 
 	
 	uint8_t index = 0;
 	while( (pointer != nullptr) && (index < INPUTS_MAX) ) {
@@ -29,7 +29,7 @@ uint8_t parseNumbers( char buffer[], float num_arr[] ) {
 		index += 1; // update index based on commas (fixed array position)
 		
 		// last call
-		pointer = strtok(nullptr, DELIM);
+		pointer = strtok(nullptr, DELIM_CHAR);
 	}
 	return index;
 }
@@ -44,7 +44,7 @@ void printArray( number_t arr[], const uint8_t END ) {
 	for( uint8_t i = 0; i < END; i += 1 ) {
 		Serial.print( arr[i] );
 		if( i < END_DELIM ) {
-			Serial.print( F(", ") ); // use space?
+			Serial.print( F(DELIM_CHAR) ); // use space?
 		}
 	}
 	Serial.println();
@@ -60,7 +60,7 @@ void printPIDCoeff(const uint8_t ch) {
 	// show label
 	Serial.print( F("PID_") );
 	Serial.print(ch);
-	Serial.print( F(": ") );
+	Serial.print( F(DELIM_CHAR) );
 	// show values
 	printArray(data, NUM);
 }
@@ -73,7 +73,7 @@ void printInLimits(const uint8_t ch) {
 	// show label
 	Serial.print( F("IN_LIMIT_") );
 	Serial.print(ch);
-	Serial.print( F(": ") );
+	Serial.print( F(DELIM_CHAR) );
 	// show values
 	printArray(data, NUM);
 }
@@ -86,7 +86,7 @@ void printOutLimits(const uint8_t ch) {
 	// show label
 	Serial.print( F("OUT_LIMIT_") );
 	Serial.print(ch);
-	Serial.print( F(": ") );
+	Serial.print( F(DELIM_CHAR) );
 	// show values
 	printArray(data, NUM);
 }
@@ -99,7 +99,7 @@ void printAlphaBetaCoeff(const uint8_t ch) {
 	// show label
 	Serial.print( F("AB_FILTER_") );
 	Serial.print(ch);
-	Serial.print( F(": ") );
+	Serial.print( F(DELIM_CHAR) );
 	// show values
 	printArray(data, NUM);
 }
@@ -112,25 +112,26 @@ void printKalmanCoeff(const uint8_t ch) {
 	// show label
 	Serial.print( F("K_FILTER_") );
 	Serial.print(ch);
-	Serial.print( F(": ") );
+	Serial.print( F(DELIM_CHAR) );
 	// show values
 	printArray(data, NUM);
 }
 
 //--------------- 
 
-// -- state --
-//static uint8_t output_flag = FILTER; 	// keep enum definitions encapsulated 
-// must make global state. make read commands independent of loop
+// NOTE: end character is provided by serial input | IMPORTANT
+
+uint8_t captureCharacters(char buffer[], const uint8_t N_CHAR) {
+	constexpr char END = '\n'; 			// end character
+	return Serial.readBytesUntil(END, buffer, N_CHAR); 
+}
 
 void readSerialInputs( float target[], float measure[] ) { 
 	
 	if( Serial.available() > 0 ) { // ->>> add timeout
 		// get data
-		constexpr char END = '\n'; 		// string end character; provided by serial input | IMPORTANT
-		
-		char buffer[N_CHAR] = {0};
-		uint8_t num_read = Serial.readBytesUntil(END, buffer, N_CHAR); 
+		char buffer[BUFFER_SIZE] = {0};
+		uint8_t num_read = captureCharacters(buffer, BUFFER_SIZE);
 		
 		// convert to number array
 		float input[INPUTS_MAX] = {-1}; // default value
@@ -150,26 +151,34 @@ void readSerialInputs( float target[], float measure[] ) {
 			
 			// state output | can be used to capture temperature readings (avoid state)
 			if( function == GET_FILTER ) {
-				Serial.print( F("FILTER: ") );
+				Serial.print( F("FILTER") );
+				Serial.print( F(DELIM_CHAR) );
+				
 				float data[] = { filter[0].value(), 
 				                 filter[1].value(), 
 				                 filter[2].value(),
 				                 filter[3].value() };
+				
 				printArray(data, NUM_PORT); // NUM_PORT
 			}
 			else if( function == GET_RAW ) {
-				Serial.print( F("RAW: ") );
+				Serial.print( F("RAW") );
+				Serial.print( F(DELIM_CHAR) );
 				printArray(measure, NUM_PORT); // NUM_PORT
 			}
 			else if( function == GET_TARGET ) {
-				Serial.print( F("TARGET: ") );
+				Serial.print( F("TARGET") );
+				Serial.print( F(DELIM_CHAR) );
 				printArray(target, NUM_PORT); // NUM_PORT
 			}
 			
 			else if( function == GET_SENSOR_TYPE ) {
-				Serial.print( F("SENSOR_TYPES: ") );
+				Serial.print( F("SENSOR_TYPES") );
+				Serial.print( F(DELIM_CHAR) );
+				
 				char data[NUM_PORT]; 
 				CN391_getPortType(data);
+				
 				printArray(data, NUM_PORT); // NUM_PORT
 			}
 		}
@@ -275,17 +284,11 @@ void readSensorTypes( char stype[] ) {  // ->>> add timeout;
 	
 		if( Serial.available() > 0 ) {
 			// capture character array: 	[TYPE, TYPE, TYPE, TYPE]
-			constexpr char END = '\n';
-			char buffer[N_ENABLED] = {0};
-			uint8_t num_read = Serial.readBytesUntil(END, buffer, N_CHAR); 
+			constexpr uint8_t N_CHAR = N_ENABLED + 1; // include end character
+			char buffer[N_CHAR] = {0};
+			uint8_t num_read = captureCharacters(buffer, N_CHAR);
 			
 			if( num_read == N_ENABLED ) {
-				// exit loop
-				if( strcmp(buffer, "exit") == 0 ) { // special command to use default values
-					Serial.println( F("DEFAULT-TYPES") );
-					break;
-				}
-				
 				// check characters
 				uint8_t ch;
 				for( ch = 0; ch < N_ENABLED; ch += 1 ) {
@@ -305,6 +308,12 @@ void readSensorTypes( char stype[] ) {  // ->>> add timeout;
  					loop = false;	// exit loop
  					Serial.println( F("RECEIVED-TYPES") );
  				}
+			}
+			
+			// exit loop
+			else if( num_read == 1 && buffer[0] == '0' ) {	// use default value
+				Serial.println( F("DEFAULT-TYPES") );
+				break;
 			}
 		}
 	}

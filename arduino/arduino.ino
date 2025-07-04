@@ -39,7 +39,7 @@ void loop() {
 	readSerialInputs(target, measure);
 
 	// adjust output
-	updateControllers(target, measure);
+	updateControllers(target, measure); // ->> Enable or disable with flag ^
 
 	// return measurements
 	updateOutputFilters(measure);
