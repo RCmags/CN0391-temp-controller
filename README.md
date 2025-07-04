@@ -26,7 +26,9 @@ python3 main.py
 ```
 
 
-## Serial Communication API [THIS SECTION IS WRONG | COMMANDS NEED TO BE UPDATED]
+## Serial Communication API 
+
+### -> THIS SECTION IS WRONG | COMMANDS NEED TO BE UPDATED. PYTHON SCRIPTS DO NOT WORK.
 
 **Inputs:** The Arduino can receive a string of numbers (separated by commas) that represent the target temperatures for the PID controllers associated with each port on the sensor module. For example:
 
