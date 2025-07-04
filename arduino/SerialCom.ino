@@ -52,8 +52,6 @@ void printArray( number_t arr[], const uint8_t END ) {
 
 //--------------- 
 
-//--
-
 void printPIDCoeff(const uint8_t ch) {
 	// get data
 	constexpr uint8_t NUM = 3;
@@ -127,7 +125,7 @@ void printKalmanCoeff(const uint8_t ch) {
 
 void readSerialInputs( float target[], float measure[] ) { 
 	
-	if( Serial.available() > 0 ) { // change to while to ensure multiple readings -> add timeout
+	if( Serial.available() > 0 ) { // ->>> add timeout
 		// get data
 		constexpr char END = '\n'; 		// string end character; provided by serial input | IMPORTANT
 		
@@ -268,7 +266,7 @@ void readSerialInputs( float target[], float measure[] ) {
 
 //--------------- 
 
-void readSensorTypes( char stype[] ) {
+void readSensorTypes( char stype[] ) {  // ->>> add timeout;
 	Serial.println( F("WAITING-TYPES") );
 	
 	// Wait until data is received

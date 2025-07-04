@@ -72,15 +72,7 @@ char setTypeInv(uint8_t type) {
 	}
 }
 
-// NOTE: "thermocouple_t" defined in "CN0391/thermocouple.h". Min and Max values define therein.
-
-void setPortType( uint8_t ch, uint8_t type ) {
-	if( type >= TYPE_T && type <= TYPE_B ) {		// ensure data valid within range
-		th_types[ch] = type;
-		sensor_types[ch] = type;					// store state; this changes with excecution. 
-	}
-}
-
+// port types
 bool CN391_checkPortType(char type) {
 	return type == 'T' || type == 'J' || type == 'K' || type == 'E' ||
 	       type == 'S' || type == 'R' || type == 'N' || type == 'B' ;
@@ -92,6 +84,8 @@ void CN391_getPortType( char types[] ) {
 	}
 } 
 
+//--- main functions ---
+
 void CN391_setup( char port[] ) { // vectorize to array
 	// SPI setup
 	SPI.begin();
@@ -101,8 +95,8 @@ void CN391_setup( char port[] ) { // vectorize to array
 
 	// Set all thermocouple channels to given inputs
 	for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
-		uint8_t type = setType( port[ch] );
-		setPortType( ch, type );
+		th_types[ch] = setType( port[ch] );
+		sensor_types[ch] = th_types[ch];
 	}
 
 	// Calibrate the RTD (cold junction) and thermocouple channels
