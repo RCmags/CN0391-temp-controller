@@ -1,22 +1,15 @@
 #ifndef Constants_h
 #define Constants_h
 
-/* 	          Instructions 
-----------------------------------------
-Enable "PID_COEFF", "PID_PIN", and "FILT_COEFF" for each thermocouple connected to the CN0391 
-sensor shield. "N_ENABLED" Must match the number of enabled PID_COEFF parameters.
-*/
 //======================================
 
-// NOTE: NUM_PORT defined in "BasicCN0391.h"
-
-/* Default PID coefficients: [required] */
+/* Default PID coefficients: */
 //                             PID       |   OUTPUT   | INPUT (C)  |  FILTER
 //                      kp,   ki,    kd  | omax, omin | imax, imin | alpha, beta
 #define PID_COEFF_1	    15,   0.25,  20,   1,    0,     100,  0,     0.5,   0.05
 #define PID_COEFF_2     0.75, 0.010, 8,    1,    0,     100,  0,     0.5,   0.05
-#define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   5.0,  0.0,   0.0,   0.0
-#define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   5.0,  0.0,   0.0,   0.0
+#define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0
+#define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,  0.0,   0.0,   0.0
 
 /* PID output pins: */
 //					diginal pin
@@ -42,12 +35,13 @@ sensor shield. "N_ENABLED" Must match the number of enabled PID_COEFF parameters
 // 			Options: 	T, J, K, E, S, R, N, B
 #define SENSOR_TYPE 	'N',  'N',  'N',  'N'
 
-// NOTE: Type 'N' sensors are thermocuple wires. 
-
+/* NOTE: 
+	- Type 'N' sensors are thermocuple wires. 
+	- NUM_PORT defined in "BasicCN0391.h"
+*/
 //======================================
 
 // Sensors:
-constexpr int 	N_ENABLED   = 4;    // Channels from which data is received and PID is enabled.
 constexpr int 	N_AVERAGE   = 10;   // Number of measurements to average when initializing filters
 
 // Serial communication:

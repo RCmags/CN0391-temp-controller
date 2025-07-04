@@ -33,8 +33,8 @@ void loop() {
 	CN391_getThermocoupleTemps(measure);
 	
 	// get target state
-	static float target[N_ENABLED] = {PID_TARGET}; 	// target temperature
-	static bool enable_pid = true;		            // default to ON
+	static float target[NUM_PORT] = {PID_TARGET}; // target temperature
+	static bool enable_pid = true;                // default to ON
 	readSerialInputs(target, measure, &enable_pid);
 	
 	// adjust output

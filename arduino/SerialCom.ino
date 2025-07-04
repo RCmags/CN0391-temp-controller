@@ -39,7 +39,7 @@ void printArray( number_t arr[], const uint8_t END ) {
 	for( uint8_t i = 0; i < END; i += 1 ) {
 		Serial.print( arr[i] );
 		if( i < END_DELIM ) {
-			Serial.print( F(DELIM_CHAR) ); // use space?
+			Serial.print( F(DELIM_CHAR) ); 
 		}
 	}
 	Serial.println();
@@ -291,15 +291,17 @@ void readSensorTypes( char stype[] ) {  // ->>> add timeout;
 	while( loop ) {
 	
 		if( Serial.available() > 0 ) {
+		
 			// capture character array: 	[TYPE, TYPE, TYPE, TYPE]
-			constexpr uint8_t N_CHAR = N_ENABLED + 1; // include end character
+			constexpr uint8_t N_CHAR = NUM_PORT + 1; // include end character
+			
 			char buffer[N_CHAR] = {0};
 			uint8_t num_read = captureCharacters(buffer, N_CHAR);
 			
-			if( num_read == N_ENABLED ) {
+			if( num_read == NUM_PORT ) {	// one character per port
 				// check characters
 				uint8_t ch;
-				for( ch = 0; ch < N_ENABLED; ch += 1 ) {
+				for( ch = 0; ch < NUM_PORT; ch += 1 ) {
 					char type = buffer[ch];
 					bool isValid = CN391_checkPortType( type );
 					
@@ -311,7 +313,7 @@ void readSensorTypes( char stype[] ) {  // ->>> add timeout;
 					}
  				}
  				// succesful data
- 				if( ch == N_ENABLED ) {
+ 				if( ch == NUM_PORT ) {
  					loop = false;	// exit loop
  					Serial.println( F("RECEIVED-TYPES") );
  				}
