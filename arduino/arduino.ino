@@ -4,8 +4,6 @@
 #include "src/KalmanFilter1D/KalmanFilter1D.h"
 #include "Constants.h"
 
-// 10k pull down resistor
-
 /* NOTE: 
 	- Open "README.md" to understand how to use code.
 	- See "Constants.h" to configure program.
@@ -33,14 +31,15 @@ void loop() {
 	// read sensors
 	float measure[NUM_PORT];
 	CN391_getThermocoupleTemps(measure);
-
+	
 	// get target state
 	static float target[N_ENABLED] = {PID_TARGET}; 	// target temperature
-	readSerialInputs(target, measure);
-
+	static bool enable_pid = true;		            // default to ON
+	readSerialInputs(target, measure, &enable_pid);
+	
 	// adjust output
-	updateControllers(target, measure); // ->> Enable or disable with flag ^
-
+	updateControllers(target, measure, enable_pid); 
+	
 	// return measurements
 	updateOutputFilters(measure);
 }

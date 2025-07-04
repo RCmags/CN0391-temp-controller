@@ -42,7 +42,7 @@ sensor shield. "N_ENABLED" Must match the number of enabled PID_COEFF parameters
 // 			Options: 	T, J, K, E, S, R, N, B
 #define SENSOR_TYPE 	'N',  'N',  'N',  'N'
 
-// NOTE: Type 'N' sensors are thermocouple wires. 
+// NOTE: Type 'N' sensors are thermocuple wires. 
 
 //======================================
 

@@ -83,14 +83,19 @@ void setupFilters( float temp_av[] ) {
 	}
 }
 
-void updateControllers( float target[], float measure[] ) {
+void updateControllers( float target[], float measure[], bool enable ) {
 	// update state
 	PIDcontroller::updateTimeStep();
 
 	// controller
 	for( uint8_t ch = 0; ch < N_ENABLED; ch += 1 ) {
-		controller[ch].update( target[ch], measure[ch] );
-		signal[ch].update( controller[ch].output() ); 		// send Pulse Frequency modulated signal
+		if( enable ) {
+			controller[ch].update( target[ch], measure[ch] );
+			signal[ch].update( controller[ch].output() ); 		// send Pulse Frequency modulated signal
+		} else {
+			controller[ch].setState( measure[ch] );				// reset controller
+			signal[ch].update(0); 								// disable pins
+		}
 	}
 }
 
@@ -100,5 +105,4 @@ void updateOutputFilters( float measure[] ) {
 		filter[ch].update( measure[ch] );
 	}
 }
-
 

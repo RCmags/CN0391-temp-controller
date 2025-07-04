@@ -15,8 +15,8 @@ class PIDcontroller {
     float alpha;
     float beta;
 		// limits
-    float out_max;
-    float out_min;
+    float out_max; // >> must be constant
+    float out_min; // >> must be constant
     float in_scale;
     float in_offset;
 

@@ -1,16 +1,11 @@
 //#include "src/BasicCN0391/BasicCN0391.h"
 #include "Commands.h"
 
-// NOTE: use F() macro to drastically reduce RAM usage. 
-// See: https://support.arduino.cc/hc/en-us/articles/360013825179-Reduce-the-size-and-memory-usage-of-your-sketch
-
 //--------------- 
 
 	// parse string of numbers: num1, num2, num3 ...
 uint8_t parseNumbers( char buffer[], float num_arr[] ) { 
 	// Split string
-	//constexpr char DELIM[] = ",";			// INPUT delimiter is string | IMPORTANT
-	
 	char* pointer;
 	pointer = strtok(buffer, DELIM_CHAR); 
 	
@@ -126,9 +121,9 @@ uint8_t captureCharacters(char buffer[], const uint8_t N_CHAR) {
 	return Serial.readBytesUntil(END, buffer, N_CHAR); 
 }
 
-void readSerialInputs( float target[], float measure[] ) { 
+void readSerialInputs( float target[], float measure[], bool* enable_pid ) { 
 	
-	if( Serial.available() > 0 ) { // ->>> add timeout
+	if( Serial.available() > 0 ) { // ->>> add timeout ??
 		// get data
 		char buffer[BUFFER_SIZE] = {0};
 		uint8_t num_read = captureCharacters(buffer, BUFFER_SIZE);
@@ -161,11 +156,13 @@ void readSerialInputs( float target[], float measure[] ) {
 				
 				printArray(data, NUM_PORT); // NUM_PORT
 			}
+			
 			else if( function == GET_RAW ) {
 				Serial.print( F("RAW") );
 				Serial.print( F(DELIM_CHAR) );
 				printArray(measure, NUM_PORT); // NUM_PORT
 			}
+			
 			else if( function == GET_TARGET ) {
 				Serial.print( F("TARGET") );
 				Serial.print( F(DELIM_CHAR) );
@@ -175,11 +172,22 @@ void readSerialInputs( float target[], float measure[] ) {
 			else if( function == GET_SENSOR_TYPE ) {
 				Serial.print( F("SENSOR_TYPES") );
 				Serial.print( F(DELIM_CHAR) );
-				
 				char data[NUM_PORT]; 
 				CN391_getPortType(data);
-				
 				printArray(data, NUM_PORT); // NUM_PORT
+			}
+			
+			// controller state
+			else if( function == SET_ENABLE ) {
+				*enable_pid = true;
+			}
+			else if( function == SET_DISABLE ) {
+				*enable_pid = false;
+			}
+			else if( function == GET_ENABLE ) {
+				Serial.print( F("ENABLE") );
+				Serial.print( F(DELIM_CHAR) );
+				Serial.println( *enable_pid );
 			}
 		}
 		
@@ -297,8 +305,7 @@ void readSensorTypes( char stype[] ) {  // ->>> add timeout;
 					
 					// indicate result
 					if( !isValid ) {
-						break;
-						Serial.println( F("INVALID-TYPES") );
+						break;		// reset loop if invalid data
 					} else {
 						stype[ch] = type;
 					}
