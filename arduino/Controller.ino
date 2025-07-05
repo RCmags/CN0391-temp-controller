@@ -57,13 +57,13 @@ void setupFilters( float temp_av[] ) {
 	}
 }
 
-void updateControllers( float target[], float measure[], bool enable ) {
+void updateControllers( float target[], float measure[], bool enable[] ) {
 	// update state
 	PIDcontroller::updateTimeStep();
 
 	// controller
 	for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
-		if( enable ) {
+		if( enable[ch] ) {
 			controller[ch].update( target[ch], measure[ch] );
 			signal[ch].update( controller[ch].output() ); 		// send Pulse Frequency modulated signal
 		} else {

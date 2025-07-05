@@ -29,6 +29,13 @@ uint8_t parseNumbers( char buffer[], float num_arr[] ) {
 	return index;
 }
 
+//--------------- 
+
+/*
+template <typename number_t>
+void setArray( number_t arr[], number_t value, ) {
+	for( )
+}*/
 
 //--------------- 
 
@@ -113,8 +120,8 @@ uint8_t captureCharacters(char buffer[], const uint8_t N_CHAR) {
 	return Serial.readBytesUntil(END, buffer, N_CHAR); 
 }
 
-void parseStringCommand( char buffer[],    float target[], float measure[], 
-                         bool* enable_pid, float* timeout, float timer ) 
+void parseStringCommand( char buffer[],     float target[],  float measure[], 
+                         bool enable_pid[], float timeout[], float timer[]  ) 
 
 {
 	// convert to number array
@@ -167,28 +174,22 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 		}
 		
 		// controller state
-		else if( function == SET_ENABLE ) {
-			*enable_pid = true;
-		}
-		else if( function == SET_DISABLE ) {
-			*enable_pid = false;
-		}
 		else if( function == GET_ENABLE ) {
 			Serial.print( F("ENABLE") );
 			Serial.print( F(DELIM_CHAR) );
-			Serial.println( *enable_pid );
+			printArray(enable_pid, NUM_PORT); 
 		}
 		
 		// timer
 		else if( function == GET_TIMER ) {
 			Serial.print( F("TIMER") );
 			Serial.print( F(DELIM_CHAR) );
-			Serial.println( timer );
+			printArray(timer, NUM_PORT); 
 		}
 		else if( function == GET_TIMEOUT ) {
 			Serial.print( F("TIMEOUT") );
 			Serial.print( F(DELIM_CHAR) );
-			Serial.println( *timeout );
+			printArray(timeout, NUM_PORT); 
 		}
 	}
 	
@@ -217,6 +218,15 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 			else if( function == GET_K_FILTER ) {
 				printKalmanCoeff(channel);
 			}
+			
+			// timer
+			else if( function == SET_ENABLE ) {
+				enable_pid[channel] = true;
+			}
+			else if( function == SET_DISABLE ) {
+				enable_pid[channel] = false;
+				timer[channel] = 0; // reset time
+			}
 		}
 		
 		// setters
@@ -235,6 +245,11 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 			// kalman filter (set state)
 			else if( function == SET_K_FILTER_STATE ) {
 				filter[channel].setState( parameter[0] );
+			}
+			
+			// update timeout
+			else if(  function == SET_TIMEOUT && parameter[0] > 0 || parameter[0] == TIME_INF ) {
+				timeout[channel] = parameter[0];
 			}
 		}
  		
@@ -273,28 +288,37 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 			target[3] = parameter[3];
 		}
 		
-		// update timeout
-		else if( (ninput == 3 && function == SET_TIMEOUT) && 
-		         (parameter[0] > 0 || parameter[0] == TIMEOUT_INF)    ) 
-		{
-			*timeout = parameter[0];
+		// timer
+		else if( ninput == 2 && function == SET_ENABLE ) {
+			for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
+				enable_pid[ch] = true;
+			}
+		}
+		else if( ninput == 2 && function == SET_DISABLE ) {
+			for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
+				enable_pid[ch] = false;
+				timer[ch] = 0; 	// reset time
+			}
 		}
 	}
 }
 
 //--------------- 
 
-void readSerialInputs( float target[], float measure[], bool* enable_pid ) { 
+void readSerialInputs( float target[], float measure[], bool enable_pid[] ) { 
 	// dissable controller after timeout
-	static float timer = 0;		        // total time controller has been enabled
-	static float timeout = TIMEOUT_INF;	// time controller is allowed to be on
-	
-	if( *enable_pid ) {
-		timer += PIDcontroller::getTimeStep(); // measure on-time
-	}
-	if( timeout > 0 && timer > timeout ) {     // reset timers
-		*enable_pid = false;
-		timer = 0;
+	static float timer[NUM_PORT] = {0};					// total time controller has been enabled
+														// time controller is allowed to be on
+	static float timeout[NUM_PORT] = {TIME_INF, TIME_INF, TIME_INF, TIME_INF};
+
+	for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
+		if( enable_pid[ch] ) {
+			timer[ch] += PIDcontroller::getTimeStep(); 	// measure on-time
+		}
+		if( timeout[ch] > 0 && timer[ch] > timeout[ch] ) {     // reset timers
+			enable_pid[ch] = false;
+			timer[ch] = 0;
+		}
 	}
 	
 	// retrieve command
@@ -302,7 +326,7 @@ void readSerialInputs( float target[], float measure[], bool* enable_pid ) {
 		// get data
 		char buffer[BUFFER_SIZE] = {0};
 		uint8_t num_read = captureCharacters(buffer, BUFFER_SIZE);
-		parseStringCommand( buffer, target, measure, enable_pid, &timeout, timer );
+		parseStringCommand( buffer, target, measure, enable_pid, timeout, timer );
 	}
 }
 

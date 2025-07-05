@@ -32,7 +32,7 @@ enum FUNCTION {
 	SET_TIMEOUT         // 19
 };
 
-constexpr int TIMEOUT_INF = -1;   // Label to disable timeout
+constexpr int TIME_INF = -1;   // Label to disable timeout
 
 // need python script to convert string to number for serial commands. 
 
