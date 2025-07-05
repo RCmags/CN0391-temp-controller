@@ -28,7 +28,10 @@ enum FUNCTION {
 	GET_SENSOR_TYPE,    // 15	// sensor
 	SET_ENABLE,         // 16	// enable/disable PID controllers
 	SET_DISABLE,        // 17
-	GET_ENABLE          // 18
+	GET_ENABLE,         // 18
+	GET_TIMER,          // 19   // timer
+	GET_TIMEOUT,        // 20
+	SET_TIMEOUT         // 21
 };
 
 // need python script to convert string to number for serial commands. 

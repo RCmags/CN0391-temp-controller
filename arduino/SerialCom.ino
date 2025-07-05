@@ -45,6 +45,11 @@ void printArray( number_t arr[], const uint8_t END ) {
 	Serial.println();
 }
 
+/*
+void printLabelArray(const String label ) {
+	Serial.println( F(label) );
+}*/
+
 //--------------- 
 
 void printPIDCoeff(const uint8_t ch) {
@@ -121,163 +126,206 @@ uint8_t captureCharacters(char buffer[], const uint8_t N_CHAR) {
 	return Serial.readBytesUntil(END, buffer, N_CHAR); 
 }
 
-void readSerialInputs( float target[], float measure[], bool* enable_pid ) { 
-	
-	if( Serial.available() > 0 ) { // ->>> add timeout ??
-		// get data
-		char buffer[BUFFER_SIZE] = {0};
-		uint8_t num_read = captureCharacters(buffer, BUFFER_SIZE);
-		
-		// convert to number array
-		float input[INPUTS_MAX] = {-1}; // default value
-		uint8_t ninput = parseNumbers(buffer, input);
-		
-		if(ninput == 0) { // exit function if no useful data
-			return;	
-		}
-		
-		// apply available functions
-		int function = input[0];		// truncate
-		int channel = input[1];			// truncate
-		float* parameter = input + 2;
-		
-		// getters
-		if( ninput == 1 ) {
-			
-			// state output | can be used to capture temperature readings (avoid state)
-			if( function == GET_FILTER ) {
-				Serial.print( F("FILTER") );
-				Serial.print( F(DELIM_CHAR) );
-				
-				float data[] = { filter[0].value(), 
-				                 filter[1].value(), 
-				                 filter[2].value(),
-				                 filter[3].value() };
-				
-				printArray(data, NUM_PORT); // NUM_PORT
-			}
-			
-			else if( function == GET_RAW ) {
-				Serial.print( F("RAW") );
-				Serial.print( F(DELIM_CHAR) );
-				printArray(measure, NUM_PORT); // NUM_PORT
-			}
-			
-			else if( function == GET_TARGET ) {
-				Serial.print( F("TARGET") );
-				Serial.print( F(DELIM_CHAR) );
-				printArray(target, NUM_PORT); // NUM_PORT
-			}
-			
-			else if( function == GET_SENSOR_TYPE ) {
-				Serial.print( F("SENSOR_TYPES") );
-				Serial.print( F(DELIM_CHAR) );
-				char data[NUM_PORT]; 
-				CN391_getPortType(data);
-				printArray(data, NUM_PORT); // NUM_PORT
-			}
-			
-			// controller state
-			else if( function == SET_ENABLE ) {
-				*enable_pid = true;
-			}
-			else if( function == SET_DISABLE ) {
-				*enable_pid = false;
-			}
-			else if( function == GET_ENABLE ) {
-				Serial.print( F("ENABLE") );
-				Serial.print( F(DELIM_CHAR) );
-				Serial.println( *enable_pid );
-			}
-		}
-		
-			// check valid channel
-		if( channel == CH0 || channel == CH1 || channel == CH2 || channel == CH3 ) {
+void parseStringCommand( char buffer[],    float target[], float measure[], 
+                         bool* enable_pid, float* timeout, float timer ) 
 
-			if( ninput == 2 ) {
-				// PID controller
-					// gains
-				if( function == GET_PID ) {
-					printPIDCoeff(channel);
-				}
-				
-					// input limits
-				else if( function == GET_IN_LIMIT ) {
-					printInLimits(channel); 
-				}
-				
-					// output limits
-				else if( function == GET_OUT_LIMIT ) {
-					printOutLimits(channel); 
-				}
-				
-				// Filters
-					// Alpha-beta filters
-				else if( function == GET_AB_FILTER ) {
-					printAlphaBetaCoeff(channel);
-				}
-				
-					// Kalman Filters
-				else if( function == GET_K_FILTER ) {
-					printKalmanCoeff(channel);
-				}
+{
+	// convert to number array
+	float input[INPUTS_MAX] = {-1}; // default value
+	uint8_t ninput = parseNumbers(buffer, input);
+	
+	if(ninput == 0) { // exit function if no useful data
+		return;	
+	}
+	
+	// apply available functions
+	int function = input[0];		// truncate
+	int channel = input[1];			// truncate
+	float* parameter = input + 2;
+	
+	// getters
+	if( ninput == 1 ) {
+		
+		// state output | can be used to capture temperature readings (avoid state)
+		if( function == GET_FILTER ) {
+			Serial.print( F("FILTER") );
+			Serial.print( F(DELIM_CHAR) );
+			
+			float data[] = { filter[0].value(), 
+			                 filter[1].value(), 
+			                 filter[2].value(),
+			                 filter[3].value() };
+			
+			printArray(data, NUM_PORT); 
+		}
+		
+		else if( function == GET_RAW ) {
+			Serial.print( F("RAW") );
+			Serial.print( F(DELIM_CHAR) );
+			printArray(measure, NUM_PORT);
+		}
+		
+		else if( function == GET_TARGET ) {
+			Serial.print( F("TARGET") );
+			Serial.print( F(DELIM_CHAR) );
+			printArray(target, NUM_PORT); 
+		}
+		
+		else if( function == GET_SENSOR_TYPE ) {
+			Serial.print( F("SENSOR_TYPES") );
+			Serial.print( F(DELIM_CHAR) );
+			char data[NUM_PORT]; 
+			CN391_getPortType(data);
+			printArray(data, NUM_PORT); 
+		}
+		
+		// controller state
+		else if( function == SET_ENABLE ) {
+			*enable_pid = true;
+		}
+		else if( function == SET_DISABLE ) {
+			*enable_pid = false;
+		}
+		else if( function == GET_ENABLE ) {
+			Serial.print( F("ENABLE") );
+			Serial.print( F(DELIM_CHAR) );
+			Serial.println( *enable_pid );
+		}
+		
+		// timer
+		else if( function == GET_TIMER ) {
+			Serial.print( F("TIMER") );
+			Serial.print( F(DELIM_CHAR) );
+			Serial.println( timer );
+		}
+		else if( function == GET_TIMEOUT ) {
+			Serial.print( F("TIMEOUT") );
+			Serial.print( F(DELIM_CHAR) );
+			Serial.println( *timeout );
+		}
+	}
+	
+		// check valid channel
+	if( channel == CH0 || channel == CH1 || channel == CH2 || channel == CH3 ) {
+
+		if( ninput == 2 ) {
+			// PID controller
+				// gains
+			if( function == GET_PID ) {
+				printPIDCoeff(channel);
 			}
 			
-			// setters
-			else if( ninput == 3 ) {
-			
-				// target values (per channel)
-				if( function == SET_TARGET ) {
-					target[channel] = parameter[0];
-				}
-				
-				// alpha-beta filter (1 input):
-				else if( function == SET_AB_FILTER ) {
-					controller[channel].setFilterGains( parameter[0] );
-				}
-				
-				// kalman filter (set state)
-				else if( function == SET_K_FILTER_STATE ) {
-					filter[channel].setState( parameter[0] );
-				}
-			}
-	 		
-			else if( ninput == 4 ) {
-				// pid inputs
-				if( function == SET_IN_LIMIT ) {
-					controller[channel].setInputLimits( parameter[0], parameter[1] );
-				}
-				
-				// pid outputs
-				else if( function == SET_OUT_LIMIT ) {
-					controller[channel].setOutputLimits( parameter[0], parameter[1] );
-				}
-				
-				// filters (2 parameters)
-					// alpha-beta 
-				else if( function == SET_AB_FILTER ) {
-					controller[channel].setFilterGains( parameter[0], parameter[1] );
-				}
-				
-					// kalman filter [gains]
-				else if( function == SET_K_FILTER ) {
-					filter[channel].setGains( parameter[0], parameter[1] );
-				}
+				// input limits
+			else if( function == GET_IN_LIMIT ) {
+				printInLimits(channel); 
 			}
 			
-			// PID coefficients
-			else if( ninput == 5 && function == SET_PID ) {
-				controller[channel].setPIDGains( parameter[0], parameter[1], parameter[2] );
+				// output limits
+			else if( function == GET_OUT_LIMIT ) {
+				printOutLimits(channel); 
+			}
+			
+			// Filters
+				// Alpha-beta filters
+			else if( function == GET_AB_FILTER ) {
+				printAlphaBetaCoeff(channel);
+			}
+			
+				// Kalman Filters
+			else if( function == GET_K_FILTER ) {
+				printKalmanCoeff(channel);
 			}
 		}
 		
-		if( ninput == 6 && function == SET_TARGET && channel == CH_ALL ) {
+		// setters
+		else if( ninput == 3 ) {
+		
+			// target values (per channel)
+			if( function == SET_TARGET ) {
+				target[channel] = parameter[0];
+			}
+			
+			// alpha-beta filter (1 input):
+			else if( function == SET_AB_FILTER ) {
+				controller[channel].setFilterGains( parameter[0] );
+			}
+			
+			// kalman filter (set state)
+			else if( function == SET_K_FILTER_STATE ) {
+				filter[channel].setState( parameter[0] );
+			}
+		}
+ 		
+		else if( ninput == 4 ) {
+			// pid inputs
+			if( function == SET_IN_LIMIT ) {
+				controller[channel].setInputLimits( parameter[0], parameter[1] );
+			}
+			
+			// pid outputs
+			else if( function == SET_OUT_LIMIT ) {
+				controller[channel].setOutputLimits( parameter[0], parameter[1] );
+			}
+			
+			// filters (2 parameters)
+				// alpha-beta 
+			else if( function == SET_AB_FILTER ) {
+				controller[channel].setFilterGains( parameter[0], parameter[1] );
+			}
+			
+				// kalman filter [gains]
+			else if( function == SET_K_FILTER ) {
+				filter[channel].setGains( parameter[0], parameter[1] );
+			}
+		}
+		
+		// PID coefficients
+		else if( ninput == 5 && function == SET_PID ) {
+			controller[channel].setPIDGains( parameter[0], parameter[1], parameter[2] );
+		}
+	}
+	
+	// change all ports
+	if( channel == CH_ALL ) {
+	
+		if( ninput == 6 && function == SET_TARGET ) {
 			// target value for all channels
 			target[0] = parameter[0];
 			target[1] = parameter[1];
 			target[2] = parameter[2];
 			target[3] = parameter[3];
 		}
+		
+		// update timeout
+		else if( (ninput == 3 && function == SET_TIMEOUT) && 
+		         (parameter[0] > 0 || parameter[0] == -1)    ) 
+		{
+			*timeout = parameter[0];
+		}
+	}
+}
+
+//--------------- 
+
+void readSerialInputs( float target[], float measure[], bool* enable_pid ) { 
+	// dissable controller after timeout
+	static float timer = 0;		// total time controller has been enabled
+	static float timeout = -1;	// time controller is allowed to be on
+	
+	if( *enable_pid ) {
+		timer += PIDcontroller::getTimeStep();
+	}
+	if( timeout > 0 && timer > timeout ) {
+		*enable_pid = false;
+		timer = 0;
+	}
+	
+	// retrieve command
+	if( Serial.available() > 0 ) { 
+		// get data
+		char buffer[BUFFER_SIZE] = {0};
+		uint8_t num_read = captureCharacters(buffer, BUFFER_SIZE);
+		parseStringCommand( buffer, target, measure, enable_pid, &timeout, timer );
 	}
 }
 

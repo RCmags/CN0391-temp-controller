@@ -17,6 +17,10 @@ static void PIDcontroller::updateTimeStep() {
 	time_last = time_now;
 }
 
+static float PIDcontroller::getTimeStep() {
+	return dt;
+}
+
 
 //==== Constructors ====
 

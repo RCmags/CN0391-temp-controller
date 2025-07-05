@@ -55,6 +55,7 @@ class PIDcontroller {
 	// global timer
 	static void initTimer();
 	static void updateTimeStep();
+	static float getTimeStep();
 
 	// controller functions
     void setState(float);
