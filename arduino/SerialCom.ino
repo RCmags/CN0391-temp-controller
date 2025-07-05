@@ -43,55 +43,18 @@ void printArray( number_t arr[], const uint8_t END ) {
 	Serial.println();
 }
 
-//--------------- 
-
-void printPIDCoeff(const uint8_t ch) {
-	// get data
-	constexpr uint8_t NUM = 3;
-	float data[NUM];
-	controller[ch].getPIDGains(data);
-	// show label
-	Serial.print( F("PID_") );
-	Serial.print(ch);
+template <typename number_t>
+void printPorts( const __FlashStringHelper * label, number_t data[] ) { // <F(label)>, <array> 
+	Serial.print( label );
 	Serial.print( F(DELIM_CHAR) );
-	// show values
-	printArray(data, NUM);
+	printArray(data, NUM_PORT);
 }
 
-void printInLimits(const uint8_t ch) {
-	// get data
-	constexpr uint8_t NUM = 2;
-	float data[NUM];
-	controller[ch].getInputLimits(data);
+void printParameters( const __FlashStringHelper * label, float         data[],
+                      const uint8_t                  CH, const uint8_t NUM   ) {
 	// show label
-	Serial.print( F("IN_LIMIT_") );
-	Serial.print(ch);
-	Serial.print( F(DELIM_CHAR) );
-	// show values
-	printArray(data, NUM);
-}
-
-void printAlphaBetaCoeff(const uint8_t ch) {
-	// get data
-	constexpr uint8_t NUM = 2;
-	float data[NUM];
-	controller[ch].getFilterGains(data);
-	// show label
-	Serial.print( F("AB_FILTER_") );
-	Serial.print(ch);
-	Serial.print( F(DELIM_CHAR) );
-	// show values
-	printArray(data, NUM);
-}
-
-void printKalmanCoeff(const uint8_t ch) {
-	// get data
-	constexpr uint8_t NUM = 2;
-	float data[NUM];
-	filter[ch].getGains(data);
-	// show label
-	Serial.print( F("K_FILTER_") );
-	Serial.print(ch);
+	Serial.print( label );
+	Serial.print( CH );
 	Serial.print( F(DELIM_CHAR) );
 	// show values
 	printArray(data, NUM);
@@ -109,9 +72,8 @@ uint8_t captureCharacters(char buffer[], const uint8_t N_CHAR) {
 //--------------- 
 
 void parseStringCommand( char buffer[],     float target[],  float measure[], 
-                         bool enable_pid[], float timeout[], float timer[]  ) 
-
-{
+                         bool enable_pid[], float timeout[], float timer[]  ) {
+	
 	// convert to number array
 	float input[INPUTS_MAX] = {-1}; // default value | outside of enum range
 	uint8_t ninput = parseNumbers(buffer, input);
@@ -130,54 +92,35 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 		
 		// state output | can be used to capture temperature readings (avoid state)
 		if( function == GET_FILTER ) {
-			Serial.print( F("FILTER") );
-			Serial.print( F(DELIM_CHAR) );
-			
-			float data[] = { filter[0].value(), 
-			                 filter[1].value(), 
-			                 filter[2].value(),
-			                 filter[3].value() };
-			
-			printArray(data, NUM_PORT); 
+			float data[] = { filter[0].value(), filter[1].value() , 
+			                 filter[2].value(), filter[3].value() };
+			printPorts( F("FILTER"), data);
 		}
 		
 		else if( function == GET_RAW ) { // calls may be factored
-			Serial.print( F("RAW") );
-			Serial.print( F(DELIM_CHAR) );
-			printArray(measure, NUM_PORT);
+			printPorts( F("RAW"), measure);
 		}
 		
-		else if( function == GET_TARGET ) {
-			Serial.print( F("TARGET") );
-			Serial.print( F(DELIM_CHAR) );
-			printArray(target, NUM_PORT); 
+		else if( function == GET_TARGET ) { 
+			printPorts( F("TARGET"), target);
 		}
 		
 		else if( function == GET_SENSOR_TYPE ) {
-			Serial.print( F("SENSOR_TYPES") );
-			Serial.print( F(DELIM_CHAR) );
-			char data[NUM_PORT]; 
-			CN391_getPortType(data);
-			printArray(data, NUM_PORT); 
+			char data[NUM_PORT]; CN391_getPortType(data);
+			printPorts( F("SENSOR_TYPES"), data);
 		}
 		
 		// controller state
 		else if( function == GET_ENABLE ) {
-			Serial.print( F("ENABLE") );
-			Serial.print( F(DELIM_CHAR) );
-			printArray(enable_pid, NUM_PORT); 
+			printPorts( F("ENABLE"), enable_pid);
 		}
 		
 		// timer
 		else if( function == GET_TIMER ) {
-			Serial.print( F("TIMER") );
-			Serial.print( F(DELIM_CHAR) );
-			printArray(timer, NUM_PORT); 
+			printPorts( F("TIMER"), timer);
 		}
-		else if( function == GET_TIMEOUT ) {
-			Serial.print( F("TIMEOUT") );
-			Serial.print( F(DELIM_CHAR) );
-			printArray(timeout, NUM_PORT); 
+		else if( function == GET_TIMEOUT ) { 
+			printPorts( F("TIMEOUT"), timeout);
 		}
 	}
 	
@@ -187,24 +130,27 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 		if( ninput == 2 ) {
 			// PID controller
 				// gains
-			if( function == GET_PID ) {
-				printPIDCoeff(channel);
+			if( function == GET_PID ) { 
+				float data[3]; controller[channel].getPIDGains(data);
+				printParameters( F("PID_"), data, channel, 3 );
 			}
-			
 				// input limits
-			else if( function == GET_IN_LIMIT ) {
-				printInLimits(channel); 
+			else if( function == GET_IN_LIMIT ) { 
+				float data[2]; controller[channel].getInputLimits(data);
+				printParameters( F("IN_LIMIT_"), data, channel, 2 );
 			}
 			
 			// Filters
 				// Alpha-beta filters
 			else if( function == GET_AB_FILTER ) {
-				printAlphaBetaCoeff(channel);
+				float data[2]; controller[channel].getFilterGains(data);
+				printParameters( F("AB_FILTER_"), data, channel, 2 );
 			}
 			
 				// Kalman Filters
 			else if( function == GET_K_FILTER ) {
-				printKalmanCoeff(channel);
+				float data[2]; filter[channel].getGains(data);
+				printParameters( F("K_FILTER_"), data, channel, 2 );
 			}
 			
 			// timer
@@ -270,22 +216,23 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 	
 		if( ninput == 6 && function == SET_TARGET ) {
 			// target value for all channels
-			target[0] = parameter[0];
-			target[1] = parameter[1];
-			target[2] = parameter[2];
-			target[3] = parameter[3];
-		}
-		
-		// timer
-		else if( ninput == 2 && function == SET_ENABLE ) {
 			for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
-				enable_pid[ch] = true;
+				target[ch] = parameter[ch];
 			}
 		}
-		else if( ninput == 2 && function == SET_DISABLE ) {
-			for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
-				enable_pid[ch] = false;
-				timer[ch] = 0; 	// reset time
+		
+		else if( ninput == 2 ) {
+			// timer 
+			if( function == SET_ENABLE ) {
+				for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
+					enable_pid[ch] = true;
+				}
+			}
+			else if( function == SET_DISABLE ) {
+				for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
+					enable_pid[ch] = false;
+					timer[ch] = 0; 	// reset time
+				}
 			}
 		}
 	}
