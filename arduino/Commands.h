@@ -18,21 +18,21 @@ enum FUNCTION {
 	SET_PID,            // 5
 	GET_IN_LIMIT,       // 6	// Input Limits
 	SET_IN_LIMIT,       // 7
-	GET_OUT_LIMIT,      // 8	// Output Limits >>[must be 0, 1]
-	SET_OUT_LIMIT,      // 9
-	GET_AB_FILTER,      // 10	// Alpha-Beta Filter
-	SET_AB_FILTER,      // 11
-	GET_K_FILTER,       // 12	// Kalman filter
-	SET_K_FILTER,       // 13
-	SET_K_FILTER_STATE, // 14
-	GET_SENSOR_TYPE,    // 15	// sensor
-	SET_ENABLE,         // 16	// enable/disable PID controllers
-	SET_DISABLE,        // 17
-	GET_ENABLE,         // 18
-	GET_TIMER,          // 19   // timer
-	GET_TIMEOUT,        // 20
-	SET_TIMEOUT         // 21
+	GET_AB_FILTER,      // 8	// Alpha-Beta Filter
+	SET_AB_FILTER,      // 9
+	GET_K_FILTER,       // 10	// Kalman filter
+	SET_K_FILTER,       // 11
+	SET_K_FILTER_STATE, // 12
+	GET_SENSOR_TYPE,    // 13	// sensor
+	SET_ENABLE,         // 14	// enable/disable PID controllers
+	SET_DISABLE,        // 15
+	GET_ENABLE,         // 16
+	GET_TIMER,          // 17   // timer
+	GET_TIMEOUT,        // 18
+	SET_TIMEOUT         // 19
 };
+
+constexpr int TIMEOUT_INF = -1;   // Label to disable timeout
 
 // need python script to convert string to number for serial commands. 
 

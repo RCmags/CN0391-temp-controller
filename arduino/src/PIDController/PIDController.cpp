@@ -26,7 +26,7 @@ static float PIDcontroller::getTimeStep() {
 
 PIDcontroller::PIDcontroller(
 		float _kp   , float _ki   , float _kd, 
-		float _omax , float _omin , float _imax, float _imin, 
+		float _imax,  float _imin, 
 		float _alpha, float _beta ) 
 {
 	// pid
@@ -39,7 +39,6 @@ PIDcontroller::PIDcontroller(
 	beta = LIMIT(_beta);
 	
 	// limits 
-	setOutputLimits(_omax, _omin);
 	setInputLimits(_imax, _imin);
 }
 
@@ -67,13 +66,6 @@ void PIDcontroller::setInputLimits(float imax, float imin) {
 	} else {
 		in_scale = 0;
 		in_offset = 0;
-	}
-}
-
-void PIDcontroller::setOutputLimits(float omax, float omin) {
-	if( omax > omin ) {
-		out_max = omax;
-		out_min = omin;
 	}
 }
 
@@ -108,7 +100,7 @@ void PIDcontroller::update( float target, float measure ) {
 	measure = normalize(measure);
 
 	// filter
-	updateFilter(measure);    	
+	updateFilter(measure);
 
   	// Sum components
     float error = target - filter();
@@ -118,11 +110,11 @@ void PIDcontroller::update( float target, float measure ) {
     float output = gain_p*error + integral_new - gain_d*deriv(); // ignore target derivative
 
     // update output
-    if( output > out_max ) {   // saturate output 
-      output = out_max;
+    if( output > OUT_MAX ) {   // saturate output 
+      output = OUT_MAX;
 
-    } else if ( output < out_min ) {
-      output = out_min;
+    } else if ( output < OUT_MIN ) {
+      output = OUT_MIN;
 
     } else {		           	// Prevent integral windup
       integral = integral_new; 	// out_min < output < out_max
@@ -154,11 +146,6 @@ void PIDcontroller::getPIDGains( float output[] ) {
 void PIDcontroller::getFilterGains( float output[] ) {
 	output[0] = alpha;
 	output[1] = beta;
-}
-
-void PIDcontroller::getOutputLimits( float output[] ) {
-	output[0] = out_max;
-	output[1] = out_min;
 }
 
 void PIDcontroller::getInputLimits( float output[] ) {

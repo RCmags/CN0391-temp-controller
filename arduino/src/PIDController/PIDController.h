@@ -4,6 +4,10 @@
 // Macro to restrict constant values
 #define LIMIT(X) X < 0 ? 0 : X > 1 ? 1 : X
 
+// Controller output limits [must match limits of signal generator]
+constexpr float OUT_MAX = 1;
+constexpr float OUT_MIN = 0;
+
 class PIDcontroller {
   private:
    	// Parameters:
@@ -15,8 +19,6 @@ class PIDcontroller {
     float alpha;
     float beta;
 		// limits
-    float out_max; // >> must be constant
-    float out_min; // >> must be constant
     float in_scale;
     float in_offset;
 
@@ -40,15 +42,12 @@ class PIDcontroller {
   	PIDcontroller() {} // manually set coefficients
 	
     PIDcontroller(float, float, float, 
-                  float, float, float, float,
+                  float, float,
                   float, float);
 	
 	// setters
 	void setPIDGains(float, float, float);
-	
-	void setOutputLimits(float, float);
 	void setInputLimits(float, float);
-	
 	void setFilterGains(float, float);
 	void setFilterGains(float);
 
@@ -68,7 +67,6 @@ class PIDcontroller {
 	
 	void getPIDGains( float []);
 	void getFilterGains( float [] );
-	void getOutputLimits( float [] );
 	void getInputLimits(float [] );
 };
 

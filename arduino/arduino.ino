@@ -34,7 +34,7 @@ void loop() {
 	
 	// get target state
 	static float target[NUM_PORT] = {PID_TARGET}; // target temperature
-	static bool enable_pid = true;                // default to ON
+	static bool enable_pid = true;                // default to ON ->> should default to OFF. 
 	readSerialInputs(target, measure, &enable_pid);
 	
 	// adjust output

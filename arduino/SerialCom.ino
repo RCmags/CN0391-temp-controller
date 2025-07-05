@@ -78,19 +78,6 @@ void printInLimits(const uint8_t ch) {
 	printArray(data, NUM);
 }
 
-void printOutLimits(const uint8_t ch) {
-	// get data
-	constexpr uint8_t NUM = 2;
-	float data[NUM];
-	controller[ch].getOutputLimits(data);
-	// show label
-	Serial.print( F("OUT_LIMIT_") );
-	Serial.print(ch);
-	Serial.print( F(DELIM_CHAR) );
-	// show values
-	printArray(data, NUM);
-}
-
 void printAlphaBetaCoeff(const uint8_t ch) {
 	// get data
 	constexpr uint8_t NUM = 2;
@@ -131,7 +118,7 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 
 {
 	// convert to number array
-	float input[INPUTS_MAX] = {-1}; // default value
+	float input[INPUTS_MAX] = {-1}; // default value | outside of enum range
 	uint8_t ninput = parseNumbers(buffer, input);
 	
 	if(ninput == 0) { // exit function if no useful data
@@ -159,7 +146,7 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 			printArray(data, NUM_PORT); 
 		}
 		
-		else if( function == GET_RAW ) {
+		else if( function == GET_RAW ) { // calls may be factored
 			Serial.print( F("RAW") );
 			Serial.print( F(DELIM_CHAR) );
 			printArray(measure, NUM_PORT);
@@ -220,11 +207,6 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 				printInLimits(channel); 
 			}
 			
-				// output limits
-			else if( function == GET_OUT_LIMIT ) {
-				printOutLimits(channel); 
-			}
-			
 			// Filters
 				// Alpha-beta filters
 			else if( function == GET_AB_FILTER ) {
@@ -262,11 +244,6 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 				controller[channel].setInputLimits( parameter[0], parameter[1] );
 			}
 			
-			// pid outputs
-			else if( function == SET_OUT_LIMIT ) {
-				controller[channel].setOutputLimits( parameter[0], parameter[1] );
-			}
-			
 			// filters (2 parameters)
 				// alpha-beta 
 			else if( function == SET_AB_FILTER ) {
@@ -298,7 +275,7 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 		
 		// update timeout
 		else if( (ninput == 3 && function == SET_TIMEOUT) && 
-		         (parameter[0] > 0 || parameter[0] == -1)    ) 
+		         (parameter[0] > 0 || parameter[0] == TIMEOUT_INF)    ) 
 		{
 			*timeout = parameter[0];
 		}
@@ -309,13 +286,13 @@ void parseStringCommand( char buffer[],    float target[], float measure[],
 
 void readSerialInputs( float target[], float measure[], bool* enable_pid ) { 
 	// dissable controller after timeout
-	static float timer = 0;		// total time controller has been enabled
-	static float timeout = -1;	// time controller is allowed to be on
+	static float timer = 0;		        // total time controller has been enabled
+	static float timeout = TIMEOUT_INF;	// time controller is allowed to be on
 	
 	if( *enable_pid ) {
-		timer += PIDcontroller::getTimeStep();
+		timer += PIDcontroller::getTimeStep(); // measure on-time
 	}
-	if( timeout > 0 && timer > timeout ) {
+	if( timeout > 0 && timer > timeout ) {     // reset timers
 		*enable_pid = false;
 		timer = 0;
 	}
@@ -331,7 +308,7 @@ void readSerialInputs( float target[], float measure[], bool* enable_pid ) {
 
 //--------------- 
 
-void readSensorTypes( char stype[] ) {  // ->>> add timeout;
+void readSensorTypes( char stype[] ) {
 	Serial.println( F("WAITING-TYPES") );
 	
 	// Wait until data is received
