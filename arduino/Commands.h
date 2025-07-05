@@ -1,6 +1,8 @@
 #ifndef Commands_h
 #define Commands_h
 
+// NOTE: use python script to convert string to number for serial commands. 
+
 enum CHANNEL {
 	CH0,    // 0
 	CH1,    // 1
@@ -32,8 +34,8 @@ enum FUNCTION {
 	SET_TIMEOUT         // 19
 };
 
-constexpr int TIME_INF = -1;   // Label to disable timeout
-
-// need python script to convert string to number for serial commands. 
-
+enum COMMAND {
+	TIME_INF = -1		// Command to disable timeout
+};
+ 
 #endif

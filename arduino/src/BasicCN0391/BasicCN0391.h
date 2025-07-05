@@ -1,7 +1,7 @@
 #ifndef _BasicCN0391_H_
 #define _BasicCN0391_H_
 
-constexpr uint8_t NUM_PORT = 4; // Global constant | Number of ports available in CN0391
+constexpr uint8_t NUM_PORT = 4; // Number of ports available in CN0391
 
 // setters
 uint8_t setType( char );

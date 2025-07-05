@@ -115,7 +115,6 @@ void CN391_getTemps(float cjTemp[], float tcTemp[], float tcVoltage[], int32_t t
 	// Update all ADC data (both RTD and thermocouple channels)
 	CN0391_set_data();
 
-	// For each port (P1 to P4) update readings:
 	for( uint8_t i = 0; i < NUM_PORT; i++ ) {
 		// Get the cold junction temperature using the RTD channel corresponding to port i
 		CN0391_calc_rtd_temperature(i, &cjTemp[i]);

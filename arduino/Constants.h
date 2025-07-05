@@ -42,14 +42,15 @@
 //======================================
 
 // Sensors:
-constexpr int 	N_AVERAGE   = 10;   // Number of measurements to average when initializing filters
+constexpr int 	N_AVERAGE   = 10;    // Number of measurements to average when initializing filters
 
 // Serial communication:
-constexpr int 	BAUD_RATE   = 9600; // speed of serial communication. MUST match value in "main.py"
-constexpr int 	BUFFER_SIZE = 40;   // maximum allowed characters in serial input buffer
-constexpr int   INPUTS_MAX  = 6;    // <command> <channel> <param1> <param2> <param3> <param4> 
-
-#define  DELIM_CHAR ","	            // character used to split serial commands; Wrap with ""
+constexpr int 	BAUD_RATE   = 9600;  // speed of serial communication. MUST match value in "main.py"
+constexpr int 	BUFFER_SIZE = 40;    // maximum allowed characters in serial input buffer
+constexpr int   INPUTS_MAX  = 6;     // <command> <channel> <param1> <param2> <param3> <param4> 
+	// Strings
+#define DELIM_CHAR     ","	     // character used to split serial commands; Wrap with ""
+#define END_LINE_CHAR  '\n'      // character used to detect the end of a string captured via serial
 
 #endif
 

@@ -1,34 +1,6 @@
 #include "Commands.h"
 
-//--------------- 
-
-	// parse string of numbers: num1, num2, num3 ...
-uint8_t parseNumbers( char buffer[], float num_arr[] ) { 
-	// Split string
-	char* pointer;
-	pointer = strtok(buffer, DELIM_CHAR); 
-	
-	uint8_t index = 0;
-	while( (pointer != nullptr) && (index < INPUTS_MAX) ) {
-		// attempt conversion to double/float
-		char * end_ptr;
-		float number = strtod(pointer, &end_ptr); 
-		
-		if (*end_ptr == '\0') { 		// store if valid conversion
-			num_arr[index] = number;
-		} else {
-			index = 0; 					// halt if string is not just delimited numbers
-			break;
-		}
-		index += 1; // update index based on commas (fixed array position)
-		
-		// last call
-		pointer = strtok(nullptr, DELIM_CHAR);
-	}
-	return index;
-}
-
-//--------------- 
+//--------------- STRING SERIAL PRINTING ---------------
 
 template <typename number_t>
 void printArray( number_t arr[], const uint8_t END ) {
@@ -60,25 +32,46 @@ void printParameters( const __FlashStringHelper * label, float         data[],
 	printArray(data, NUM);
 }
 
-//--------------- 
+//--------------- STRING PARSING ---------------
 
-// NOTE: end character is provided by serial input | IMPORTANT
-
-uint8_t captureCharacters(char buffer[], const uint8_t N_CHAR) {
-	constexpr char END = '\n'; 			// end character
-	return Serial.readBytesUntil(END, buffer, N_CHAR); 
+// parse string of numbers: num1, num2, num3 ...
+uint8_t parseNumbers( char buffer[], float num_arr[] ) { 
+	// Split string
+	char* pointer;
+	pointer = strtok(buffer, DELIM_CHAR); 
+	
+	uint8_t index = 0;
+	while( (pointer != nullptr) && (index < INPUTS_MAX) ) {
+		// attempt conversion to double/float
+		char * end_ptr;
+		float number = strtod(pointer, &end_ptr); 
+		
+		if (*end_ptr == '\0') { 		// store if valid conversion
+			num_arr[index] = number;
+		} else {
+			index = 0; 					// halt if string is not just delimited numbers
+			break;
+		}
+		index += 1; // update index based on commas (fixed array position)
+		
+		// last call
+		pointer = strtok(nullptr, DELIM_CHAR);
+	}
+	return index;
 }
 
-//--------------- 
+uint8_t captureCharacters(char buffer[], const uint8_t N_CHAR) {
+	return Serial.readBytesUntil(END_LINE_CHAR, buffer, N_CHAR); 
+}
 
 void parseStringCommand( char buffer[],     float target[],  float measure[], 
                          bool enable_pid[], float timeout[], float timer[]  ) {
 	
 	// convert to number array
-	float input[INPUTS_MAX] = {-1}; // default value | outside of enum range
+	float input[INPUTS_MAX] = {-1}; // default negative value ensures no command is executed
 	uint8_t ninput = parseNumbers(buffer, input);
 	
-	if(ninput == 0) { // exit function if no useful data
+	if(ninput == 0) {               // exit function if no useful data
 		return;	
 	}
 	
@@ -238,7 +231,7 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 	}
 }
 
-//--------------- 
+//--------------- SERIAL INPUT ---------------
 
 void readSerialInputs( float target[], float measure[], bool enable_pid[] ) { 
 	// dissable controller after timeout
@@ -248,7 +241,7 @@ void readSerialInputs( float target[], float measure[], bool enable_pid[] ) {
 
 	for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 		if( enable_pid[ch] ) {
-			timer[ch] += PIDcontroller::getTimeStep(); 	// measure on-time
+			timer[ch] += PIDcontroller::getTimeStep(); 	       // measure on-time
 		}
 		if( timeout[ch] > 0 && timer[ch] > timeout[ch] ) {     // reset timers
 			enable_pid[ch] = false;
@@ -264,8 +257,6 @@ void readSerialInputs( float target[], float measure[], bool enable_pid[] ) {
 		parseStringCommand( buffer, target, measure, enable_pid, timeout, timer );
 	}
 }
-
-//--------------- 
 
 void readSensorTypes( char stype[] ) {
 	Serial.println( F("WAITING-TYPES") );
