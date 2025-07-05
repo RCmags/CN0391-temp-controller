@@ -1,4 +1,3 @@
-//#include "src/BasicCN0391/BasicCN0391.h"
 #include "Commands.h"
 
 //--------------- 
@@ -31,14 +30,6 @@ uint8_t parseNumbers( char buffer[], float num_arr[] ) {
 
 //--------------- 
 
-/*
-template <typename number_t>
-void setArray( number_t arr[], number_t value, ) {
-	for( )
-}*/
-
-//--------------- 
-
 template <typename number_t>
 void printArray( number_t arr[], const uint8_t END ) {
 	const uint8_t END_DELIM = END - 1;
@@ -51,11 +42,6 @@ void printArray( number_t arr[], const uint8_t END ) {
 	}
 	Serial.println();
 }
-
-/*
-void printLabelArray(const String label ) {
-	Serial.println( F(label) );
-}*/
 
 //--------------- 
 
@@ -119,6 +105,8 @@ uint8_t captureCharacters(char buffer[], const uint8_t N_CHAR) {
 	constexpr char END = '\n'; 			// end character
 	return Serial.readBytesUntil(END, buffer, N_CHAR); 
 }
+
+//--------------- 
 
 void parseStringCommand( char buffer[],     float target[],  float measure[], 
                          bool enable_pid[], float timeout[], float timer[]  ) 
