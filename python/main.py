@@ -15,30 +15,24 @@ def main(port, baud_rate, window, ylims, nsamples=10):
 	serialCom = ArduinoSerial.SerialCommunication(port, baud_rate)
 	time.sleep(2)
 	
-	
+	# keyboard inputs
 	def callback(string):
-		print("INPUT, " + string)
 		serialCom.write_serial_string(string)
-		
+
 		if string == "exit":
 			keythread.stop()
 			serialCom.close()
 	
-	
-	keythread = kb.KeyboardThread(callback)
+	keythread = kb.KeyboardThread( function=callback )
 	keythread.start() # must start thread
 	
-	
 	#---- loop ----
-	
-	while True:
-		try:
-			data, function, parseIsGood = serialCom.read_data() # blocking function. Waits for input to arrive 
-			print(function, data, parseIsGood)
-		except:
-			continue
+	while keythread.is_active():
+		data, function, parseIsGood, string = serialCom.read_data() # blocking function
 		
-		#print("END-LOOP")
+		if parseIsGood:
+			print(string)
+		
 
 #=========================================================================================
 

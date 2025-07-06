@@ -9,25 +9,25 @@ class SerialCommunication:
 	def __init__(self, port, baud_rate):
 		self.arduino = serial.Serial(port, baud_rate)
 	
-	# close serial connection
+	# helpers
 	def close(self):
 		self.arduino.close()
+	
+	def flush(self):
+		self.arduino.flushInput()
 	
 	# read and write serial strings
 	def read_serial_string(self): # add to separate thread
 		try: 
-			return self.arduino.readline().decode('utf-8') 
+			return self.arduino.readline().decode('utf-8') # blocking function -> add thread?
 		except:
 			return ""
 	
 	def write_serial_string(self, string):
 		data = string.encode('utf-8')
 		self.arduino.write(data)
-	
-	def flush(self):
-		self.arduino.flushInput()
-	
-	# parse string 
+		
+		# parse expected input string 
 	def read_data(self):
 		string = self.read_serial_string()
 		
@@ -59,5 +59,5 @@ class SerialCommunication:
 				output = np.append(output, number)
 				output = output.reshape(-1,1) 			# array flip to vertical
 		
-		return output, function, parseIsGood			# <string> <array> <bool>
+		return output, function, parseIsGood, string	# <array> <string> <bool> <string>
 

@@ -17,7 +17,7 @@ class KeyboardThread(threading.Thread):
 	def run(self):
 		while self.is_active():
 			self._input_data = input()
-			self._function( self._input_data )	#waits to get input + Return
+			self._function( self._input_data )	   #waits to get input + Return
 	
 	def input(self):
 		return self._input_data
