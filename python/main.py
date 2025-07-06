@@ -6,6 +6,7 @@ import time
 # local file
 import ArduinoSerial
 import KeyboardThread as kb
+import Commands
 
 #=========================================================================================
 
@@ -17,7 +18,7 @@ def main(port, baud_rate, window, ylims, nsamples=10):
 	
 	# keyboard inputs
 	def callback(string):
-		serialCom.write_serial_string(string)
+		serialCom.write_data(string)
 
 		if string == "exit":
 			keythread.stop()
@@ -26,12 +27,16 @@ def main(port, baud_rate, window, ylims, nsamples=10):
 	keythread = kb.KeyboardThread( function=callback )
 	keythread.start() # must start thread
 	
+	#--- setup ---
+	serialCom.write_data( Commands.set_sensor_type('N', 'N', 'N', 'N') )
+	
 	#---- loop ----
 	while keythread.is_active():
-		data, function, parseIsGood, string = serialCom.read_data() # blocking function
+		#data, function, parseIsGood, string = serialCom.read_data() # blocking function
+		data = serialCom.read_data()
 		
-		if parseIsGood:
-			print(string)
+		if data["flag"]:
+			print( data["str"] )
 		
 
 #=========================================================================================
@@ -63,3 +68,16 @@ def averageSignal(self, n_sum):
 	return summation / n_sum
 """
 
+"""
+Pending | Controller class:
+1. [x] embed Commands.py directly into TempController
+2. add parameter to select type out of output of read_data()
+3. [x] add default baud rate to TempController constructor
+4. add setup(types) function to TempController
+"""
+
+"""
+Pending | Main program:
+1. get real-time data plot to work
+2. load coefficients from json file. Load into controller.
+"""

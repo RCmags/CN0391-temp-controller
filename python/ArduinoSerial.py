@@ -16,24 +16,22 @@ class SerialCommunication:
 	def flush(self):
 		self.arduino.flushInput()
 	
-	# read and write serial strings
+	def _strip_string(self, string):
+		string = string.replace('\r', '')
+		string = string.replace('\n', '')
+		return string
+	
+	# read serial strings
 	def read_serial_string(self): # add to separate thread
 		try: 
-			return self.arduino.readline().decode('utf-8') # blocking function -> add thread?
+			data = self.arduino.readline().decode('utf-8') # blocking function -> add thread?
+			return self._strip_string(data)
 		except:
 			return ""
 	
-	def write_serial_string(self, string):
-		data = string.encode('utf-8')
-		self.arduino.write(data)
-		
-		# parse expected input string 
-	def read_data(self):
-		string = self.read_serial_string()
-		
+	def parse_serial_string(self, string):
 		# strip characters
-		string = string.replace('\r', '')
-		string = string.replace('\n', '')
+		#string = self._strip_string(string)
 		
 		# separate inputs
 		string_arr = string.split(",") 		# delimiter. Must match DELIM_CHAR from Arduino.
@@ -59,5 +57,15 @@ class SerialCommunication:
 				output = np.append(output, number)
 				output = output.reshape(-1,1) 			# array flip to vertical
 		
-		return output, function, parseIsGood, string	# <array> <string> <bool> <string>
+		return {'param': output, 'func': function, 'flag': parseIsGood, 'str': string} # provide reduced output
+	
+	def read_data(self):
+		string = self.read_serial_string()
+		return self.parse_serial_string(string)
+	
+	# write serial strings
+	def write_data(self, string):
+		data = string.encode('utf-8')
+		self.arduino.write(data)
+
 
