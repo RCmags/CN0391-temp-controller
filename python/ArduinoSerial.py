@@ -22,20 +22,24 @@ class SerialCommunication:
 		return string
 	
 	# read serial strings
-	def read_serial_string(self): # add to separate thread
+	def _read_serial_string(self): # add to separate thread
 		try: 
-			data = self.arduino.readline().decode('utf-8') # blocking function -> add thread?
-			return self._strip_string(data)
-			#return self.arduino.readline().decode('utf-8')
+			#data = self.arduino.readline().decode('utf-8') # blocking function -> add thread?
+			#return self._strip_string(data)
+			return self.arduino.readline().decode('utf-8')
 		except:
 			return ""
 	
-	def parse_serial_string(self, string):
+	
+	def _parse_serial_string(self, string, out_type=None):
 		# strip characters
-		#string = self._strip_string(string)
+		string = self._strip_string(string)
 		
 		# separate inputs
 		string_arr = string.split(",") 		# delimiter. Must match DELIM_CHAR from Arduino.
+		
+		if out_type == "str":
+			return string_arr
 		
 			# outputs
 		output = np.array( [] )
@@ -44,6 +48,10 @@ class SerialCommunication:
 		# convert parameters
 		function = string_arr[0]
 		
+		if out_type == "func":
+			return function
+		
+		# parse values to float
 		if len(string_arr) > 1:
 			parameters = string_arr[1:]
 			
@@ -58,11 +66,16 @@ class SerialCommunication:
 				output = np.append(output, number)
 				output = output.reshape(-1,1) 			# array flip to vertical
 		
-		return {'param': output, 'func': function, 'flag': parseIsGood, 'str': string} # provide reduced output
+		if out_type == "param" or out_type == None:
+			return output
+		
+		if out_type == "all":
+			return {'param': output, 'func': function, 'flag': parseIsGood, 'str': string} 
 	
-	def read_data(self):
-		string = self.read_serial_string()
-		return self.parse_serial_string(string)
+	
+	def read_data(self, out_type=None):
+		string = self._read_serial_string()
+		return self._parse_serial_string(string, out_type)
 	
 	# write serial strings
 	def write_data(self, string):

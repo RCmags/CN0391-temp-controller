@@ -86,7 +86,7 @@ def main(port, baud_rate, window, ylims, nsamples=10):
 	#---- loop ----
 	print("enter-loop")
 	while keythread.is_active():
-		data = controller.serial.read_data()
+		data = controller.serial.read_data("all") # capture all data
 		
 		if data["flag"]:
 			print( data["str"] )
@@ -124,7 +124,7 @@ def averageSignal(self, n_sum):
 """
 Pending | Controller class:
 1. [x] embed Commands.py directly into TempController
-2. [+-]add parameter to select type out of output of read_data()
+2. [x] add parameter to select type out of output of read_data()
 3. [x] add default baud rate to TempController constructor
 4. [x] add setup(types) function to TempController
 """

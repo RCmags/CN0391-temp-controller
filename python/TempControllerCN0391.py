@@ -23,7 +23,7 @@ class TempControllerCN0391:
 		
 		# check and send response
 		while True:
-			data = self.serial.read_data()["str"]
+			data = self.serial.read_data("func")
 			print(data)
 			
 			if data == 'WAITING-TYPES':
@@ -50,9 +50,9 @@ class TempControllerCN0391:
 
 	# ----- functions -----
 		# private
-	def _getter(self, cmd):
+	def _getter(self, cmd, out_type=None):
 		self.serial.write_data(cmd)
-		return self.serial.read_data()
+		return self.serial.read_data(out_type)
 	
 	def _setter(self, cmd):
 		cmd = f'{cmd}{_END_LINE_CHAR}' # add end-of-line to avoid blocking
@@ -62,15 +62,15 @@ class TempControllerCN0391:
 		# sensor
 	def get_filter(self):
 		cmd = "0"
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	def get_raw(self):
 		cmd = "1"
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	def get_target(self):
 		cmd = "2"
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	
 	# Note: cannot overload functions
@@ -88,7 +88,7 @@ class TempControllerCN0391:
 		# PID controller
 	def get_pid(self, ch):
 		cmd = "4," + str(ch)
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	def set_pid(self, ch, ki, kp, kd):
 		cmd = "5," + str(ch) + "," + str(ki) + "," + str(kd) + "," + str(kp)
@@ -97,7 +97,7 @@ class TempControllerCN0391:
 			# input limits
 	def get_in_limit(self, ch):
 		cmd = "6," + str(ch)
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	def set_in_limit(self, ch, imax, imin):
 		cmd = "7," + str(ch) + "," + str(imax) + "," + str(imin)
@@ -108,7 +108,7 @@ class TempControllerCN0391:
 			# alpha-beta
 	def get_ab_filter(self, ch):
 		cmd = "8," + str(ch)
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	def set_ab_filter(self, ch, alpha, beta):
 		cmd = "9," + str(ch) + "," + str(alpha) + "," + str(beta)
@@ -117,7 +117,7 @@ class TempControllerCN0391:
 			# kalman
 	def get_k_filter(self, ch):
 		cmd = "10," + str(ch)
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	def set_k_filter(self, ch, error, noise):
 		cmd = "11," + str(ch) + "," + str(error) + "," + str(noise)
@@ -130,10 +130,8 @@ class TempControllerCN0391:
 
 		# Sensors
 	def get_sensor_type(self): 				# NOTE: returns characters
-		self.serial.write_data("13")
-		string = self.serial.read_serial_string()
-		return string.split(",")[1:]		# -> Modify general function to spit out characters?
-	
+		cmd = "13"
+		return self._getter(cmd, "str")[1:]
 	
 		#Enable / Disable controllers
 	def set_enable(self, ch):
@@ -154,17 +152,17 @@ class TempControllerCN0391:
 	
 	def get_enable(self):
 		cmd = "16"
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	
 		# timers
 	def get_timer(self):
 		cmd = "17"
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	def get_timeout(self):
 		cmd = "18"
-		return self._getter(cmd)["param"]
+		return self._getter(cmd)
 	
 	def set_timeout(self, ch, time):
 		cmd = "19," + str(ch) + "," + str(time)
@@ -174,5 +172,5 @@ class TempControllerCN0391:
 		cmd = "19," + str(ch) + ",-1"
 		self._setter(cmd)
 
-# NOTE: functions may hang due to errors in the arduino code. Check errors on that end!
+# NOTE: functions can hang due to errors in the arduino code. Check errors on that end!
 
