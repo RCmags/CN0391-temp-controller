@@ -209,7 +209,7 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 	
 		if( ninput == 6 && function == SET_TARGET ) {
 			// target value for all channels
-			for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
+			for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 				target[ch] = parameter[ch];
 			}
 		}
@@ -217,12 +217,12 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 		else if( ninput == 2 ) {
 			// timer 
 			if( function == SET_ENABLE ) {
-				for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
+				for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 					enable_pid[ch] = true;
 				}
 			}
 			else if( function == SET_DISABLE ) {
-				for( uint8_t ch = 0; ch += 1; ch < NUM_PORT ) {
+				for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 					enable_pid[ch] = false;
 					timer[ch] = 0; 	// reset time
 				}

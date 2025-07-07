@@ -26,6 +26,7 @@ class SerialCommunication:
 		try: 
 			data = self.arduino.readline().decode('utf-8') # blocking function -> add thread?
 			return self._strip_string(data)
+			#return self.arduino.readline().decode('utf-8')
 		except:
 			return ""
 	
