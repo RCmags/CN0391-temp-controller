@@ -18,7 +18,7 @@ def main(port, baud_rate, window, ylims, nsamples=10):
 	
 	# keyboard inputs
 	def callback(string):
-		controller.serial.write_data(string)
+		controller.write_serial(string)
 		if string == "exit":
 			keythread.stop()
 			controller.close()
@@ -86,7 +86,7 @@ def main(port, baud_rate, window, ylims, nsamples=10):
 	#---- loop ----
 	print("enter-loop")
 	while keythread.is_active():
-		data = controller.serial.read_data("all") # capture all data
+		data = controller.read_data("all") # capture all data
 		
 		if data["flag"]:
 			print( data["str"] )

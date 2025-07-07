@@ -22,14 +22,11 @@ class SerialCommunication:
 		return string
 	
 	# read serial strings
-	def _read_serial_string(self): # add to separate thread
+	def read_serial(self): # add to separate thread
 		try: 
-			#data = self.arduino.readline().decode('utf-8') # blocking function -> add thread?
-			#return self._strip_string(data)
 			return self.arduino.readline().decode('utf-8')
 		except:
 			return ""
-	
 	
 	def _parse_serial_string(self, string, out_type=None):
 		# strip characters
@@ -74,11 +71,11 @@ class SerialCommunication:
 	
 	
 	def read_data(self, out_type=None):
-		string = self._read_serial_string()
+		string = self.read_serial()
 		return self._parse_serial_string(string, out_type)
 	
 	# write serial strings
-	def write_data(self, string):
+	def write_serial(self, string):
 		data = string.encode('utf-8')
 		self.arduino.write(data)
 

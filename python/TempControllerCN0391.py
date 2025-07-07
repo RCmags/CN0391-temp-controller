@@ -1,4 +1,4 @@
-# global libraries
+# Global libraries
 import time
 
 # local file
@@ -17,6 +17,9 @@ class TempControllerCN0391:
 	
 	# ---- setup -----
 	
+	# See: `arduino.ino`   -> setup()
+    #      `SerialCom.ino` -> readSensorTypes()
+	
 	def _setup(self, cmd):
 		# delay to initialize device
 		time.sleep(2) 
@@ -25,10 +28,9 @@ class TempControllerCN0391:
 		while True:
 			data = self.serial.read_data("func")
 			print(data)
-			
-			if data == 'WAITING-TYPES':
-				self._setter(cmd)		# send sensor types
-			elif data  == "CALIBRATED":
+			if data == 'WAITING-TYPES': # COMMAND MUST MATCH ARDUINO OUTPUT
+				self._setter(cmd)       # send sensor types
+			elif data  == "CALIBRATED": # COMMAND MUST MATCH ARDUINO OUTPUT
 				break
 	
 	
@@ -47,16 +49,26 @@ class TempControllerCN0391:
 	
 	def flush(self):
 		self.serial.flush()
+	
+		# direct way to send and receive serial commands
+	def write_serial(self, string):				# send raw data
+		self.serial.write_serial(string)
+	
+	def read_serial(self):						# get raw data
+		self.serial.read_serial()
+		
+	def read_data(self, out_type=None):			# get parsed data
+		return self.serial.read_data(out_type)
 
 	# ----- functions -----
 		# private
 	def _getter(self, cmd, out_type=None):
-		self.serial.write_data(cmd)
+		self.serial.write_serial(cmd)
 		return self.serial.read_data(out_type)
 	
 	def _setter(self, cmd):
 		cmd = f'{cmd}{_END_LINE_CHAR}' # add end-of-line to avoid blocking
-		self.serial.write_data(cmd)
+		self.serial.write_serial(cmd)
 	
 	
 		# sensor
@@ -169,8 +181,8 @@ class TempControllerCN0391:
 		self._setter(cmd)
 	
 	def set_timeout_inf(self, ch):
-		cmd = "19," + str(ch) + ",-1"
+		cmd = "19," + str(ch) + ",-1"	# send value for infinite time. See `Commands.h`
 		self._setter(cmd)
 
-# NOTE: functions can hang due to errors in the arduino code. Check errors on that end!
+# NOTE: functions can hang due to errors in the arduino code. Must 
 
