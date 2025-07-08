@@ -2,96 +2,102 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+#import json
 
 # local file
 import ArduinoSerial
 import KeyboardThread as kb
-import TempControllerCN0391 as tctl
-#import Commands
+import TempControllerCN0391 as cntl
 
 #=========================================================================================
 
+"""
+def load_coefficients(path, function):
+	with open(path) as file:
+		data = file.read()	
+	# load parameters
+	function( data["ch"], data["kp"], data["ki"], data["kd"] )
+"""
+
 def main(port, baud_rate, window, ylims, nsamples=10):
-	# ---- State ----
-	# Serial
-	controller = tctl.TempControllerCN0391(port, baud_rate)
+	# ---- Serial ----
+	controller = cntl.TempControllerCN0391(port, baud_rate)
 	
-	# keyboard inputs
+	controller.setup()
+		# port #1
+	controller.set_enable(ch=1) 
+	controller.set_pid(ch=1, kp=0.5, ki=0.01, kd=6)
+
+	# ---- keyboard inputs ----
 	def callback(string):
-		controller.write_serial(string)
 		if string == "exit":
 			keythread.stop()
 			controller.close()
-	
+		else:
+			controller.serial.write_serial(string) 
+			controller.serial.write_serial
+
 	keythread = kb.KeyboardThread( function=callback )
-	keythread.start() # must start thread
+	keythread.start() 		# must start thread
 	
-	#--- setup ---
-	print("pre-setup")
+	# ---- Plots ----
+	# Size of data
+	time_init = 0
+	time.sleep(2)			# wait for serial to reload
 	
-	controller.setup('T', 'J', 'K', 'N')
-	#controller.setup()
+	y_init = sum( [controller.get_filter() for i in range(nsamples)] ) / nsamples
+	n_data = np.size(y_init)
 	
-	print("past-setup")
+	# figure
+	x = np.array( [] )
+	y = np.array( [] )
 	
-	#--- test functions ---
-	
-	print( controller.get_filter() )
-	print( controller.get_raw() )
-	
-	controller.set_target(1, 45)
-	print( controller.get_target() )
-	
-	controller.set_target_all(10, 20, 30, 40)
-	print( controller.get_target() )
-	
-	controller.set_pid(0, 4, 2, 3)
-	print( controller.get_pid(0) )
-	
-	controller.set_in_limit(0, 50, 25)
-	print( controller.get_in_limit(0) )
-	
-	controller.set_ab_filter(0, 0.1, 0.2)
-	print( controller.get_ab_filter(0) )
-	
-	controller.set_k_filter(0, 0.3, 0.4)
-	print( controller.get_k_filter(0) )
-	
-	controller.set_k_filter_state(0, 100)
-	print( controller.get_filter() )
-	
-	print( controller.get_sensor_type() )
-	
-	controller.set_enable(0)
-	print( controller.get_enable() )
-	
-	controller.set_enable_all()
-	print( controller.get_enable() )
-	
-	controller.set_disable(0)
-	print( controller.get_enable() )
-	
-	controller.set_disable_all()
-	print( controller.get_enable() )
-	
-	print( controller.get_timer() )
-	
-	controller.set_timeout(0, 100)
-	print( controller.get_timeout() )
-	
-	controller.set_timeout_inf(0)
-	print( controller.get_timeout() )
-	
+	# plot graphs
+	figure, ax = plt.subplots()
+	lines = [ ax.plot(x, y, label=f'Port {i+1}')[0] for i in range(n_data) ] 
+
+	#---- configure plot ----
+	ax.legend()
+	ax.set_xlim( [0, window] )
+	ax.set_ylim( ylims )
+	ax.set_xlabel("Seconds")
+	ax.set_ylabel("Celcius")
+
+	plt.ion()
+	plt.show()
 	
 	#---- loop ----
-	print("enter-loop")
-	while keythread.is_active():
-		data = controller.read_data("all") # capture all data
+	while controller.is_active(): 	# check connection
+		try:
+			# update plot data
+			time_now = time.time()
+			
+			if np.size(x) == 0: 
+				time_init = time_now
+				y = y_init.copy()
+			else:
+				ynew = controller.get_filter()	# breaks when interrupt is called
+				y = np.hstack( (y, ynew) )
+			
+			time_zero = time_now - time_init
+			x = np.append(x, time_zero);
+			
+			if time_zero > window:
+				y = y[:, 1:] 				# delete first vertical slice
+				x = np.delete(x, 0)
+				ax.set_xlim( [ x[0], x[-1] ] )
+			
+			# update plots
+			for i in range(n_data):
+				lines[i].set_xdata(x)
+				lines[i].set_ydata( y[i] )
+			
+			figure.canvas.draw()
+			figure.canvas.flush_events()
 		
-		if data["flag"]:
-			print( data["str"] )
+		except:
+			continue
 	
-
 #=========================================================================================
 
 if __name__ == '__main__':
@@ -108,17 +114,54 @@ if __name__ == '__main__':
 # 		On Linux and macOS, use '/dev/ttyACM0' or similar
 #		On Windows, use 'COM3' or similar
 
-
 """
-# get average of multiple measurements
-def averageSignal(self, n_sum):
-	self.arduino.flushInput()
-	
-	summation = 0
-	for i in range(n_sum):
-		summation = summation + self.readData()
+#--- test functions ---
 
-	return summation / n_sum
+print( controller.get_filter() )
+print( controller.get_raw() )
+
+controller.set_target(1, 45)
+print( controller.get_target() )
+
+controller.set_target_all(10, 20, 30, 40)
+print( controller.get_target() )
+
+controller.set_pid(0, 4, 2, 3)
+print( controller.get_pid(0) )
+
+controller.set_in_limit(0, 50, 25)
+print( controller.get_in_limit(0) )
+
+controller.set_ab_filter(0, 0.1, 0.2)
+print( controller.get_ab_filter(0) )
+
+controller.set_k_filter(0, 0.3, 0.4)
+print( controller.get_k_filter(0) )
+
+controller.set_k_filter_state(0, 100)
+print( controller.get_filter() )
+
+print( controller.get_sensor_type() )
+
+controller.set_enable(0)
+print( controller.get_enable() )
+
+controller.set_enable_all()
+print( controller.get_enable() )
+
+controller.set_disable(0)
+print( controller.get_enable() )
+
+controller.set_disable_all()
+print( controller.get_enable() )
+
+print( controller.get_timer() )
+
+controller.set_timeout(0, 100)
+print( controller.get_timeout() )
+
+controller.set_timeout_inf(0)
+print( controller.get_timeout() )
 """
 
 """
@@ -131,6 +174,6 @@ Pending | Controller class:
 
 """
 Pending | Main program:
-1. get real-time data plot to work
+1. [x] get real-time data plot to work
 2. load coefficients from json file. Load into controller.
 """

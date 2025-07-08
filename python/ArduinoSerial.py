@@ -1,17 +1,27 @@
 import serial
 import numpy as np
+
 # NOTE: keyboard inputs are separate from receiving and sending serial commands.
+
+#--- CONSTANTS ---
+_END_CHAR = '\n' # see: arduino/Constants.h
+_TIMEOUT  = 2    # seconds
 
 #=========================================================================================
 
 class SerialCommunication:
 	
 	def __init__(self, port, baud_rate):
-		self.arduino = serial.Serial(port, baud_rate)
+		self.arduino = serial.Serial(port, baud_rate, timeout=_TIMEOUT) 
+		self._isActive = True
 	
 	# helpers
 	def close(self):
 		self.arduino.close()
+		self._isActive = False
+	
+	def is_active(self):
+		return self._isActive
 	
 	def flush(self):
 		self.arduino.flushInput()
@@ -24,7 +34,7 @@ class SerialCommunication:
 	# read serial strings
 	def read_serial(self): # add to separate thread
 		try: 
-			return self.arduino.readline().decode('utf-8')
+			return self.arduino.readline().decode('utf-8')	# blocks | must enable timeout
 		except:
 			return ""
 	
@@ -76,7 +86,8 @@ class SerialCommunication:
 	
 	# write serial strings
 	def write_serial(self, string):
-		data = string.encode('utf-8')
-		self.arduino.write(data)
+		string = f'{string}{_END_CHAR}' # add end-of-line to avoid blocking. ESSENTIAL
+		cmd = string.encode('utf-8')
+		self.arduino.write(cmd)
 
 

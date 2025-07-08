@@ -1,3 +1,10 @@
+"""
+TempControllerCN0391
+--------------------
+This module is a self-contained wrapper for serial commands needed to control all of the parameters
+of a temperature controller built around the CN0391 temperature shield. 
+"""
+
 # Global libraries
 import time
 
@@ -6,7 +13,6 @@ import ArduinoSerial
 
 #--- CONSTANTS ---
 _DEFAULT_BAUD = 9600
-_END_LINE_CHAR = '\n'
 
 #=========================================================================================
 
@@ -22,12 +28,15 @@ class TempControllerCN0391:
 	
 	def _setup(self, cmd):
 		# delay to initialize device
+		self.serial.flush()
 		time.sleep(2) 
 		
 		# check and send response
 		while True:
 			data = self.serial.read_data("func")
-			print(data)
+			if data != '':
+				print(data)
+			
 			if data == 'WAITING-TYPES': # COMMAND MUST MATCH ARDUINO OUTPUT
 				self._setter(cmd)       # send sensor types
 			elif data  == "CALIBRATED": # COMMAND MUST MATCH ARDUINO OUTPUT
@@ -50,26 +59,18 @@ class TempControllerCN0391:
 	def flush(self):
 		self.serial.flush()
 	
-		# direct way to send and receive serial commands
-	def write_serial(self, string):				# send raw data
-		self.serial.write_serial(string)
+	def is_active(self):
+		return self.serial.is_active()
 	
-	def read_serial(self):						# get raw data
-		self.serial.read_serial()
-		
-	def read_data(self, out_type=None):			# get parsed data
-		return self.serial.read_data(out_type)
-
+	
 	# ----- functions -----
 		# private
 	def _getter(self, cmd, out_type=None):
-		self.serial.write_serial(cmd)
+		self._setter(cmd)
 		return self.serial.read_data(out_type)
 	
 	def _setter(self, cmd):
-		cmd = f'{cmd}{_END_LINE_CHAR}' # add end-of-line to avoid blocking
 		self.serial.write_serial(cmd)
-	
 	
 		# sensor
 	def get_filter(self):
@@ -102,8 +103,8 @@ class TempControllerCN0391:
 		cmd = "4," + str(ch)
 		return self._getter(cmd)
 	
-	def set_pid(self, ch, ki, kp, kd):
-		cmd = "5," + str(ch) + "," + str(ki) + "," + str(kd) + "," + str(kp)
+	def set_pid(self, ch, kp, ki, kd):
+		cmd = "5," + str(ch) + "," + str(kp) + "," + str(ki) + "," + str(kd)
 		self._setter(cmd)
 	
 			# input limits
@@ -139,7 +140,7 @@ class TempControllerCN0391:
 		cmd = "12," + str(ch) + "," + str(value)
 		self._setter(cmd)
 	
-
+	
 		# Sensors
 	def get_sensor_type(self): 				# NOTE: returns characters
 		cmd = "13"
@@ -185,4 +186,19 @@ class TempControllerCN0391:
 		self._setter(cmd)
 
 # NOTE: functions can hang due to errors in the arduino code. Must 
+
+"""
+Must document following format:
+
+"example_func.py"
+Multiplies two numbers and returns the result.
+
+Args:
+    a (int): The first number.
+    b (int): The second number.
+
+Returns:
+    int: The product of a and b.
+
+"""
 
