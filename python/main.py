@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-#import json
+import json
 
 # local file
 import ArduinoSerial
@@ -11,23 +11,23 @@ import TempControllerCN0391 as cntl
 
 #=========================================================================================
 
-"""
-def load_coefficients(path, function):
+def load_coefficients(path, controller):
 	with open(path) as file:
-		data = file.read()	
+		data = json.load(file)
 	# load parameters
-	function( data["ch"], data["kp"], data["ki"], data["kd"] )
-"""
+	controller.set_pid( data["ch"], data["kp"], data["ki"], data["kd"] )
+
+#------------
 
 def main(port, baud_rate, window, ylims, nsamples=10):
 	# ---- Serial ----
 	controller = cntl.TempControllerCN0391(port, baud_rate)
 	
+		# setup
 	controller.setup()
-		# port #1
 	controller.set_enable(ch=1) 
-	controller.set_pid(ch=1, kp=0.5, ki=0.01, kd=6)
-
+	load_coefficients('coefficients.json', controller)
+	
 	# ---- keyboard inputs ----
 	def callback(string):
 		if string == "exit":
@@ -97,7 +97,7 @@ def main(port, baud_rate, window, ylims, nsamples=10):
 		
 		except:
 			continue
-	
+			
 #=========================================================================================
 
 if __name__ == '__main__':
@@ -115,65 +115,7 @@ if __name__ == '__main__':
 #		On Windows, use 'COM3' or similar
 
 """
-#--- test functions ---
-
-print( controller.get_filter() )
-print( controller.get_raw() )
-
-controller.set_target(1, 45)
-print( controller.get_target() )
-
-controller.set_target_all(10, 20, 30, 40)
-print( controller.get_target() )
-
-controller.set_pid(0, 4, 2, 3)
-print( controller.get_pid(0) )
-
-controller.set_in_limit(0, 50, 25)
-print( controller.get_in_limit(0) )
-
-controller.set_ab_filter(0, 0.1, 0.2)
-print( controller.get_ab_filter(0) )
-
-controller.set_k_filter(0, 0.3, 0.4)
-print( controller.get_k_filter(0) )
-
-controller.set_k_filter_state(0, 100)
-print( controller.get_filter() )
-
-print( controller.get_sensor_type() )
-
-controller.set_enable(0)
-print( controller.get_enable() )
-
-controller.set_enable_all()
-print( controller.get_enable() )
-
-controller.set_disable(0)
-print( controller.get_enable() )
-
-controller.set_disable_all()
-print( controller.get_enable() )
-
-print( controller.get_timer() )
-
-controller.set_timeout(0, 100)
-print( controller.get_timeout() )
-
-controller.set_timeout_inf(0)
-print( controller.get_timeout() )
-"""
-
-"""
 Pending | Controller class:
-1. [x] embed Commands.py directly into TempController
-2. [x] add parameter to select type out of output of read_data()
-3. [x] add default baud rate to TempController constructor
-4. [x] add setup(types) function to TempController
+5. add adjustable timeout for serial
 """
 
-"""
-Pending | Main program:
-1. [x] get real-time data plot to work
-2. load coefficients from json file. Load into controller.
-"""

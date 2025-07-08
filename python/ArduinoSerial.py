@@ -5,7 +5,7 @@ import numpy as np
 
 #--- CONSTANTS ---
 _END_CHAR = '\n' # see: arduino/Constants.h
-_TIMEOUT  = 2    # seconds
+_TIMEOUT  = 5    # seconds
 
 #=========================================================================================
 
@@ -38,25 +38,19 @@ class SerialCommunication:
 		except:
 			return ""
 	
-	def _parse_serial_string(self, string, out_type=None):
+	def _parse_serial_string(self, string):
 		# strip characters
 		string = self._strip_string(string)
 		
 		# separate inputs
 		string_arr = string.split(",") 		# delimiter. Must match DELIM_CHAR from Arduino.
-		
-		if out_type == "str":
-			return string_arr
-		
+
 			# outputs
 		output = np.array( [] )
 		parseIsGood = True
 		
 		# convert parameters
 		function = string_arr[0]
-		
-		if out_type == "func":
-			return function
 		
 		# parse values to float
 		if len(string_arr) > 1:
@@ -73,16 +67,12 @@ class SerialCommunication:
 				output = np.append(output, number)
 				output = output.reshape(-1,1) 			# array flip to vertical
 		
-		if out_type == "param" or out_type == None:
-			return output
-		
-		if out_type == "all":
-			return {'param': output, 'func': function, 'flag': parseIsGood, 'str': string} 
+		return {'param': output, 'func': function, 'flag': parseIsGood, \
+		          'str': string, 'str_arr': string_arr} 
 	
-	
-	def read_data(self, out_type=None):
+	def read_data(self):
 		string = self.read_serial()
-		return self._parse_serial_string(string, out_type)
+		return self._parse_serial_string(string)
 	
 	# write serial strings
 	def write_serial(self, string):
