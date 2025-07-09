@@ -5,37 +5,65 @@ import time
 import json
 
 # local file
-import ArduinoSerial
 import KeyboardThread as kb
 import TempControllerCN0391 as cntl
 
 #=========================================================================================
 
-def load_coefficients(path, controller):
+def load_parameters(path):
 	with open(path) as file:
 		data = json.load(file)
-	# load parameters
-	controller.set_pid( data["ch"], data["kp"], data["ki"], data["kd"] )
+	return data
 
-#------------
+def load_coefficients(data, controller):
+	# retrieve data
+	parameters  = data["parameters"]
+	
+	for channel, param in enumerate(parameters):
+		# load paramters
+		kp    = param["kp"]
+		ki    = param["ki"]
+		kd    = param["kd"]
+		alpha = param["alpha"]
+		beta  = param["beta"]
+		error = param["error"]
+		noise = param["noise"]
+		
+		# write state
+		controller.set_pid(channel, kp, ki, kd)
+		controller.set_ab_filter(channel, alpha, beta)
+		controller.set_k_filter(channel, error, noise)
+		"""
+		# check
+		print( "ch:"+ str(channel) )
+		print( controller.get_pid(channel) )
+		print( controller.get_ab_filter(channel) )
+		print( controller.get_k_filter(channel) )
+		"""
+	time.sleep(10)	# wait long enough for arduino to configure itself
 
-def main(port, baud_rate, window, ylims, nsamples=10):
+#-----------------------------------------------------------------------------------------
+
+def main(data, window, ylims, nsamples=10):
 	# ---- Serial ----
-	controller = cntl.TempControllerCN0391(port, baud_rate)
+	controller = cntl.TempControllerCN0391( data["serial_port"], data["baud_rate"] )
 	
 		# setup
-	controller.setup()
-	controller.set_enable(ch=1) 
-	load_coefficients('coefficients.json', controller)
+	controller.setup()		# Note: must come before setting coefficients 
+	load_coefficients(data, controller)
+		# other:
+	controller.set_enable(ch=1)
 	
 	# ---- keyboard inputs ----
 	def callback(string):
 		if string == "exit":
 			keythread.stop()
+			controller.set_disable_all()	# turn off heater
+			controller.flush()
 			controller.close()
 		else:
 			controller.serial.write_serial(string) 
-			controller.serial.write_serial
+			controller.flush()
 
 	keythread = kb.KeyboardThread( function=callback )
 	keythread.start() 		# must start thread
@@ -97,25 +125,23 @@ def main(port, baud_rate, window, ylims, nsamples=10):
 		
 		except:
 			continue
-			
+	
+	print("CLOSED-PYTHON")
+	
 #=========================================================================================
 
 if __name__ == '__main__':
-	# Inputs
-	PORT 		= "/dev/ttyACM0"	# String of the Serial port used by the arduino
-	BAUD_RATE 	= 9600				# Baud rate used by the arduino. Must match the value in "Constants.h"
-	X_WINDOW 	= 120				# Horizontal size of x-axis of the real time plot
-	Y_LIMS 		= [20, 80]			# Range of visible temperatures in the real time plot; [minimum, maximum]
-	
-	main( PORT, BAUD_RATE, X_WINDOW, Y_LIMS )
-	print("CLOSED-PYTHON")
-
-# Note: the Serial port changes with operating system:
-# 		On Linux and macOS, use '/dev/ttyACM0' or similar
-#		On Windows, use 'COM3' or similar
+	config = load_parameters('coefficients.json')
+	main(data=config, window=120, ylims=[20, 80])
 
 """
-Pending | Controller class:
-5. add adjustable timeout for serial
+Note: the Serial port changes with operating system:
+		On Linux and macOS, use '/dev/ttyACM0' or similar
+		On Windows, use 'COM3' or similar
+
+PORT        String of the Serial port used by the arduino
+BAUD_RATE   Baud rate used by the arduino. Must match the value in "Constants.h"
+X_WINDOW    Horizontal size of x-axis of the real time plot
+Y_LIMS      Range of visible temperatures in the real time plot; [minimum, maximum]
 """
 

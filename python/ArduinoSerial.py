@@ -5,7 +5,7 @@ import numpy as np
 
 #--- CONSTANTS ---
 _END_CHAR = '\n' # see: arduino/Constants.h
-_TIMEOUT  = 5    # seconds
+_TIMEOUT  = 5   # seconds
 
 #=========================================================================================
 
@@ -24,7 +24,8 @@ class SerialCommunication:
 		return self._isActive
 	
 	def flush(self):
-		self.arduino.flushInput()
+		self.arduino.reset_input_buffer()
+		self.arduino.reset_output_buffer()
 	
 	def _strip_string(self, string):
 		string = string.replace('\r', '')
@@ -32,12 +33,18 @@ class SerialCommunication:
 		return string
 	
 	# read serial strings
-	def read_serial(self): # add to separate thread
-		try: 
-			return self.arduino.readline().decode('utf-8')	# blocks | must enable timeout
-		except:
-			return ""
+	def read_serial(self): 	# add to separate thread
+		data = self.arduino.readline().decode('utf-8') # blocks | makes hard copy
+		return data
 	
+	# write serial strings
+	def write_serial(self, string):
+		string = f'{string}{_END_CHAR}'     # add end-of-line to avoid blocking. ESSENTIAL
+		cmd = string.encode('utf-8')
+		self.arduino.reset_output_buffer()  # ensure no unwanted data is sent
+		self.arduino.write(cmd)
+	
+	# parse command
 	def _parse_serial_string(self, string):
 		# strip characters
 		string = self._strip_string(string)
@@ -74,10 +81,6 @@ class SerialCommunication:
 		string = self.read_serial()
 		return self._parse_serial_string(string)
 	
-	# write serial strings
-	def write_serial(self, string):
-		string = f'{string}{_END_CHAR}' # add end-of-line to avoid blocking. ESSENTIAL
-		cmd = string.encode('utf-8')
-		self.arduino.write(cmd)
+
 
 

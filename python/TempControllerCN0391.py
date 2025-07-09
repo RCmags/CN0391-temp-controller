@@ -28,18 +28,20 @@ class TempControllerCN0391:
 	
 	def _setup(self, cmd):
 		# delay to initialize device
-		self.serial.flush()
+		self.flush()
 		time.sleep(2) 
 		
 		# check and send response
 		while True:
 			data = self.serial.read_data()['func']
+			
 			if data != '':
 				print(data)
 			
 			if data == 'WAITING-TYPES': # COMMAND MUST MATCH ARDUINO OUTPUT
 				self._setter(cmd)       # send sensor types
 			elif data  == "CALIBRATED": # COMMAND MUST MATCH ARDUINO OUTPUT
+				self.flush()
 				break
 	
 	def setup(self, type1=None, type2=None, type3=None, type4=None):
@@ -67,6 +69,7 @@ class TempControllerCN0391:
 		return self.serial.read_data()
 	
 	def _setter(self, cmd):
+		#self.flush()		# clear buffer
 		self.serial.write_serial(cmd)
 	
 		# sensor
