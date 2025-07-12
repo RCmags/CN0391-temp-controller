@@ -58,9 +58,7 @@ void DiscretePulseFrequency::update() {
 }
 
 void DiscretePulseFrequency::setDuty(float x) {
-	//noInterrupts();
 	_duty = x;		// modify variable
-	//Interrupts();
 }
 
 

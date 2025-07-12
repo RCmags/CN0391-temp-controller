@@ -1,10 +1,6 @@
 #ifndef Constants_h
 #define Constants_h
 
-// Test
-//#define PID_COEFF_2     0.5,  0.01,   8.0,  100.0,  0.0,   0.5,   0.05
-//#define FILT_COEFF_2	1.0,   0.2
-
 //======================================
 
 /* Default PID coefficients: */
@@ -46,8 +42,8 @@
 //======================================
 
 // Sensors:
-constexpr int 	N_AVERAGE   = 10;     // Number of measurements to average when initializing filters
-constexpr int   PULSE_WIDTH = 100000; // Smallest pulse width of frequency-pulse-modulation (us)
+constexpr int 	   N_AVERAGE   = 10;     // Number of measurements to average when initializing filters
+constexpr uint32_t PULSE_WIDTH = 100000; // Smallest pulse width of frequency-pulse-modulation (us)
 
 // Serial communication:
 constexpr int 	BAUD_RATE   = 9600;   // speed of serial communication. MUST match value in "main.py"
