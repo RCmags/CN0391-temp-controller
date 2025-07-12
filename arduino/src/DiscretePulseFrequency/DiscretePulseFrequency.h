@@ -5,8 +5,9 @@
 
 class DiscretePulseFrequency {
 	private:
-    	const uint8_t PIN;
-			uint16_t cycle_count = 0;
+		const uint8_t PIN;
+		uint16_t cycle_count = 0;
+		volatile float _duty = 0;	// can be modified by interrupt
 
 	public:
 		// define constructor / constants:
@@ -15,6 +16,8 @@ class DiscretePulseFrequency {
 		// setter and getter functions:
 		void setup();
 		void update(float);
+		void update();
+		void setDuty(float);
 };
 
 #endif

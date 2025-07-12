@@ -5,6 +5,8 @@ BAUD_RATE = 9600
 controller = cntl.TempControllerCN0391(PORT, BAUD_RATE)
 controller.setup()
 
+# Note: come up with more demanding test routine. Continuous getters or setters.
+# then check results. Loops of data retrieval, etc. 
 
 #--- test functions ---
 print( controller.get_filter() )

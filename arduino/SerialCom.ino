@@ -72,7 +72,7 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 	uint8_t ninput = parseNumbers(buffer, input);
 	
 	if(ninput == 0) {               // exit function if no useful data
-		return;	
+		return;
 	}
 	
 	// apply available functions

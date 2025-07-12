@@ -69,8 +69,8 @@ class TempControllerCN0391:
 		return self.serial.read_data()
 	
 	def _setter(self, cmd):
-		#self.flush()		# clear buffer
 		self.serial.write_serial(cmd)
+		time.sleep(0.5) 	# include small delay to ensure message is sent
 	
 		# sensor
 	def get_filter(self):

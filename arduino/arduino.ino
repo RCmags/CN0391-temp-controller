@@ -2,6 +2,7 @@
 #include "src/PIDController/PIDController.h"
 #include "src/DiscretePulseFrequency/DiscretePulseFrequency.h"
 #include "src/KalmanFilter1D/KalmanFilter1D.h"
+#include "src/TimerOne/TimerOne.h"  // External library: https://github.com/PaulStoffregen/TimerOne
 #include "Constants.h"
 
 /* NOTE: 
@@ -20,10 +21,15 @@ void setup() {
 	readSensorTypes(stype);
 	
 	// configure sensor and board
+		// controllers
 	float temp_av[NUM_PORT];
-	
 	setupControllers(temp_av, stype);
 	setupFilters(temp_av); 
+	
+		// interrupt
+	Timer1.initialize(PULSE_WIDTH);
+	Timer1.attachInterrupt(updateSignals);
+	
 	Serial.println( F("CALIBRATED") );
 }
 

@@ -1,11 +1,12 @@
 import serial
 import numpy as np
-
+import time
 # NOTE: keyboard inputs are separate from receiving and sending serial commands.
 
 #--- CONSTANTS ---
 _END_CHAR = '\n' # see: arduino/Constants.h
-_TIMEOUT  = 5   # seconds
+_TIMEOUT  = 5    # seconds | Maximum time to 
+_DELAY    = 0.25 # seconds | Delay that allows serial command to be sent
 
 #=========================================================================================
 
@@ -23,7 +24,7 @@ class SerialCommunication:
 	def is_active(self):
 		return self._isActive
 	
-	def flush(self):
+	def flush(self): # adjust?
 		self.arduino.reset_input_buffer()
 		self.arduino.reset_output_buffer()
 	
@@ -34,7 +35,7 @@ class SerialCommunication:
 	
 	# read serial strings
 	def read_serial(self): 	# add to separate thread
-		data = self.arduino.readline().decode('utf-8') # blocks | makes hard copy
+		data = self.arduino.readline().decode('utf-8') # blocks unless timeout is given
 		return data
 	
 	# write serial strings
@@ -43,6 +44,7 @@ class SerialCommunication:
 		cmd = string.encode('utf-8')
 		self.arduino.reset_output_buffer()  # ensure no unwanted data is sent
 		self.arduino.write(cmd)
+		time.sleep(_DELAY)					# wait for message to be received
 	
 	# parse command
 	def _parse_serial_string(self, string):

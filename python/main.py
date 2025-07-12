@@ -28,19 +28,23 @@ def load_coefficients(data, controller):
 		beta  = param["beta"]
 		error = param["error"]
 		noise = param["noise"]
+		imax  = param["imax"]
+		imin  = param["imin"]
 		
 		# write state
 		controller.set_pid(channel, kp, ki, kd)
 		controller.set_ab_filter(channel, alpha, beta)
 		controller.set_k_filter(channel, error, noise)
+		controller.set_in_limit(channel, imax, imin)
+		
 		"""
 		# check
 		print( "ch:"+ str(channel) )
 		print( controller.get_pid(channel) )
 		print( controller.get_ab_filter(channel) )
 		print( controller.get_k_filter(channel) )
+		print( controller.get_in_limit(channel) )
 		"""
-	time.sleep(10)	# wait long enough for arduino to configure itself
 
 #-----------------------------------------------------------------------------------------
 
@@ -50,9 +54,8 @@ def main(data, window, ylims, nsamples=10):
 	
 		# setup
 	controller.setup()		# Note: must come before setting coefficients 
-	load_coefficients(data, controller)
-		# other:
 	controller.set_enable(ch=1)
+	load_coefficients(data, controller)
 	
 	# ---- keyboard inputs ----
 	def callback(string):

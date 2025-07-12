@@ -51,3 +51,16 @@ void DiscretePulseFrequency::update(float duty) {
 	// bit-banging to generate pulse frequency signal
 	digitalWrite(PIN, pulse);
 }
+
+// use external setter to define output
+void DiscretePulseFrequency::update() {
+	update(_duty);
+}
+
+void DiscretePulseFrequency::setDuty(float x) {
+	//noInterrupts();
+	_duty = x;		// modify variable
+	//Interrupts();
+}
+
+

@@ -65,11 +65,21 @@ void updateControllers( float target[], float measure[], bool enable[] ) {
 	for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 		if( enable[ch] ) {
 			controller[ch].update( target[ch], measure[ch] );
-			signal[ch].update( controller[ch].output() ); 		// send Pulse Frequency modulated signal
+			float output = controller[ch].output();
+			signal[ch].setDuty(output);				// send Pulse Frequency modulated signal
+			signal[ch].update();
 		} else {
-			controller[ch].setState( measure[ch] );				// reset controller
-			signal[ch].update(0); 								// disable pins
+			controller[ch].setState( measure[ch] );	// reset controller
+			signal[ch].setDuty(0);					// disable pins
+			signal[ch].update();
 		}
+	}
+}
+
+	// interrupt function: update frequency
+void updateSignals(void) {
+	for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
+		//signal[ch].update();
 	}
 }
 

@@ -1,13 +1,17 @@
 #ifndef Constants_h
 #define Constants_h
 
+// Test
+//#define PID_COEFF_2     0.5,  0.01,   8.0,  100.0,  0.0,   0.5,   0.05
+//#define FILT_COEFF_2	1.0,   0.2
+
 //======================================
 
 /* Default PID coefficients: */
 //                             PID       |  INPUT (C) |  FILTER
 //                      kp,   ki,    kd  | imax, imin | alpha, beta
-#define PID_COEFF_1	    15,   0.25,  20,   100,  0.0,   0.5,   0.05
-#define PID_COEFF_2     0.75, 0.010, 8.0,  100,  0.0,   0.5,   0.05
+#define PID_COEFF_1	    0.0,  0.0,   0.0,  0.0,  0.0,   0.0,   0.0
+#define PID_COEFF_2     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,   0.0
 #define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,   0.0
 #define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,   0.0
 
@@ -22,8 +26,8 @@
 
 /* Default Output signal coefficients: */
 // 						error, noise
-#define FILT_COEFF_1	1.0,   0.1
-#define FILT_COEFF_2	1.1,   0.2
+#define FILT_COEFF_1	0.0,   0.0
+#define FILT_COEFF_2	0.0,   0.0
 #define FILT_COEFF_3	0.0,   0.0
 #define FILT_COEFF_4	0.0,   0.0
 
@@ -42,12 +46,13 @@
 //======================================
 
 // Sensors:
-constexpr int 	N_AVERAGE   = 10;    // Number of measurements to average when initializing filters
+constexpr int 	N_AVERAGE   = 10;     // Number of measurements to average when initializing filters
+constexpr int   PULSE_WIDTH = 100000; // Smallest pulse width of frequency-pulse-modulation (us)
 
 // Serial communication:
-constexpr int 	BAUD_RATE   = 9600;  // speed of serial communication. MUST match value in "main.py"
-constexpr int 	BUFFER_SIZE = 40;    // maximum allowed characters in serial input buffer
-constexpr int   INPUTS_MAX  = 6;     // <command> <channel> <param1> <param2> <param3> <param4> 
+constexpr int 	BAUD_RATE   = 9600;   // speed of serial communication. MUST match value in "main.py"
+constexpr int 	BUFFER_SIZE = 40;     // maximum allowed characters in serial input buffer
+constexpr int   INPUTS_MAX  = 6;      // <command> <channel> <param1> <param2> <param3> <param4> 
 	// Strings
 #define DELIM_CHAR     ","	     // character used to split serial commands; Wrap with ""
 #define END_LINE_CHAR  '\n'      // character used to detect the end of a string captured via serial

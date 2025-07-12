@@ -14,7 +14,9 @@
 			"alpha": 0.5,
 			"beta":  0.05,
 			"error": 1,
-			"noise": 0.1
+			"noise": 0.1,
+			"imax":  100,
+			"imin":  0
 		},
 		
 		{
@@ -24,7 +26,9 @@
 			"alpha": 0.5,
 			"beta":  0.05,
 			"error": 1,
-			"noise": 0.2
+			"noise": 0.2,
+			"imax":  100,
+			"imin":  0
 		}, 
 		
 		{
@@ -34,7 +38,9 @@
 			"alpha": 0,
 			"beta":  0,
 			"error": 0,
-			"noise": 0
+			"noise": 0,
+			"imax":  0,
+			"imin":  0
 		}, 
 		
 		{
@@ -44,7 +50,9 @@
 			"alpha": 0,
 			"beta":  0,
 			"error": 0,
-			"noise": 0
+			"noise": 0,
+			"imax":  0,
+			"imin":  0
 		} 
 	]
 }

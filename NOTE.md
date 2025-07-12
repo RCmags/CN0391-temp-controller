@@ -9,3 +9,5 @@ See:
 
 - [CN0391_example](https://github.com/analogdevicesinc/arduino/tree/master/Arduino%20Uno%20R3/examples/CN0391_example)
 
+# Other dependencies
+A stripped-down copy of Paul Stoffregen's [TimeOne library](https://github.com/PaulStoffregen/TimerOne) is included with the Arduino code. 
