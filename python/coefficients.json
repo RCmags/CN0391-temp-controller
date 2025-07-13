@@ -3,8 +3,6 @@
 	"serial_port":  "/dev/ttyACM0",
 	"serial_tout":  5,
 	"sensor_types": ["N", "N", "N", "N"],
-	"timeout":      [-1, -1, -1, -1],
-	"enable":       [0, 0, 0, 0],
 	
 	"parameters": [
 		{
@@ -16,7 +14,9 @@
 			"error": 1,
 			"noise": 0.1,
 			"imax":  100,
-			"imin":  0
+			"imin":  0,
+			"timeout": -1,
+			"enable":  0
 		},
 		
 		{
@@ -28,7 +28,9 @@
 			"error": 1,
 			"noise": 0.2,
 			"imax":  100,
-			"imin":  0
+			"imin":  0,
+			"timeout": -1,
+			"enable":  1
 		}, 
 		
 		{
@@ -40,7 +42,9 @@
 			"error": 0,
 			"noise": 0,
 			"imax":  0,
-			"imin":  0
+			"imin":  0,
+			"timeout": -1,
+			"enable":   0
 		}, 
 		
 		{
@@ -52,7 +56,9 @@
 			"error": 0,
 			"noise": 0,
 			"imax":  0,
-			"imin":  0
+			"imin":  0,
+			"timeout": -1,
+			"enable":   0
 		} 
 	]
 }

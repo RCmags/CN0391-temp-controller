@@ -33,10 +33,8 @@ class TempControllerCN0391:
 		
 		# check and send response
 		while True:
-			data = self.serial.read_data()['func']
-			
-			if data != '':
-				print(data)
+			data = self.serial.read_serial()
+			print(data)
 			
 			if data == 'WAITING-TYPES': # COMMAND MUST MATCH ARDUINO OUTPUT
 				self._setter(cmd)       # send sensor types
@@ -64,26 +62,26 @@ class TempControllerCN0391:
 	
 	# ----- functions -----
 		# private
-	def _getter(self, cmd):
-		self._setter(cmd)
-		return self.serial.read_data()
+	def _getter(self, cmd, out=None):
+		self.serial.write_serial(cmd)
+		return self.serial.read_data(out)
 	
 	def _setter(self, cmd):
 		self.serial.write_serial(cmd)
-		time.sleep(0.5) 	# include small delay to ensure message is sent
+		#return self.serial.read_serial()	# recognize message is received
 	
 		# sensor
 	def get_filter(self):
 		cmd = "0"
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	def get_raw(self):
 		cmd = "1"
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	def get_target(self):
 		cmd = "2"
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	# Note: cannot overload functions
 	
@@ -99,7 +97,7 @@ class TempControllerCN0391:
 		# PID controller
 	def get_pid(self, ch):
 		cmd = "4," + str(ch)
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	def set_pid(self, ch, kp, ki, kd):
 		cmd = "5," + str(ch) + "," + str(kp) + "," + str(ki) + "," + str(kd)
@@ -108,7 +106,7 @@ class TempControllerCN0391:
 			# input limits
 	def get_in_limit(self, ch):
 		cmd = "6," + str(ch)
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	def set_in_limit(self, ch, imax, imin):
 		cmd = "7," + str(ch) + "," + str(imax) + "," + str(imin)
@@ -118,7 +116,7 @@ class TempControllerCN0391:
 			# alpha-beta
 	def get_ab_filter(self, ch):
 		cmd = "8," + str(ch)
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	def set_ab_filter(self, ch, alpha, beta):
 		cmd = "9," + str(ch) + "," + str(alpha) + "," + str(beta)
@@ -127,7 +125,7 @@ class TempControllerCN0391:
 			# kalman
 	def get_k_filter(self, ch):
 		cmd = "10," + str(ch)
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	def set_k_filter(self, ch, error, noise):
 		cmd = "11," + str(ch) + "," + str(error) + "," + str(noise)
@@ -140,7 +138,7 @@ class TempControllerCN0391:
 		# Sensors
 	def get_sensor_type(self): 				# NOTE: returns characters
 		cmd = "13"
-		return self._getter(cmd)['str_arr'][1:]
+		return self._getter(cmd, out='str_arr')[1:]#['str_arr'][1:]
 	
 		#Enable / Disable controllers
 	def set_enable(self, ch):
@@ -161,16 +159,16 @@ class TempControllerCN0391:
 	
 	def get_enable(self):
 		cmd = "16"
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 		# timers
 	def get_timer(self):
 		cmd = "17"
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	def get_timeout(self):
 		cmd = "18"
-		return self._getter(cmd)['param']
+		return self._getter(cmd, out='param')#['param']
 	
 	def set_timeout(self, ch, time):
 		cmd = "19," + str(ch) + "," + str(time)

@@ -32,6 +32,10 @@ void printParameters( const __FlashStringHelper * label, float         data[],
 	printArray(data, NUM);
 }
 
+void printSet( const __FlashStringHelper * label ) {
+	Serial.println( label );	// reply when set command is received
+}
+
 //--------------- STRING PARSING ---------------
 
 // parse string of numbers: num1, num2, num3 ...
@@ -149,10 +153,12 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 			// timer
 			else if( function == SET_ENABLE ) {
 				enable_pid[channel] = true;
+				//printSet( F("SET_ENABLE") );
 			}
 			else if( function == SET_DISABLE ) {
 				enable_pid[channel] = false;
 				timer[channel] = 0; // reset time
+				//printSet( F("SET_DISABLE") );
 			}
 		}
 		
@@ -162,21 +168,25 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 			// target values (per channel)
 			if( function == SET_TARGET ) {
 				target[channel] = parameter[0];
+				//printSet( F("SET_TARGET") );
 			}
 			
 			// alpha-beta filter (1 input):
 			else if( function == SET_AB_FILTER ) {
 				controller[channel].setFilterGains( parameter[0] );
+				//printSet( F("SET_AB_FILTER") );
 			}
 			
 			// kalman filter (set state)
 			else if( function == SET_K_FILTER_STATE ) {
 				filter[channel].setState( parameter[0] );
+				//printSet( F("SET_K_FILTER_STATE") );
 			}
 			
 			// update timeout
 			else if(  function == SET_TIMEOUT && parameter[0] > 0 || parameter[0] == TIME_INF ) {
 				timeout[channel] = parameter[0];
+				//printSet( F("SET_TIMEOUT") );
 			}
 		}
  		
@@ -184,23 +194,27 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 			// pid inputs
 			if( function == SET_IN_LIMIT ) {
 				controller[channel].setInputLimits( parameter[0], parameter[1] );
+				//printSet( F("SET_IN_LIMIT") );
 			}
 			
 			// filters (2 parameters)
 				// alpha-beta 
 			else if( function == SET_AB_FILTER ) {
 				controller[channel].setFilterGains( parameter[0], parameter[1] );
+				//printSet( F("SET_AB_FILTER") );
 			}
 			
 				// kalman filter [gains]
 			else if( function == SET_K_FILTER ) {
 				filter[channel].setGains( parameter[0], parameter[1] );
+				//printSet( F("SET_K_FILTER") );
 			}
 		}
 		
 		// PID coefficients
 		else if( ninput == 5 && function == SET_PID ) {
 			controller[channel].setPIDGains( parameter[0], parameter[1], parameter[2] );
+			//printSet( F("SET_PID") );
 		}
 	}
 	
@@ -212,6 +226,7 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 			for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 				target[ch] = parameter[ch];
 			}
+			//printSet( F("SET_TARGET") );
 		}
 		
 		else if( ninput == 2 ) {
@@ -220,12 +235,14 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 				for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 					enable_pid[ch] = true;
 				}
+				//printSet( F("SET_ENABLE") );
 			}
 			else if( function == SET_DISABLE ) {
 				for( uint8_t ch = 0; ch < NUM_PORT; ch += 1 ) {
 					enable_pid[ch] = false;
 					timer[ch] = 0; 	// reset time
 				}
+				//printSet( F("SET_DISABLE") );
 			}
 		}
 	}
@@ -255,6 +272,7 @@ void readSerialInputs( float target[], float measure[], bool enable_pid[] ) {
 		char buffer[BUFFER_SIZE] = {0};
 		uint8_t num_read = captureCharacters(buffer, BUFFER_SIZE);
 		parseStringCommand( buffer, target, measure, enable_pid, timeout, timer );
+		Serial.flush(); // clear buffers
 	}
 }
 
@@ -299,6 +317,8 @@ void readSensorTypes( char stype[] ) {
 				Serial.println( F("DEFAULT-TYPES") );
 				break;
 			}
+			
+			Serial.flush(); // clear buffers
 		}
 	}
 }

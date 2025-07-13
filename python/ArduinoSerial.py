@@ -5,8 +5,8 @@ import time
 
 #--- CONSTANTS ---
 _END_CHAR = '\n' # see: arduino/Constants.h
-_TIMEOUT  = 5    # seconds | Maximum time to 
-_DELAY    = 0.25 # seconds | Delay that allows serial command to be sent
+_TIMEOUT  = 20   # seconds | Time that serial reads are allowed to block code execution. 
+_DELAY    = 1.0  # seconds | Required delay that allows serial command to be sent
 
 #=========================================================================================
 
@@ -24,18 +24,24 @@ class SerialCommunication:
 	def is_active(self):
 		return self._isActive
 	
-	def flush(self): # adjust?
+	def flush(self):
+		self.arduino.flush()
+	
+	def reset(self): 
+		#self.arduino.flush()
 		self.arduino.reset_input_buffer()
 		self.arduino.reset_output_buffer()
 	
 	def _strip_string(self, string):
 		string = string.replace('\r', '')
-		string = string.replace('\n', '')
+		string = string.replace(_END_CHAR, '')
 		return string
 	
 	# read serial strings
 	def read_serial(self): 	# add to separate thread
 		data = self.arduino.readline().decode('utf-8') # blocks unless timeout is given
+		self.arduino.flush()				# clear buffers
+		data = self._strip_string(data)
 		return data
 	
 	# write serial strings
@@ -44,15 +50,19 @@ class SerialCommunication:
 		cmd = string.encode('utf-8')
 		self.arduino.reset_output_buffer()  # ensure no unwanted data is sent
 		self.arduino.write(cmd)
+		self.arduino.flush()				# ensure data is written
 		time.sleep(_DELAY)					# wait for message to be received
 	
 	# parse command
-	def _parse_serial_string(self, string):
-		# strip characters
-		string = self._strip_string(string)
+	def _parse_serial_string(self, string, out):
+		if out == 'str':
+			return string
 		
 		# separate inputs
 		string_arr = string.split(",") 		# delimiter. Must match DELIM_CHAR from Arduino.
+
+		if out == 'str_arr':
+			return string_arr
 
 			# outputs
 		output = np.array( [] )
@@ -76,12 +86,16 @@ class SerialCommunication:
 				output = np.append(output, number)
 				output = output.reshape(-1,1) 			# array flip to vertical
 		
-		return {'param': output, 'func': function, 'flag': parseIsGood, \
+		if out == 'param':
+			return output
+		
+		# default to all output
+		return {'param': output, 'func':    function,   'flag': parseIsGood, \
 		          'str': string, 'str_arr': string_arr} 
 	
-	def read_data(self):
+	def read_data(self, out=None):
 		string = self.read_serial()
-		return self._parse_serial_string(string)
+		return self._parse_serial_string(string, out)
 	
 
 

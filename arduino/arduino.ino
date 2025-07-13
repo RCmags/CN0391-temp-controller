@@ -12,8 +12,9 @@
 void setup() {
 	// enable serial communication
 	Serial.begin(BAUD_RATE); 
-	delay(1000);
 	Serial.flush();
+	delay(1000);
+	
 	Serial.println( F("CONNECTED") );
 	
 	// sensors
@@ -31,6 +32,7 @@ void setup() {
 	Timer1.attachInterrupt(updateSignals);
 	
 	Serial.println( F("CALIBRATED") );
+	Serial.flush(); 
 }
 
 void loop() {

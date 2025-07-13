@@ -30,13 +30,21 @@ def load_coefficients(data, controller):
 		noise = param["noise"]
 		imax  = param["imax"]
 		imin  = param["imin"]
+		timeout = param["timeout"]
+		enable  = param["enable"]
 		
 		# write state
 		controller.set_pid(channel, kp, ki, kd)
 		controller.set_ab_filter(channel, alpha, beta)
 		controller.set_k_filter(channel, error, noise)
 		controller.set_in_limit(channel, imax, imin)
+		controller.set_timeout(channel, timeout)
 		
+		if enable:
+			controller.set_enable(channel)
+		
+		#controller.serial.reset()
+		#time.sleep(1)
 		"""
 		# check
 		print( "ch:"+ str(channel) )
@@ -53,16 +61,15 @@ def main(data, window, ylims, nsamples=10):
 	controller = cntl.TempControllerCN0391( data["serial_port"], data["baud_rate"] )
 	
 		# setup
-	controller.setup()		# Note: must come before setting coefficients 
-	controller.set_enable(ch=1)
+	controller.setup( *data["sensor_types"] )	# Note: must come before setting coefficients 
 	load_coefficients(data, controller)
 	
 	# ---- keyboard inputs ----
 	def callback(string):
 		if string == "exit":
 			keythread.stop()
+			controller.serial.reset()
 			controller.set_disable_all()	# turn off heater
-			controller.flush()
 			controller.close()
 		else:
 			controller.serial.write_serial(string) 
@@ -78,6 +85,7 @@ def main(data, window, ylims, nsamples=10):
 	
 	y_init = sum( [controller.get_filter() for i in range(nsamples)] ) / nsamples
 	n_data = np.size(y_init)
+	#print(y_init)
 	
 	# figure
 	x = np.array( [] )
