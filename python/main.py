@@ -42,17 +42,6 @@ def load_coefficients(data, controller):
 		
 		if enable:
 			controller.set_enable(channel)
-		
-		#controller.serial.reset()
-		#time.sleep(1)
-		"""
-		# check
-		print( "ch:"+ str(channel) )
-		print( controller.get_pid(channel) )
-		print( controller.get_ab_filter(channel) )
-		print( controller.get_k_filter(channel) )
-		print( controller.get_in_limit(channel) )
-		"""
 
 #-----------------------------------------------------------------------------------------
 
@@ -64,24 +53,9 @@ def main(data, window, ylims, nsamples=10):
 	controller.setup( *data["sensor_types"] )	# Note: must come before setting coefficients 
 	load_coefficients(data, controller)
 	
-	controller.set_target(1, 35)
-	
 	# ---- keyboard inputs ----
-	def callback(string):
-		#if string == "exit":
-			#keythread.stop()
-			#controller.serial.flush()		# ensure commands are written
-			#controller.set_disable_all()	# turn off heater
-			#controller.serial.reset()		# clear serial
-			#controller.serial.close()		# close connection (important!)
-		
-		#else:
-		controller.serial.flush()		# ensure commands are written
-		controller.serial.write_serial(string) 
-		print( controller.serial.read_serial() )
-
-	keythread = kb.KeyboardThread()# function=callback )
-	keythread.start() 		# must start thread
+	keythread = kb.KeyboardThread()
+	keythread.start() 	# must start thread
 	
 	# ---- Plots ----
 	# Size of data
@@ -90,7 +64,6 @@ def main(data, window, ylims, nsamples=10):
 	
 	y_init = sum( [controller.get_filter() for i in range(nsamples)] ) / nsamples
 	n_data = np.size(y_init)
-	#print(y_init)
 	
 	# figure
 	x = np.array( [] )
@@ -112,31 +85,17 @@ def main(data, window, ylims, nsamples=10):
 	
 	#---- loop ----
 	while controller.is_active(): 	# check connection
-		# ----- inputs -----
+		# ----- serial inputs -----
 		if keythread.flag():
 			key_input = keythread.input()
 			
 			if key_input == "exit":
 				break
 			elif key_input != "":
-				controller.serial.write_serial(key_input) 
-				print( controller.serial.read_serial() )
-		
-		"""
-		key_input = keythread.input()
-		
-		if key_input == "exit":
-			break
-		elif key_input != "":
-			controller.serial.write_serial(key_input) 
-			print( controller.serial.read_serial() ) # need to ping NAN
-		"""
-		#print( keythread.input() )
+				reply = controller.setter(key_input)
+				print(reply)
 		
 		#----- plot -----
-		
-		#try:
-			# update plot data
 		time_now = time.time()
 		
 		if np.size(x) == 0: 
@@ -161,16 +120,12 @@ def main(data, window, ylims, nsamples=10):
 		
 		figure.canvas.draw()
 		figure.canvas.flush_events()
-		
-		#except:
-			#continue
 	
 	print("CLOSED-PYTHON")
 	controller.set_disable_all()
 	controller.serial.reset()
 	controller.serial.close()
 	keythread.stop()
-	
 	
 #=========================================================================================
 

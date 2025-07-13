@@ -76,6 +76,7 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 	uint8_t ninput = parseNumbers(buffer, input);
 	
 	if(ninput == 0) {               // exit function if no useful data
+		printError();
 		return;
 	}
 	
@@ -298,11 +299,13 @@ void readSerialInputs( float target[], float measure[], bool enable_pid[] ) {
 	
 	// retrieve command
 	if( Serial.available() > 0 ) { 
-		// get data
+		// get and set data
 		char buffer[BUFFER_SIZE] = {0};
 		uint8_t num_read = captureCharacters(buffer, BUFFER_SIZE);
 		parseStringCommand( buffer, target, measure, enable_pid, timeout, timer );
-		Serial.flush(); // clear buffers
+		
+		// clear buffers after data is read/written
+		Serial.flush();	
 	}
 }
 
@@ -311,7 +314,7 @@ void readSensorTypes( char stype[] ) {
 	
 	// Wait until data is received
 	bool loop = true;	// enter loop by default
-	while( loop ) {
+	while(loop) {
 	
 		if( Serial.available() > 0 ) {
 			// capture character array: 	[TYPE, TYPE, TYPE, TYPE]
@@ -328,17 +331,18 @@ void readSensorTypes( char stype[] ) {
 					// indicate result
 					if( !isValid ) {
 						printError(); 
-						break;		// reset loop if invalid data
+						break;		// reset for loop if invalid data
 					} else {
 						stype[ch] = type;
 					}
  				}
  				// succesful data
  				if( ch == NUM_PORT ) {
- 					loop = false;	// exit loop
  					Serial.println( F("RECEIVED-TYPES") );
+ 					loop = false;	// exit loop
  				}
 			}
+			
 			// exit loop
 			else if( num_read == 1 && buffer[0] == '0' ) {	// use default value
 				Serial.println( F("DEFAULT-TYPES") );
@@ -350,7 +354,8 @@ void readSensorTypes( char stype[] ) {
 				printError();
 			}
 			
-			Serial.flush(); // clear buffers
+			// clear buffers after data is read/written
+			Serial.flush(); 
 		}
 	}
 }

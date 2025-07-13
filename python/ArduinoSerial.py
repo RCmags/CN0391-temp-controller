@@ -8,6 +8,8 @@ _END_CHAR = '\n' # see: arduino/Constants.h
 _TIMEOUT  = 20   # seconds | Time that serial reads are allowed to block code execution. 
 _DELAY    = 1.0  # seconds | Required delay that allows serial command to be sent
 
+# NOTE: Time delays need to be long enough to compensate for the slow execution of python
+
 #=========================================================================================
 
 class SerialCommunication:
