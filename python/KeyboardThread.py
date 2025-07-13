@@ -13,14 +13,27 @@ class KeyboardThread(threading.Thread):
 		self._function = function
 		self._stop = threading.Event()
 		self._input_data = ""					# initialize to empty string
+		self._flag = False
 	
 	def run(self):
 		while self.is_active():
+			# get input
 			self._input_data = input()
-			self._function( self._input_data )	   #waits to get input + Return
+			if self._input_data != "":
+				self._flag = True	# data is unread
+			# callback
+			if self._function != None:
+				self._function( self._input_data ) #waits to get input + Return
+	
+	def setCallback(self, function):
+		self._function = function
 	
 	def input(self):
+		self._flag = False			# data was read
 		return self._input_data
+	
+	def flag(self):
+		return self._flag
 	
 	def stop(self):
 		self._stop.set()

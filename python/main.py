@@ -64,18 +64,23 @@ def main(data, window, ylims, nsamples=10):
 	controller.setup( *data["sensor_types"] )	# Note: must come before setting coefficients 
 	load_coefficients(data, controller)
 	
+	controller.set_target(1, 35)
+	
 	# ---- keyboard inputs ----
 	def callback(string):
-		if string == "exit":
-			keythread.stop()
-			controller.serial.reset()
-			controller.set_disable_all()	# turn off heater
-			controller.close()
-		else:
-			controller.serial.write_serial(string) 
-			controller.flush()
+		#if string == "exit":
+			#keythread.stop()
+			#controller.serial.flush()		# ensure commands are written
+			#controller.set_disable_all()	# turn off heater
+			#controller.serial.reset()		# clear serial
+			#controller.serial.close()		# close connection (important!)
+		
+		#else:
+		controller.serial.flush()		# ensure commands are written
+		controller.serial.write_serial(string) 
+		print( controller.serial.read_serial() )
 
-	keythread = kb.KeyboardThread( function=callback )
+	keythread = kb.KeyboardThread()# function=callback )
 	keythread.start() 		# must start thread
 	
 	# ---- Plots ----
@@ -107,37 +112,65 @@ def main(data, window, ylims, nsamples=10):
 	
 	#---- loop ----
 	while controller.is_active(): 	# check connection
-		try:
-			# update plot data
-			time_now = time.time()
+		# ----- inputs -----
+		if keythread.flag():
+			key_input = keythread.input()
 			
-			if np.size(x) == 0: 
-				time_init = time_now
-				y = y_init.copy()
-			else:
-				ynew = controller.get_filter()	# breaks when interrupt is called
-				y = np.hstack( (y, ynew) )
-			
-			time_zero = time_now - time_init
-			x = np.append(x, time_zero);
-			
-			if time_zero > window:
-				y = y[:, 1:] 				# delete first vertical slice
-				x = np.delete(x, 0)
-				ax.set_xlim( [ x[0], x[-1] ] )
-			
-			# update plots
-			for i in range(n_data):
-				lines[i].set_xdata(x)
-				lines[i].set_ydata( y[i] )
-			
-			figure.canvas.draw()
-			figure.canvas.flush_events()
+			if key_input == "exit":
+				break
+			elif key_input != "":
+				controller.serial.write_serial(key_input) 
+				print( controller.serial.read_serial() )
 		
-		except:
-			continue
+		"""
+		key_input = keythread.input()
+		
+		if key_input == "exit":
+			break
+		elif key_input != "":
+			controller.serial.write_serial(key_input) 
+			print( controller.serial.read_serial() ) # need to ping NAN
+		"""
+		#print( keythread.input() )
+		
+		#----- plot -----
+		
+		#try:
+			# update plot data
+		time_now = time.time()
+		
+		if np.size(x) == 0: 
+			time_init = time_now
+			y = y_init.copy()
+		else:
+			ynew = controller.get_filter()	# breaks when interrupt is called
+			y = np.hstack( (y, ynew) )
+		
+		time_zero = time_now - time_init
+		x = np.append(x, time_zero);
+		
+		if time_zero > window:
+			y = y[:, 1:] 				# delete first vertical slice
+			x = np.delete(x, 0)
+			ax.set_xlim( [ x[0], x[-1] ] )
+		
+		# update plots
+		for i in range(n_data):
+			lines[i].set_xdata(x)
+			lines[i].set_ydata( y[i] )
+		
+		figure.canvas.draw()
+		figure.canvas.flush_events()
+		
+		#except:
+			#continue
 	
 	print("CLOSED-PYTHON")
+	controller.set_disable_all()
+	controller.serial.reset()
+	controller.serial.close()
+	keythread.stop()
+	
 	
 #=========================================================================================
 

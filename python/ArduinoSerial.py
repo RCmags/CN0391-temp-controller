@@ -28,7 +28,6 @@ class SerialCommunication:
 		self.arduino.flush()
 	
 	def reset(self): 
-		#self.arduino.flush()
 		self.arduino.reset_input_buffer()
 		self.arduino.reset_output_buffer()
 	

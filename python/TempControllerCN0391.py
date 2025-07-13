@@ -28,7 +28,8 @@ class TempControllerCN0391:
 	
 	def _setup(self, cmd):
 		# delay to initialize device
-		self.flush()
+		self.serial.flush()
+		self.serial.reset()
 		time.sleep(2) 
 		
 		# check and send response
@@ -50,7 +51,7 @@ class TempControllerCN0391:
 		else:
 			self._setup('0')	# Default types
 	
-	# ----- helpers -----
+	# ----- wrappers -----
 	def close(self):
 		self.serial.close()
 	
@@ -68,7 +69,7 @@ class TempControllerCN0391:
 	
 	def _setter(self, cmd):
 		self.serial.write_serial(cmd)
-		#return self.serial.read_serial()	# recognize message is received
+		return self.serial.read_serial()	# recognize message is received
 	
 		# sensor
 	def get_filter(self):
