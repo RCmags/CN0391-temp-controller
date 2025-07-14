@@ -7,6 +7,8 @@ of a temperature controller built around the CN0391 temperature shield.
 
 # Global libraries
 import time
+import json
+
 # local file
 import ArduinoSerial
 
@@ -17,11 +19,24 @@ _DEFAULT_BAUD = 9600
 
 class TempControllerCN0391:
 
-	def __init__(self, port, baud_rate=_DEFAULT_BAUD):
-		self.serial = ArduinoSerial.SerialCommunication(port, baud_rate)
+	def __init__(self, port=None, baud_rate=_DEFAULT_BAUD, path=None):
+		self.json_data = {}
+		
+		# json file is provided
+		if type(path) == str:
+			self.load_parameters(path)	# get json_data
+			self.serial = ArduinoSerial.SerialCommunication( self.json_data["serial_port"], \
+			                                                 self.json_data["baud_rate"] )
+			# load data
+			self.setup( *self.json_data["sensor_types"] )
+			self.load_coefficients()
+		
+		# no json file
+		elif path == None:
+			self.serial = ArduinoSerial.SerialCommunication(port, baud_rate)
+			self.json_data = {}
 	
-	# ---- setup -----
-	
+	# ================ setup ================
 	# See: `arduino.ino`   -> setup()
     #      `SerialCom.ino` -> readSensorTypes()
 	
@@ -50,7 +65,7 @@ class TempControllerCN0391:
 		else:
 			self._setup('0')	# Default types
 	
-	# ----- wrappers -----
+	# ================ wrappers ================
 	def close(self):
 		self.serial.close()
 	
@@ -60,7 +75,7 @@ class TempControllerCN0391:
 	def is_active(self):
 		return self.serial.is_active()
 	
-	# ----- functions -----
+	# ================ functions ================
 		# private
 	def getter(self, cmd, out=None):
 		self.serial.write_serial(cmd)
@@ -176,18 +191,54 @@ class TempControllerCN0391:
 		cmd = "19," + str(ch) + ",-1"	# send value for infinite time. See `Commands.h`
 		self.setter(cmd)
 
-"""
-Must document following format:
+	# ================ JSON coefficients ================
+	def load_parameters(self, path):
+		with open(path) as file:
+			self.json_data = json.load(file)
+	
+	def load_coefficients(self):
+		# retrieve data
+		parameters = self.json_data["parameters"]
+		
+		for channel, param in enumerate(parameters):
+			# load paramters
+			kp    = param["kp"]
+			ki    = param["ki"]
+			kd    = param["kd"]
+			alpha = param["alpha"]
+			beta  = param["beta"]
+			error = param["error"]
+			noise = param["noise"]
+			imax  = param["imax"]
+			imin  = param["imin"]
+			timeout = param["timeout"]
+			enable  = param["enable"]
+			
+			# write state
+			self.set_pid(channel, kp, ki, kd)
+			self.set_ab_filter(channel, alpha, beta)
+			self.set_k_filter(channel, error, noise)
+			self.set_in_limit(channel, imax, imin)
+			self.set_timeout(channel, timeout)
+			
+			if enable:
+				self.set_enable(channel)
+	
+	def get_json_data(self):
+		return self.json_data
 
-"example_func.py"
-Multiplies two numbers and returns the result.
 
-Args:
-    a (int): The first number.
-    b (int): The second number.
+# Must document following format:
+'''Writes a custom packet to the device.
 
-Returns:
-    int: The product of a and b.
+            Parameters
+            ----------
+            comm : str
+                Command to execute the write operation.
 
-"""
+            Returns
+            -------
+            Union[bool, str, None]
+                True if write was successful, contrarily false.  
+'''
 

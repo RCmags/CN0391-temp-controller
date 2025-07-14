@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-import json
 
 # local file
 import KeyboardThread as kb
@@ -10,48 +9,9 @@ import TempControllerCN0391 as cntl
 
 #=========================================================================================
 
-def load_parameters(path):
-	with open(path) as file:
-		data = json.load(file)
-	return data
-
-def load_coefficients(data, controller):
-	# retrieve data
-	parameters  = data["parameters"]
-	
-	for channel, param in enumerate(parameters):
-		# load paramters
-		kp    = param["kp"]
-		ki    = param["ki"]
-		kd    = param["kd"]
-		alpha = param["alpha"]
-		beta  = param["beta"]
-		error = param["error"]
-		noise = param["noise"]
-		imax  = param["imax"]
-		imin  = param["imin"]
-		timeout = param["timeout"]
-		enable  = param["enable"]
-		
-		# write state
-		controller.set_pid(channel, kp, ki, kd)
-		controller.set_ab_filter(channel, alpha, beta)
-		controller.set_k_filter(channel, error, noise)
-		controller.set_in_limit(channel, imax, imin)
-		controller.set_timeout(channel, timeout)
-		
-		if enable:
-			controller.set_enable(channel)
-
-#-----------------------------------------------------------------------------------------
-
-def main(data, window, ylims, nsamples=10):
+def main(window, ylims, path=None, nsamples=10):
 	# ---- Serial ----
-	controller = cntl.TempControllerCN0391( data["serial_port"], data["baud_rate"] )
-	
-		# setup
-	controller.setup( *data["sensor_types"] )	# Note: must come before setting coefficients 
-	load_coefficients(data, controller)
+	controller = cntl.TempControllerCN0391(path=path)
 	
 	# ---- keyboard inputs ----
 	keythread = kb.KeyboardThread()
@@ -121,6 +81,7 @@ def main(data, window, ylims, nsamples=10):
 		figure.canvas.draw()
 		figure.canvas.flush_events()
 	
+	#---- exit program ----
 	print("CLOSED-PYTHON")
 	controller.set_disable_all()
 	controller.serial.reset()
@@ -130,8 +91,7 @@ def main(data, window, ylims, nsamples=10):
 #=========================================================================================
 
 if __name__ == '__main__':
-	config = load_parameters('coefficients.json')
-	main(data=config, window=120, ylims=[20, 80])
+	main(path='coefficients.json', window=120, ylims=[20, 80])
 
 """
 Note: the Serial port changes with operating system:
