@@ -1,0 +1,708 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <meta charset="utf-8"/>
+  <title>
+   Made with Remarkable!
+  </title>
+  <link href="/usr/share/remarkable/media/highlightjs.default.min.css" rel="stylesheet"/>
+  <style type="text/css">
+   ::selection,a::selection{background:rgba(255,255,0,.3)}a,a::selection{color:#0645ad}hr,img{border:0}a,ins{text-decoration:none}::selection,ins,mark{color:#000}dfn,mark{font-style:italic}hr,ol,p,ul{margin:1em 0}table tr td,table tr th{border:1px solid #ccc;text-align:left;padding:6px 13px;margin:0}hr,pre code,table,table tr{padding:0}pre,pre code{white-space:pre}html{font-size:100%;overflow-y:scroll;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}body{color:#444;font-family:Georgia,Palatino,"Palatino Linotype",Times,"Times New Roman",serif;font-size:12px;line-height:1.5em;padding:1em;margin:auto;max-width:42em;background:#fefefe}a:visited{color:#0b0080}a:hover{color:#06e}a:active{color:#faa700}a:focus{outline:dotted thin}a:active,a:hover{outline:0}::-moz-selection{background:rgba(255,255,0,.3);color:#000}a::-moz-selection{background:rgba(255,255,0,.3);color:#0645ad}img{max-width:100%;-ms-interpolation-mode:bicubic;vertical-align:middle}h1,h2,h3,h4,h5,h6{font-weight:400;color:#111;line-height:1em}b,h4,h5,h6,mark,strong,table tr th{font-weight:700}h1{font-size:2.5em}h2{font-size:2em}h3{font-size:1.5em}h4{font-size:1.2em}h5{font-size:1em}h6{font-size:.9em}blockquote{color:#666;margin:0;padding-left:3em;border-left:.5em #EEE solid}hr{display:block;height:2px;border-top:1px solid #aaa;border-bottom:1px solid #eee}code,kbd,pre,samp{color:#000;font-family:monospace,monospace;font-size:.98em}pre{white-space:pre-wrap;word-wrap:break-word}ins{background:#ff9}mark{background:#ff0}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-.5em}sub{bottom:-.25em}ol,ul{padding:0 0 0 2em}li p:last-child{margin:0}dd{margin:0 0 0 2em}table{border-collapse:collapse;border-spacing:0}td{vertical-align:top}@media only screen and (min-width:480px){body{font-size:14px}}@media only screen and (min-width:768px){body{font-size:16px}}@media print{blockquote,img,pre,tr{page-break-inside:avoid}*{background:0 0!important;color:#000!important;filter:none!important;-ms-filter:none!important}body{font-size:12pt;max-width:100%}a,a:visited{text-decoration:underline}hr{height:1px;border:0;border-bottom:1px solid #000}a[href]:after{content:" (" attr(href) ")"}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}blockquote,pre{border:1px solid #999;padding-right:1em}img{max-width:100%!important}@page :left{margin:15mm 20mm 15mm 10mm}@page :right{margin:15mm 10mm 15mm 20mm}h2,h3,p{orphans:3;widows:3}h2,h3{page-break-after:avoid}}table tr{border-top:1px solid #ccc;background-color:#fff;margin:0}table tr:nth-child(2n){background-color:#aaa}table tr td :first-child,table tr th :first-child{margin-top:0}table tr td:last-child,table tr th :last-child{margin-bottom:0}code,tt{margin:0 2px;padding:0 5px;white-space:nowrap;border:1px solid #eaeaea;background-color:#f8f8f8;border-radius:3px}pre code{margin:0;border:none;background:0 0}.highlight pre,pre{background-color:#f8f8f8;border:1px solid #ccc;font-size:13px;line-height:19px;overflow:auto;padding:6px 10px;border-radius:3px}
+  </style>
+ </head>
+ <body>
+  <h1>
+   Arduino Temperature Controller
+  </h1>
+  <p>
+   This repository contains a large Arduino sketch and a set of Python scripts that create a temperature controller using the
+   <em>
+    CN-0391 sensor shield
+   </em>
+   . The sketch and the Python scripts are meant to run in unison. Once the sketch is uploaded to the Arduino, the Python script communicates with the Arduino via serial to plot the data measured by the Temperature shield. The sketch is designed such that it can control up to four different devices and accurately control their temperature. Each port in the temperature shield can be connected to a thermistor to complete the circuit for maintaining a target temperature.
+  </p>
+  <h2>
+   Dependencies
+  </h2>
+  <p>
+   The code requires the following external dependencies:
+  </p>
+  <p>
+   <strong>
+    Arduino:
+   </strong>
+   - None. All the code is included locally and simply needs to be uploaded to an
+   <em>
+    Arduino Uno
+   </em>
+   or a similar board with an
+   <em>
+    ATmega328P
+   </em>
+   microcontroller.
+  </p>
+  <p>
+   <strong>
+    Python:
+   </strong>
+   The scripts were written with
+   <em>
+    Python 3.11
+   </em>
+   and will work with
+   <em>
+    Python 3.12
+   </em>
+   . They require the following libraries that can be installed using
+   <strong>
+    pip
+   </strong>
+   :
+  </p>
+  <pre><code class="language-bash">pip install numpy==2.3.0
+pip install pyserial==3.5
+pip install matplotlib==3.10.3
+</code></pre>
+  <h2>
+   How to run the software
+  </h2>
+  <p>
+   To run the software follow these steps:
+  </p>
+  <ol>
+   <li>
+    Open the folder
+    <code>
+     arduino
+    </code>
+    and upload the sketch
+    <code>
+     arduino.ino
+    </code>
+    to the board using the Arduino IDE.
+   </li>
+   <li>
+    Open a terminal on Unix-based systems or use IDLE (included with Python) on Windows, and run the script
+    <code>
+     main.py
+    </code>
+    inside the python folder with the command:
+   </li>
+  </ol>
+  <pre><code class="language-bash">python3 main.py
+</code></pre>
+  <h2>
+   Serial Communication API
+  </h2>
+  <p>
+   Serial API to interface directly with the Arduino is based on a comma delimited string of the form:
+  </p>
+  <pre><code>&lt;function&gt;,&lt;channel&gt;,&lt;value1&gt;,&lt;value2&gt;, .... &lt;valueN&gt;
+</code></pre>
+  <p>
+   Each element in the string encodes the following information:
+  </p>
+  <ul>
+   <li>
+    <code>
+     &lt;command&gt;
+    </code>
+    is a positive integer that indicates a specific function.
+   </li>
+   <li>
+    <code>
+     &lt;channel&gt;
+    </code>
+    is a positive integer that indicates for which device the function will be applied to.
+   </li>
+   <li>
+    The remaining
+    <code>
+     &lt;values&gt;
+    </code>
+    are
+    <em>
+     decimal
+    </em>
+    numbers that act as the input parameters for aforementioned function.
+   </li>
+  </ul>
+  <p>
+   The values for each function and each channel are shown in the table below:
+  </p>
+  <table>
+   <thead>
+    <tr>
+     <th>
+      CHANNEL
+     </th>
+     <th>
+      FUNCTION
+     </th>
+     <th>
+      VALUE
+     </th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td>
+      CH0
+     </td>
+     <td>
+      GET_FILTER
+     </td>
+     <td>
+      0
+     </td>
+    </tr>
+    <tr>
+     <td>
+      CH1
+     </td>
+     <td>
+      GET_RAW
+     </td>
+     <td>
+      1
+     </td>
+    </tr>
+    <tr>
+     <td>
+      CH2
+     </td>
+     <td>
+      GET_TARGET
+     </td>
+     <td>
+      2
+     </td>
+    </tr>
+    <tr>
+     <td>
+      CH3
+     </td>
+     <td>
+      SET_TARGET
+     </td>
+     <td>
+      3
+     </td>
+    </tr>
+    <tr>
+     <td>
+      CH_ALL
+     </td>
+     <td>
+      GET_PID
+     </td>
+     <td>
+      4
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      SET_PID
+     </td>
+     <td>
+      5
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      GET_IN_LIMIT
+     </td>
+     <td>
+      6
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      SET_IN_LIMIT
+     </td>
+     <td>
+      7
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      GET_AB_FILTER
+     </td>
+     <td>
+      8
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      SET_AB_FILTER
+     </td>
+     <td>
+      9
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      GET_K_FILTER
+     </td>
+     <td>
+      10
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      SET_K_FILTER
+     </td>
+     <td>
+      11
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      SET_K_FILTER_STATE
+     </td>
+     <td>
+      12
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      GET_SENSOR_TYPE
+     </td>
+     <td>
+      13
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      SET_ENABLE
+     </td>
+     <td>
+      14
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      SET_DISABLE
+     </td>
+     <td>
+      15
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      GET_ENABLE
+     </td>
+     <td>
+      16
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      GET_TIMER
+     </td>
+     <td>
+      17
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      GET_TIMEOUT
+     </td>
+     <td>
+      18
+     </td>
+    </tr>
+    <tr>
+     <td>
+     </td>
+     <td>
+      SET_TIMEOUT
+     </td>
+     <td>
+      19
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p>
+   Based on this table its possible to combine the numbers to access a specific function. For example,
+to set the
+   <em>
+    target temperature
+   </em>
+   on
+   <em>
+    channel 1
+   </em>
+   to
+   <strong>
+    45 degrees
+   </strong>
+   celsius, the command is:
+  </p>
+  <pre><code>3,1,45
+</code></pre>
+  <p>
+   Likewise, to set the
+   <em>
+    PID coefficients
+   </em>
+   on
+   <em>
+    channel 3
+   </em>
+   , with
+   <strong>
+    kp=10
+   </strong>
+   ,
+   <strong>
+    ki=0.1
+   </strong>
+   , and
+   <strong>
+    kd=20
+   </strong>
+   , 
+one can provide:
+  </p>
+  <pre><code>5,1,10,0.1,20
+</code></pre>
+  <p>
+   Whenever a command has been successfully received, the Arduino will reply with the name of the 
+function that was executed as it appears in the table. In the above example, one shall receive:
+  </p>
+  <pre><code>SET_PID
+</code></pre>
+  <p>
+   Should the command not be on the list, or if it passed with an incorrect number of parameters,
+the Arduino will reply with the following error message:
+  </p>
+  <pre><code>BAD_COMMAND
+</code></pre>
+  <p>
+   The parameters for each function are available through the documentation for the Python API.
+  </p>
+  <h2>
+   Python API
+  </h2>
+  <p>
+   The serial commands can also be called via a Python API to execute the functions in an orderly and
+verbose manner. Each function show in the table has an equivalent function in the
+   <code>
+    TempControllerCN0391
+   </code>
+   class. For more details, see the documentation for the modules:
+  </p>
+  <ul>
+   <li>
+    <a href="python/html/TempControllerCN0391.html">
+     TempControllerCN0391
+    </a>
+    : Contains list of parameters for both Serial and Python API
+   </li>
+   <li>
+    <a href="python/html/ArduinoSerial.html">
+     ArduinoSerial
+    </a>
+   </li>
+   <li>
+    <a href="python/html/KeyboardThread.html">
+     KeyboardThread
+    </a>
+   </li>
+  </ul>
+  <h2>
+   Power Control
+  </h2>
+  <p>
+   The user can choose which digital output pins on the Arduino will be used to control a solid-state relay or a MOSFET. The Arduino activates the chosen electrical switch using a modified pulse-frequecy modulation (PFM) wave, controlling the average power dissipated by the heating element and precisely controlling the temperature.
+  </p>
+  <p>
+   This precise control is achieved through a PID controller that employs an alpha-beta filter to smooth raw temperature sensor measurements and obtain a low-noise approximation of the derivative of the temperature. Depending on the thermal inertia of the object being controlled, and the underlying system's time constant, the software can achieve precision of
+   <strong>
+    ~0.5 degrees Celsius
+   </strong>
+   near the target temperature. This will depend on the noise of the sensor attached to the temperature shield, as some sensors have more noise than others.
+  </p>
+  <p>
+   By using the serial interface to view raw temperature measurements and manually fine-tuning the PID and filter coefficients loaded onto the Arduino, it is possible to accurately control the temperature of an object with acceptable overshoot and response time.
+  </p>
+  <h2>
+   Configuring PID Controllers and Signal Filters
+  </h2>
+  <h3>
+   Controller:
+  </h3>
+  <p>
+   The temperature controllers utilize individual PID controllers to reach a target temperature. These controllers have three primary parameters that determine their behavior:
+  </p>
+  <ul>
+   <li>
+    <p>
+     <strong>
+      GAIN_P (Proportional Coefficient):
+     </strong>
+     The proportional coefficient influences the response of the controller based on the measured temperature. A larger value causes the controller to inject heat into the system when the temperature is lower than the setpoint. It plays a significant role in controlling the temperature.
+    </p>
+   </li>
+   <li>
+    <p>
+     <strong>
+      GAIN_I (Integral Coefficient):
+     </strong>
+     The integral coefficient determines the magnitude of the time integral of the error between the target temperature and the measured temperature. This term eliminates any long-term, steady-state error at the cost of greater overshoot and ringing in the step response.
+    </p>
+   </li>
+   <li>
+    <p>
+     <strong>
+      GAIN_D (Derivative Coefficient):
+     </strong>
+     The derivative coefficient determines the magnitude of the time derivative of the measured temperature. This term is highly sensitive to noise in the measured temperature and is influenced significantly by the coefficients chosen for the Alpha-Beta filter. When tuned correctly, it damps the response of the controller, slowing its reactions while removing ringing from the system. However, if too large, it can cause high-frequency oscillations or instability.
+    </p>
+   </li>
+   <li>
+    <p>
+     <strong>
+      MIN and MAX:
+     </strong>
+     These are the saturation limits of a PID controller that clamps its output to avoid integral windup, wherein the integral term cannot change if the output of the controller is saturated.
+    </p>
+   </li>
+  </ul>
+  <h3>
+   Filters:
+  </h3>
+  <p>
+   The Alpha/Beta coefficients smooth raw temperature readings and are part of the PID controller. This filter is essential in reducing noise in the derivative term.
+  </p>
+  <ul>
+   <li>
+    <p>
+     <strong>
+      ALPHA:
+     </strong>
+     This coefficient smooths any abrupt changes in the raw measurements. A value closer to zero causes a slower but smoother response. Constraints:
+     <code>
+      0 &lt;= ALPHA &lt;= 1
+     </code>
+    </p>
+   </li>
+   <li>
+    <p>
+     <strong>
+      BETA:
+     </strong>
+     This is the derivative filter. It increases the delay and overshoot in the signal response due to ALPHA, causing a phase delay between the real derivative and smoothed estimate. A value closer to zero causes a smoother and more delayed response. Constraints:
+     <code>
+      0 &lt;= BETA &lt;= 1
+     </code>
+    </p>
+   </li>
+  </ul>
+  <p>
+   The Kalman Filter modifies the Arduino's serial output and requires two coefficients:
+  </p>
+  <ul>
+   <li>
+    <p>
+     <strong>
+      ERROR:
+     </strong>
+     If the filter's value is within this error band relative to the unfiltered value, the filter will respond very slowly to any changes in the raw signal. This is equivalent to the standard deviation of the unfiltered signal. In other words, measurements within this error band are suppressed.
+    </p>
+   </li>
+   <li>
+    <p>
+     <strong>
+      NOISE:
+     </strong>
+     This coefficient determines the general response of the filter. A larger number makes the filter react more quickly to changes in the raw signal. A smaller value makes the filter react more slowly. A smaller value also smooths out any fluctuations in the raw signal at the cost of response time. Constraints:
+     <code>
+      0 &lt;= NOISE &lt;= 1
+     </code>
+    </p>
+   </li>
+  </ul>
+  <p>
+   <em>
+    Note:
+   </em>
+   Different sensor types can be connected to the CN-0391. These sensors are physically distinct, and they require unique calibration parameters to accurately measure temperature. The user must identify the type of sensor they are using, either through documentation or by comparing the output of CN-0391 with another temperature sensor that is accurately calibrated.
+  </p>
+  <h2>
+   Circuit
+  </h2>
+  <p>
+   The Arduino should be connected to a 5V power supply, and the heating elements should be connected to a solid-state relay (SSR) and an alternating current (AC) source. The SSR must be connected in series between the power source and a heating element. Note that the input side of the SSR module should be connected to the ground of the 5V supply and to one of the digital output pins on the Arduino. The input to the SSR can be attached to any digital pin that is enabled through software. See the attached schematic:
+  </p>
+  <p>
+   <img alt="image" src="diagram/CN0391-diagram.png"/>
+  </p>
+  <p>
+   Due to how Arduinos are electrically connected, they will reset whenever a new serial communication is established. There is no straightforward method to prevent this behavior with software. To avoid this issue, add a small capacitor between the reset pin and ground on the Arduino. Alternatively, cut the traces that connect to the reset pin to permanently disable it; however, this interferes with uploading new firmware to the Arduino. For an easier solution, physically connect a capacitor to the Arduino
+   <em>
+    after
+   </em>
+   firmware is loaded and remove the capacitor
+   <em>
+    before
+   </em>
+   reprogramming it.
+  </p>
+  <p>
+   <img alt="image" src="diagram/arduino-reset-block.png"/>
+  </p>
+  <p>
+   In practice, this behavior means that whenever a serial connection is lost and reestablished, the Arduino will reset and a new target temperature must be specified. This discontinuity could cause the device being controlled by the Arduino to experience a significant change in temperature.
+  </p>
+  <h2>
+   References
+  </h2>
+  <p>
+   <strong>
+    Filters
+   </strong>
+   :
+  </p>
+  <ul>
+   <li>
+    <p>
+     <a href="https://en.wikipedia.org/wiki/Alpha_beta_filter">
+      Alpha Beta Filter
+     </a>
+    </p>
+   </li>
+   <li>
+    <p>
+     <a href="https://github.com/denyssene/SimpleKalmanFilter">
+      Arduino - 1D Kalman Filter
+     </a>
+    </p>
+   </li>
+   <li>
+    <p>
+     <a href="https://cookierobotics.com/072/">
+      Kalman Filter for 1D Motion with Acceleration and Bias
+     </a>
+    </p>
+   </li>
+  </ul>
+  <p>
+   <strong>
+    Signals
+   </strong>
+   :
+  </p>
+  <ul>
+   <li>
+    <a href="https://en.wikipedia.org/wiki/Pulse-frequency_modulation">
+     Pulse Frequency Modulation (PFM)
+    </a>
+   </li>
+  </ul>
+  <p>
+   <strong>
+    Hardware
+   </strong>
+   :
+  </p>
+  <ul>
+   <li>
+    <p>
+     <a href="https://wiki.analog.com/resources/eval/user-guides/Arduino-uno/reference_designs/demo_cn0391">
+      Analog Systems CN-0391 Module
+     </a>
+    </p>
+   </li>
+   <li>
+    <p>
+     <a href="https://www.astroscopic.com/blog/disable-Arduinos-auto-reset-connection">
+      Disable Arduino Auto-Reset
+     </a>
+    </p>
+   </li>
+  </ul>
+  <p>
+   <strong>
+    Documentation
+   </strong>
+   :
+  </p>
+  <p>
+   The python modules were documented automatically by embedding the function descriptions into the 
+code using
+   <strong>
+    docstrings
+   </strong>
+   , and then scanning the
+   <code>
+    .py
+   </code>
+   files with
+   <strong>
+    pdoc3
+   </strong>
+   to generate fully
+styled
+   <strong>
+    HTML
+   </strong>
+   pages. 
+For more details, see:
+  </p>
+  <ul>
+   <li>
+    <a href="https://pdoc3.github.io/pdoc/">
+     pdoc3
+    </a>
+    - Light weight documentation generator for python
+   </li>
+   <li>
+    <a href="https://numpydoc.readthedocs.io/en/latest/format.html">
+     numpydoc
+    </a>
+    - Style guide for docstrings
+   </li>
+  </ul>
+  <script src="/usr/share/remarkable/media/highlight.min.js">
+  </script>
+  <script>
+   hljs.initHighlightingOnLoad();
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript">
+  </script>
+  <script type="text/javascript">
+   MathJax.Hub.Config({"showProcessingMessages" : false,"messageStyle" : "none","tex2jax": { inlineMath: [ [ "$", "$" ] ] }});
+  </script>
+ </body>
+</html>
