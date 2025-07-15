@@ -27,52 +27,81 @@ python3 main.py
 
 
 ## Serial Communication API 
-
-### -> THIS SECTION IS WRONG | COMMANDS NEED TO BE UPDATED. PYTHON SCRIPTS DO NOT WORK.
-
-**Inputs:** The Arduino can receive a string of numbers (separated by commas) that represent the target temperatures for the PID controllers associated with each port on the sensor module. For example:
+Serial API to interface directly with the Arduino is based on a comma delimited string of the form:
 
 ```
-30, 20, 63, 10
+<function>,<channel>,<value1>,<value2>, .... <valueN>
 ```
 
-In this case, the first number corresponds to port 1, the second to port 2, and so on. If an input at a specific position is not a number, it will be ignored. For example: 
+Each element in the string encodes the following information:
+
+- `<command>` is a positive integer that indicates a specific function. 
+- `<channel>` is a positive integer that indicates for which device the function will be applied to.
+- The remaining `<values>` are _decimal_ numbers that act as the input parameters for aforementioned function.  
+
+The values for each function and each channel are shown in the table below:
+
+| CHANNEL | FUNCTION           | VALUE |
+| ------- | ------------------ | ----- |
+| CH0     | GET_FILTER         | 0     |
+| CH1     | GET_RAW            | 1     |
+| CH2     | GET_TARGET         | 2     |
+| CH3     | SET_TARGET         | 3     |
+| CH_ALL  | GET_PID            | 4     |
+|         | SET_PID            | 5     |
+|         | GET_IN_LIMIT       | 6     |
+|         | SET_IN_LIMIT       | 7     |
+|         | GET_AB_FILTER      | 8     |
+|         | SET_AB_FILTER      | 9     |
+|         | GET_K_FILTER       | 10    |
+|         | SET_K_FILTER       | 11    |
+|         | SET_K_FILTER_STATE | 12    |
+|         | GET_SENSOR_TYPE    | 13    |
+|         | SET_ENABLE         | 14    |
+|         | SET_DISABLE        | 15    |
+|         | GET_ENABLE         | 16    |
+|         | GET_TIMER          | 17    |
+|         | GET_TIMEOUT        | 18    |
+|         | SET_TIMEOUT        | 19    |
+
+Based on this table its possible to combine the numbers to access a specific function. For example,
+to set the _target temperature_ on _channel 1_ to **45 degrees** celsius, the command is:
 
 ```
-na, 20, 30, na
+3,1,45
 ```
 
-This string will only update the PID controllers for ports 2 and 3. Not all ports need to have their target temperature set at the same time. For example:
+Likewise, to set the _PID coefficients_ on _channel 3_, with **kp=10**, **ki=0.1**, and **kd=20**, 
+one can provide:
 
 ```
-20, 30
+5,1,10,0.1,20
 ```
 
-This command will only update ports 1 and 2.
-
-**Outputs:** The output of the Arduino can be changed using three commands:
-
-- `target` returns the current target temperatures for the PID controllers.
-- `raw` returns unmodified measurements from the enabled sensor ports.
-- `filter` outputs filtered measurements that go through a one-dimensional Kalman filter, reducing noise at the cost of a small delay.
-
-By default, the Arduino will reply with **filtered** measurements. The serial output of the Arduino will be a string containing a series of numbers separated by commas, where each number represents the measurement for a specific port on the sensor shield. For example:
+Whenever a command has been successfully received, the Arduino will reply with the name of the 
+function that was executed as it appears in the table. In the above example, one shall receive:
 
 ```
-20.53, 31.36, 58.63, 100.34
+SET_PID
 ```
 
-In this case, the first number corresponds to port 1, the third number corresponds to port 3, and so on.
+Should the command not be on the list, or if it passed with an incorrect number of parameters,
+the Arduino will reply with the following error message:
 
 ```
-port1 = 20.53
-port2 = 31.36
-port3 = 58.63
-port4 = 100.34
+BAD_COMMAND
 ```
 
-The meaning of these numbers depends on the previous command issued to the Arduino.
+The parameters for each function are available through the documentation for the Python API. 
 
+## Python API
+The serial commands can also be called via a Python API to execute the functions in an orderly and
+verbose manner. Each function show in the table has an equivalent function in the `TempControllerCN0391` 
+class. For more details, see the documentation for the modules:
+
+- [TempControllerCN0391](python/html/TempControllerCN0391.html) : Contains list of parameters for both Serial and Python API
+- [ArduinoSerial](python/html/ArduinoSerial.html)
+- [KeyboardThread](python/html/KeyboardThread.html)
 
 ## Power Control
 The user can choose which digital output pins on the Arduino will be used to control a solid-state relay or a MOSFET. The Arduino activates the chosen electrical switch using a modified pulse-frequecy modulation (PFM) wave, controlling the average power dissipated by the heating element and precisely controlling the temperature.
@@ -138,7 +167,17 @@ In practice, this behavior means that whenever a serial connection is lost and r
 
 **Hardware**:   
 
-- [Analog Systems CN-0391 Module](https://wiki.analog.com/resources/eval/user-guides/arduino-uno/reference_designs/demo_cn0391)
+- [Analog Systems CN-0391 Module](https://wiki.analog.com/resources/eval/user-guides/Arduino-uno/reference_designs/demo_cn0391)
 
-- [Disable Arduino Auto-Reset](https://www.astroscopic.com/blog/disable-arduinos-auto-reset-connection)
+- [Disable Arduino Auto-Reset](https://www.astroscopic.com/blog/disable-Arduinos-auto-reset-connection)
+
+**Documentation**:   
+
+The python modules were documented automatically by embedding the function descriptions into the 
+code using **docstrings**, and then scanning the `.py` files with **pdoc3** to generate fully
+styled **HTML** pages. 
+For more details, see:
+
+- [pdoc3](https://pdoc3.github.io/pdoc/) - Light weight documentation generator for python
+- [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) - Style guide for docstrings
 
