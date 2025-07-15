@@ -14,8 +14,7 @@ def main(window, ylims, path=None, nsamples=10):
 	controller = cntl.TempControllerCN0391(path=path)
 	
 	# ---- keyboard inputs ----
-	keythread = kb.KeyboardThread()
-	keythread.start() 	# must start thread
+	keythread = kb.KeyboardThread() # starts thread automatically
 	
 	# ---- Plots ----
 	# Size of data
@@ -52,7 +51,7 @@ def main(window, ylims, path=None, nsamples=10):
 			if key_input == "exit":
 				break
 			elif key_input != "":
-				reply = controller.setter(key_input)
+				reply = controller.send_serial_command(key_input)
 				print(reply)
 		
 		#----- plot -----
@@ -104,3 +103,8 @@ X_WINDOW    Horizontal size of x-axis of the real time plot
 Y_LIMS      Range of visible temperatures in the real time plot; [minimum, maximum]
 """
 
+# Q: how to store data into file? <--- part of GUI backend? 
+# time, filter_temp, target
+# num , num        , num
+# 
+# note, data could be collected when serial calls are performed. 
