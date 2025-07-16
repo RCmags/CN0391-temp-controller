@@ -51,7 +51,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
 <dl>
 <dt id="TempControllerCN0391.TempControllerCN0391"><code class="flex name class">
 <span>class <span class="ident">TempControllerCN0391</span></span>
-<span>(</span><span>port=None, baud_rate=9600, path=None)</span>
+<span>(</span><span>port: str = None, baud_rate: str = 9600, path: str = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -60,17 +60,19 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
 </summary>
 <pre><code class="python">class TempControllerCN0391:
 
-        def __init__(self, port=None, baud_rate=_DEFAULT_BAUD, path=None):
+        def __init__(self, port:str = None, baud_rate:str = _DEFAULT_BAUD, path:str = None):
                 &#39;&#39;&#39;Initialize the temperature controller.
+                
+                __Note:__ The Serial port changes with operating system:   
+                
+                - On Linux and macOS, use &#39;/dev/ttyACM0&#39; or similar
+                - On Windows, use &#39;COM3&#39; or similar
                 
                 Parameters
                 ----------
                 port: str
                         Serial port used by the Arduino to communicate with the computer. \
-                        Required if `path` is not provided. The Serial port changes with operating system:
-                
-                - On Linux and macOS, use &#39;/dev/ttyACM0&#39; or similar
-                - On Windows, use &#39;COM3&#39; or similar
+                        Required if `path` is not provided. 
                 
                 baud_rate: int
                         Baud rate at which the Arduino is configured. Optional parameter that defaults to \
@@ -105,7 +107,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         # See: `arduino.ino`   -&gt; setup()
     #      `SerialCom.ino` -&gt; readSensorTypes()
         
-        def _setup(self, cmd):
+        def _setup(self, cmd:str) -&gt; None:
                 &#39;&#39;&#39;Private implementation of setup(). Captures and sends serial commands \
                 to configure sensor types. Calibration is performed automatically by the Arduino. 
                 
@@ -131,23 +133,23 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                                 break
         
         
-        def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None):
+        def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None) -&gt; None:
                 &#39;&#39;&#39;Assigns the sensor types for each port and performs an initial calibration
                 of the temperature sensors. Defaults to pre-programmed sensor types if no
                 parameters are provided. 
                 
                 Parameters
                 ----------
-                type0 : char
-                        Sensor type (N, K, J, etc) of channel 0
+                type0 : str
+                        Sensor type (N, K, J, etc) of channel 0. Must be a character.
                 
-                type1 : char
+                type1 : str
                         Same as before but for channel 1
                 
-                type2 : char
+                type2 : str
                         Same as before but for channel 2
                 
-                type3 : char
+                type3 : str
                         Same as before but for channel 3
                 &#39;&#39;&#39;
                 # Custom types
@@ -163,21 +165,21 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         
         # ================ wrappers ================
-        def close(self):
+        def close(self) -&gt; None:
                 &#39;&#39;&#39; Close the serial connection. Must call at the end of program execution to ensure \
                     the connection does not remain active.
                 &#39;&#39;&#39;
                 self.serial.close()
         
         
-        def flush(self):
+        def flush(self) -&gt; None:
                 &#39;&#39;&#39; Block program execution and wait for serial commands to be written
                 &#39;&#39;&#39;
                 self.serial.flush()
         
         
         
-        def is_active(self):
+        def is_active(self) -&gt; bool:
                 &#39;&#39;&#39;Returns whether the serial connection is active (True) or disabled (False)
                 
                 Returns
@@ -186,7 +188,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 return self.serial.is_active()
         
-        def send_serial_command(self, cmd):
+        def send_serial_command(self, cmd:str) -&gt; str:
                 &#39;&#39;&#39; Send an arbitrary serial command and receive a reply from the Arduino
                 
                 Parameters
@@ -204,7 +206,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         # ================ functions ================
                 # private
-        def _getter(self, cmd, out=None):
+        def _getter(self, cmd:str, out:str = None) -&gt; str | list | dict:
                 &#39;&#39;&#39; Private function to send a specific serial command and receive a parsed reply
                 
                 Parameters
@@ -218,7 +220,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                None : Dict
+                None : dict
                         If no parameter is specified, the function returns a dictionary with \
                         all data from a parsed serial command
                 
@@ -235,7 +237,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self.serial.read_data(out)
         
         
-        def _setter(self, cmd):
+        def _setter(self, cmd:str) -&gt; str:
                 &#39;&#39;&#39; Private function to send an arbitrary serial command a receive the raw reply. \
                     See: send_serial_command()
                 &#39;&#39;&#39;
@@ -244,7 +246,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         
                 # sensor
-        def get_filter(self):
+        def get_filter(self) -&gt; list:
                 &#39;&#39;&#39;Gets the temperature measurements that have been smoothed by a kalman filter
                 
                 Returns
@@ -256,7 +258,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self._getter(cmd, out=&#39;param&#39;)
         
         
-        def get_raw(self):
+        def get_raw(self) -&gt; list:
                 &#39;&#39;&#39;Gets the raw temperature measurements of the sensor(s)
                 
                 Returns
@@ -268,7 +270,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self._getter(cmd, out=&#39;param&#39;)
         
         
-        def get_target(self):
+        def get_target(self) -&gt; list:
                 &#39;&#39;&#39;Gets the target temperatures of the PID controllers
                 
                 Returns
@@ -281,7 +283,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         
                 # target
-        def set_target(self, ch, target): 
+        def set_target(self, ch:int, target:float) -&gt; None: 
                 &#39;&#39;&#39;Sets the target temperature of the PID controller of a specific port
                 
                 Parameters
@@ -295,7 +297,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 cmd = &#34;3,&#34; + str(ch) + &#34;,&#34; + str(target) 
                 self._setter(cmd) 
         
-        def set_target_all(self, targ0, targ1, targ2, targ3): 
+        def set_target_all(self, targ0:float, targ1:float, targ2:float, targ3:float) -&gt; None: 
                 &#39;&#39;&#39;Sets the target temperature for all PID controllers simultaneously
                 
                 Parameters
@@ -317,7 +319,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         
                 # PID controller
-        def get_pid(self, ch):
+        def get_pid(self, ch:int) -&gt; list:
                 &#39;&#39;&#39;Gets the PID coefficients of a specific channel
                 Parameters
                 ----------
@@ -333,7 +335,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self._getter(cmd, out=&#39;param&#39;)
         
         
-        def set_pid(self, ch, kp, ki, kd):
+        def set_pid(self, ch:int, kp:float, ki:float, kd:float) -&gt; None:
                 &#39;&#39;&#39;Sets the PID coefficients of a specific channel
                 
                 Parameters
@@ -356,7 +358,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         
                         # input limits
-        def get_in_limit(self, ch):
+        def get_in_limit(self, ch:int) -&gt; list:
                 &#34;&#34;&#34;Gets the target temperature limits (in Celsius) for the PID controller 
                 of a specific channel
                 
@@ -374,7 +376,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self._getter(cmd, out=&#39;param&#39;)
         
         
-        def set_in_limit(self, ch, imax, imin):
+        def set_in_limit(self, ch:int, imax:float, imin:float) -&gt; None:
                 &#39;&#39;&#39;Sets the target temperature limits (in Celsius) for the PID controller \
                 of a specific channel
                 
@@ -396,7 +398,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
                 # Filters
                         # alpha-beta
-        def get_ab_filter(self, ch):
+        def get_ab_filter(self, ch:int) -&gt; list:
                 &#39;&#39;&#39;Gets the coefficients of the alpha-beta filter assigned to the PID controller
                 of a specific channel
                 
@@ -414,7 +416,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self._getter(cmd, out=&#39;param&#39;)
         
         
-        def set_ab_filter(self, ch, alpha, beta):
+        def set_ab_filter(self, ch:int, alpha:float, beta:float) -&gt; None:
                 &#39;&#39;&#39;Sets the coefficients of the alpha-beta filter assigned to the PID controller \
                 of a specific channel
                 
@@ -435,7 +437,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         
                         # kalman
-        def get_k_filter(self, ch):
+        def get_k_filter(self, ch:int) -&gt; list:
                 &#39;&#39;&#39;Gets the coefficients of the kalman filter assigned to the temperature \
                 measurements of a specific channel
                 
@@ -453,7 +455,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self._getter(cmd, out=&#39;param&#39;)
         
         
-        def set_k_filter(self, ch, error, noise):
+        def set_k_filter(self, ch:int, error:float, noise:float) -&gt; None:
                 &#39;&#39;&#39;Sets the coefficients of the kalman filter assigned to the temperature \
                 measurements of a specific channel
                 
@@ -474,7 +476,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self._set_k_filter_json(ch, error, noise)
         
         
-        def set_k_filter_state(self, ch, value):
+        def set_k_filter_state(self, ch:int, value:float) -&gt; None:
                 &#39;&#39;&#39;Sets state of the kalman filter assigned to specific channel
                 
                 Parameters
@@ -490,13 +492,13 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         
                 # Sensors
-        def get_sensor_type(self):      # NOTE: returns characters
+        def get_sensor_type(self) -&gt; list:      # NOTE: returns characters
                 &#39;&#39;&#39;Retrieves the sensor type (N, K, J, etc) that was assigned \
                 to each port of the CN0391 
                 
                 Returns
                 -------
-                types: list[char]
+                types: list[str]
                         Sensor type of each port: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;13&#34;
@@ -504,7 +506,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         
                 #Enable / Disable controllers
-        def set_enable(self, ch):
+        def set_enable(self, ch:int) -&gt; None:
                 &#39;&#39;&#39;Enables the PID controller of a specific channel
                 
                 Parameters
@@ -517,7 +519,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self._set_enable_json(ch)
         
         
-        def set_enable_all(self): 
+        def set_enable_all(self) -&gt; None: 
                 &#39;&#39;&#39; Enables the PID controller of every channel
                 &#39;&#39;&#39;
                 cmd = &#34;14,4&#34;
@@ -525,7 +527,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self._set_enable_all_json()
         
         
-        def set_disable(self, ch):
+        def set_disable(self, ch:int):
                 &#39;&#39;&#39;Disables the PID controller of a specific channel
                 
                 Parameters
@@ -538,7 +540,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self._set_disable_json(ch)
         
         
-        def set_disable_all(self): 
+        def set_disable_all(self) -&gt; None: 
                 &#39;&#39;&#39; Disables the PID controller of every channel
                 &#39;&#39;&#39;
                 cmd = &#34;15,4&#34;
@@ -546,7 +548,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self._set_disable_all_json()
         
         
-        def get_enable(self):
+        def get_enable(self) -&gt; list:
                 &#39;&#39;&#39;Retrieves which ports have a PID controller actively monitoring their temperature.
                 A port can be active (True) or disabled (False)
                 
@@ -556,12 +558,12 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                         condition of each port: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;16&#34;
-                data = self._getter(cmd, out=&#39;param&#39;)#.tolist() -&gt; part of arduinoserial
-                return [elem == True for elem in data]  # convert to boolean
+                data = self._getter(cmd, out=&#39;param&#39;)
+                return [elem == True for elem in data]  # convert int to boolean
         
         
                 # timers
-        def get_timer(self):
+        def get_timer(self) -&gt; list:
                 &#39;&#39;&#39;Retrieves the time (in seconds) each port has been actively controlling its temperature.
                 
                 Returns
@@ -573,7 +575,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self._getter(cmd, out=&#39;param&#39;)
         
         
-        def get_timeout(self):
+        def get_timeout(self) -&gt; list:
                 &#39;&#39;&#39;Retrieves the time (in seconds) each port is allowed to control its temperature.
                 
                 Returns
@@ -585,7 +587,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return self._getter(cmd, out=&#39;param&#39;)
         
         
-        def set_timeout(self, ch, time):
+        def set_timeout(self, ch:int, time:float) -&gt; None:
                 &#39;&#39;&#39;Sets the time a PID controller will be enabled for a specific channel
                 
                 Parameters
@@ -601,7 +603,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self._set_timeout_json(ch, time)
         
         
-        def set_timeout_inf(self, ch):
+        def set_timeout_inf(self, ch:int) -&gt; None:
                 &#39;&#39;&#39;Allow the PID controller at a specific port to run forever
                 
                 Parameters
@@ -618,7 +620,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         #----- Reading -------
         
-        def load_json_file(self, path):
+        def load_json_file(self, path:str) -&gt; None:
                 &#39;&#39;&#39;Load the JSON file containing the controller parameters
                 
                 Parameters
@@ -630,7 +632,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                         self.json_data = json.load(outfile)
         
         
-        def set_json_coefficients(self):
+        def set_json_coefficients(self) -&gt; None:
                 &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `load_json_file` \
                 beforehand. Will not work otherwise. 
                 &#39;&#39;&#39;
@@ -662,13 +664,13 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                                 self.set_enable(channel)
         
         
-        def get_json_data(self):
+        def get_json_data(self) -&gt; dict:
                 &#39;&#39;&#39;Retrieves the parameters and coefficients required to configure the serial communication \
                 and PID controllers.
                 
                 Returns
                 -------
-                data : Dict
+                data : dict
                         Dictionary with all of the parameters and coefficients parsed from the JSON File.
                 &#39;&#39;&#39;
                 return self.json_data
@@ -680,7 +682,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                data : Dict
+                data : dict
                         dictionary with every value set to `None`
                 &#39;&#39;&#39;
                 coeffs = {
@@ -709,7 +711,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 return data
         
         
-        def save_json_file(self, path):
+        def save_json_file(self, path:str) -&gt; None:
                 &#39;&#39;&#39;Save a JSON file with the current controller parameters
                 
                 Parameters
@@ -723,7 +725,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         #-- functions to store state in JSON file:
         
-        def get_device_coefficients(self):
+        def get_device_coefficients(self) -&gt; None:
                 &#39;&#39;&#39;Gets the coefficients currently loaded on the Arduino and prepares them to be stored
                 in a JSON file.
                 &#39;&#39;&#39;
@@ -760,7 +762,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                         self._set_timeout_json( ch, timeout[ch] )
         
         
-        def _set_pid_json(self, ch, kp, ki, kd):
+        def _set_pid_json(self, ch:int, kp:float, ki:float, kd:float) -&gt; None:
                 &#39;&#39;&#39;Stores the PID coefficients in a dictionary
                 
                 Parameters
@@ -772,7 +774,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self.json_data[&#34;parameters&#34;][ch][&#34;kd&#34;] = kd
         
         
-        def _set_in_limit_json(self, ch, imax, imin):
+        def _set_in_limit_json(self, ch:int, imax:float, imin:float) -&gt; None:
                 &#39;&#39;&#39;Stores the input limits in a dictionary
                 
                 Parameters
@@ -783,7 +785,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self.json_data[&#34;parameters&#34;][ch][&#34;imin&#34;] = imin
         
         
-        def _set_k_filter_json(self, ch, error, noise):
+        def _set_k_filter_json(self, ch:int, error:float, noise:float) -&gt; None:
                 &#39;&#39;&#39;Stores the coefficients for a kalman filter in a dictionary
                 
                 Parameters
@@ -794,7 +796,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self.json_data[&#34;parameters&#34;][ch][&#34;noise&#34;] = noise
         
         
-        def _set_ab_filter_json(self, ch, alpha, beta):
+        def _set_ab_filter_json(self, ch:int, alpha:float, beta:float) -&gt; None:
                 &#39;&#39;&#39;Stores the coefficients for an alpha-beta filter in a dictionary
                 
                 Parameters
@@ -805,7 +807,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self.json_data[&#34;parameters&#34;][ch][&#34;beta&#34;] = beta
         
         
-        def _set_enable_json(self, ch):
+        def _set_enable_json(self, ch:int) -&gt; None:
                 &#39;&#39;&#39;Stores whether a PID controller is enabled in a dictionary
                 
                 Parameters
@@ -815,7 +817,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self.json_data[&#34;parameters&#34;][ch][&#34;enable&#34;] = 1
         
         
-        def _set_enable_all_json(self):
+        def _set_enable_all_json(self) -&gt; None:
                 &#39;&#39;&#39;Stores whether all PID controllers are enabled in a dictionary
                 
                 Parameters
@@ -826,7 +828,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                         self._set_enable_json(ch)
         
         
-        def _set_disable_json(self, ch):
+        def _set_disable_json(self, ch:int) -&gt; None:
                 &#39;&#39;&#39;Stores whether a PID controller is disabled in a dictionary
                 
                 Parameters
@@ -836,7 +838,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self.json_data[&#34;parameters&#34;][ch][&#34;enable&#34;] = 0
         
         
-        def _set_disable_all_json(self):
+        def _set_disable_all_json(self) -&gt; None:
                 &#39;&#39;&#39;Stores whether all PID controllers are disabled in a dictionary
                 
                 Parameters
@@ -847,7 +849,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                         self._set_disable_json(ch)
         
         
-        def _set_timeout_json(self, ch, time):
+        def _set_timeout_json(self, ch:int, time:float) -&gt; None:
                 &#39;&#39;&#39;Stores the time a PID controller can be enabled in a dictionary
                 
                 Parameters
@@ -857,7 +859,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self.json_data[&#34;parameters&#34;][ch][&#34;timeout&#34;] = time
         
         
-        def _set_timeout_inf_json(self, ch):
+        def _set_timeout_inf_json(self, ch:int) -&gt; None:
                 &#39;&#39;&#39;Stores whether a PID controller stay on indefinitely in a dictionary
                 
                 Parameters
@@ -869,7 +871,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 # See: /arduino/Serialcom.ino
         
         
-        def _set_sensor_type_json(self):
+        def _set_sensor_type_json(self) -&gt; None:
                 &#39;&#39;&#39;Stores the sensor type for each for in a dictionary
                 
                 Parameters
@@ -879,33 +881,35 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 self.json_data[&#34;sensor_types&#34;] = self.get_sensor_type()</code></pre>
 </details>
 <div class="desc"><p>Initialize the temperature controller.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>port</code></strong> :&ensp;<code>str</code></dt>
-<dd>Serial port used by the Arduino to communicate with the computer.
-Required if <code>path</code> is not provided. The Serial port changes with operating system:</dd>
-</dl>
+<p><strong>Note:</strong> The Serial port changes with operating system:
+</p>
 <ul>
 <li>On Linux and macOS, use '/dev/ttyACM0' or similar</li>
 <li>On Windows, use 'COM3' or similar</li>
 </ul>
-<p>baud_rate: int
-Baud rate at which the Arduino is configured. Optional parameter that defaults to
-hardcoded value if none is provided</p>
-<p>path : str
-Path to JSON file containing the controller parameters. Parameter is optional
-and overrides <code>port</code> and <code>baud_rate</code></p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>port</code></strong> :&ensp;<code>str</code></dt>
+<dd>Serial port used by the Arduino to communicate with the computer.
+Required if <code>path</code> is not provided.</dd>
+<dt><strong><code>baud_rate</code></strong> :&ensp;<code>int</code></dt>
+<dd>Baud rate at which the Arduino is configured. Optional parameter that defaults to
+hardcoded value if none is provided</dd>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to JSON file containing the controller parameters. Parameter is optional
+and overrides <code>port</code> and <code>baud_rate</code></dd>
+</dl></div>
 <h3>Methods</h3>
 <dl>
 <dt id="TempControllerCN0391.TempControllerCN0391.close"><code class="name flex">
-<span>def <span class="ident">close</span></span>(<span>self)</span>
+<span>def <span class="ident">close</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def close(self):
+<pre><code class="python">def close(self) -&gt; None:
         &#39;&#39;&#39; Close the serial connection. Must call at the end of program execution to ensure \
             the connection does not remain active.
         &#39;&#39;&#39;
@@ -915,14 +919,14 @@ and overrides <code>port</code> and <code>baud_rate</code></p></div>
 the connection does not remain active.</p></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.flush"><code class="name flex">
-<span>def <span class="ident">flush</span></span>(<span>self)</span>
+<span>def <span class="ident">flush</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def flush(self):
+<pre><code class="python">def flush(self) -&gt; None:
         &#39;&#39;&#39; Block program execution and wait for serial commands to be written
         &#39;&#39;&#39;
         self.serial.flush()</code></pre>
@@ -930,14 +934,14 @@ the connection does not remain active.</p></div>
 <div class="desc"><p>Block program execution and wait for serial commands to be written</p></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_ab_filter"><code class="name flex">
-<span>def <span class="ident">get_ab_filter</span></span>(<span>self, ch)</span>
+<span>def <span class="ident">get_ab_filter</span></span>(<span>self, ch: int) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_ab_filter(self, ch):
+<pre><code class="python">def get_ab_filter(self, ch:int) -&gt; list:
         &#39;&#39;&#39;Gets the coefficients of the alpha-beta filter assigned to the PID controller
         of a specific channel
         
@@ -968,14 +972,14 @@ of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_device_coefficients"><code class="name flex">
-<span>def <span class="ident">get_device_coefficients</span></span>(<span>self)</span>
+<span>def <span class="ident">get_device_coefficients</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_device_coefficients(self):
+<pre><code class="python">def get_device_coefficients(self) -&gt; None:
         &#39;&#39;&#39;Gets the coefficients currently loaded on the Arduino and prepares them to be stored
         in a JSON file.
         &#39;&#39;&#39;
@@ -1015,14 +1019,14 @@ of a specific channel</p>
 in a JSON file.</p></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_enable"><code class="name flex">
-<span>def <span class="ident">get_enable</span></span>(<span>self)</span>
+<span>def <span class="ident">get_enable</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_enable(self):
+<pre><code class="python">def get_enable(self) -&gt; list:
         &#39;&#39;&#39;Retrieves which ports have a PID controller actively monitoring their temperature.
         A port can be active (True) or disabled (False)
         
@@ -1032,8 +1036,8 @@ in a JSON file.</p></div>
                 condition of each port: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;16&#34;
-        data = self._getter(cmd, out=&#39;param&#39;)#.tolist() -&gt; part of arduinoserial
-        return [elem == True for elem in data]  # convert to boolean
+        data = self._getter(cmd, out=&#39;param&#39;)
+        return [elem == True for elem in data]  # convert int to boolean
 
 
         # timers</code></pre>
@@ -1047,14 +1051,14 @@ A port can be active (True) or disabled (False)</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_filter"><code class="name flex">
-<span>def <span class="ident">get_filter</span></span>(<span>self)</span>
+<span>def <span class="ident">get_filter</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_filter(self):
+<pre><code class="python">def get_filter(self) -&gt; list:
         &#39;&#39;&#39;Gets the temperature measurements that have been smoothed by a kalman filter
         
         Returns
@@ -1073,14 +1077,14 @@ A port can be active (True) or disabled (False)</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_in_limit"><code class="name flex">
-<span>def <span class="ident">get_in_limit</span></span>(<span>self, ch)</span>
+<span>def <span class="ident">get_in_limit</span></span>(<span>self, ch: int) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_in_limit(self, ch):
+<pre><code class="python">def get_in_limit(self, ch:int) -&gt; list:
         &#34;&#34;&#34;Gets the target temperature limits (in Celsius) for the PID controller 
         of a specific channel
         
@@ -1111,20 +1115,20 @@ of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_json_data"><code class="name flex">
-<span>def <span class="ident">get_json_data</span></span>(<span>self)</span>
+<span>def <span class="ident">get_json_data</span></span>(<span>self) ‑> dict</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_json_data(self):
+<pre><code class="python">def get_json_data(self) -&gt; dict:
         &#39;&#39;&#39;Retrieves the parameters and coefficients required to configure the serial communication \
         and PID controllers.
         
         Returns
         -------
-        data : Dict
+        data : dict
                 Dictionary with all of the parameters and coefficients parsed from the JSON File.
         &#39;&#39;&#39;
         return self.json_data</code></pre>
@@ -1133,19 +1137,19 @@ of a specific channel</p>
 and PID controllers.</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>data</code></strong> :&ensp;<code>Dict</code></dt>
+<dt><strong><code>data</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Dictionary with all of the parameters and coefficients parsed from the JSON File.</dd>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_k_filter"><code class="name flex">
-<span>def <span class="ident">get_k_filter</span></span>(<span>self, ch)</span>
+<span>def <span class="ident">get_k_filter</span></span>(<span>self, ch: int) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_k_filter(self, ch):
+<pre><code class="python">def get_k_filter(self, ch:int) -&gt; list:
         &#39;&#39;&#39;Gets the coefficients of the kalman filter assigned to the temperature \
         measurements of a specific channel
         
@@ -1176,14 +1180,14 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_pid"><code class="name flex">
-<span>def <span class="ident">get_pid</span></span>(<span>self, ch)</span>
+<span>def <span class="ident">get_pid</span></span>(<span>self, ch: int) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_pid(self, ch):
+<pre><code class="python">def get_pid(self, ch:int) -&gt; list:
         &#39;&#39;&#39;Gets the PID coefficients of a specific channel
         Parameters
         ----------
@@ -1212,14 +1216,14 @@ Parameters</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_raw"><code class="name flex">
-<span>def <span class="ident">get_raw</span></span>(<span>self)</span>
+<span>def <span class="ident">get_raw</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_raw(self):
+<pre><code class="python">def get_raw(self) -&gt; list:
         &#39;&#39;&#39;Gets the raw temperature measurements of the sensor(s)
         
         Returns
@@ -1238,20 +1242,20 @@ Parameters</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_sensor_type"><code class="name flex">
-<span>def <span class="ident">get_sensor_type</span></span>(<span>self)</span>
+<span>def <span class="ident">get_sensor_type</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_sensor_type(self):      # NOTE: returns characters
+<pre><code class="python">def get_sensor_type(self) -&gt; list:      # NOTE: returns characters
         &#39;&#39;&#39;Retrieves the sensor type (N, K, J, etc) that was assigned \
         to each port of the CN0391 
         
         Returns
         -------
-        types: list[char]
+        types: list[str]
                 Sensor type of each port: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;13&#34;
@@ -1264,19 +1268,19 @@ Parameters</p>
 to each port of the CN0391 </p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>types</code></strong> :&ensp;<code>list[char]</code></dt>
+<dt><strong><code>types</code></strong> :&ensp;<code>list[str]</code></dt>
 <dd>Sensor type of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_target"><code class="name flex">
-<span>def <span class="ident">get_target</span></span>(<span>self)</span>
+<span>def <span class="ident">get_target</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_target(self):
+<pre><code class="python">def get_target(self) -&gt; list:
         &#39;&#39;&#39;Gets the target temperatures of the PID controllers
         
         Returns
@@ -1298,14 +1302,14 @@ to each port of the CN0391 </p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_timeout"><code class="name flex">
-<span>def <span class="ident">get_timeout</span></span>(<span>self)</span>
+<span>def <span class="ident">get_timeout</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_timeout(self):
+<pre><code class="python">def get_timeout(self) -&gt; list:
         &#39;&#39;&#39;Retrieves the time (in seconds) each port is allowed to control its temperature.
         
         Returns
@@ -1324,14 +1328,14 @@ to each port of the CN0391 </p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_timer"><code class="name flex">
-<span>def <span class="ident">get_timer</span></span>(<span>self)</span>
+<span>def <span class="ident">get_timer</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_timer(self):
+<pre><code class="python">def get_timer(self) -&gt; list:
         &#39;&#39;&#39;Retrieves the time (in seconds) each port has been actively controlling its temperature.
         
         Returns
@@ -1350,14 +1354,14 @@ to each port of the CN0391 </p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.is_active"><code class="name flex">
-<span>def <span class="ident">is_active</span></span>(<span>self)</span>
+<span>def <span class="ident">is_active</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_active(self):
+<pre><code class="python">def is_active(self) -&gt; bool:
         &#39;&#39;&#39;Returns whether the serial connection is active (True) or disabled (False)
         
         Returns
@@ -1374,14 +1378,14 @@ to each port of the CN0391 </p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.load_json_file"><code class="name flex">
-<span>def <span class="ident">load_json_file</span></span>(<span>self, path)</span>
+<span>def <span class="ident">load_json_file</span></span>(<span>self, path: str) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def load_json_file(self, path):
+<pre><code class="python">def load_json_file(self, path:str) -&gt; None:
         &#39;&#39;&#39;Load the JSON file containing the controller parameters
         
         Parameters
@@ -1400,14 +1404,14 @@ to each port of the CN0391 </p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.save_json_file"><code class="name flex">
-<span>def <span class="ident">save_json_file</span></span>(<span>self, path)</span>
+<span>def <span class="ident">save_json_file</span></span>(<span>self, path: str) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def save_json_file(self, path):
+<pre><code class="python">def save_json_file(self, path:str) -&gt; None:
         &#39;&#39;&#39;Save a JSON file with the current controller parameters
         
         Parameters
@@ -1427,14 +1431,14 @@ to each port of the CN0391 </p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.send_serial_command"><code class="name flex">
-<span>def <span class="ident">send_serial_command</span></span>(<span>self, cmd)</span>
+<span>def <span class="ident">send_serial_command</span></span>(<span>self, cmd: str) ‑> str</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def send_serial_command(self, cmd):
+<pre><code class="python">def send_serial_command(self, cmd:str) -&gt; str:
         &#39;&#39;&#39; Send an arbitrary serial command and receive a reply from the Arduino
         
         Parameters
@@ -1466,14 +1470,14 @@ to each port of the CN0391 </p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_ab_filter"><code class="name flex">
-<span>def <span class="ident">set_ab_filter</span></span>(<span>self, ch, alpha, beta)</span>
+<span>def <span class="ident">set_ab_filter</span></span>(<span>self, ch: int, alpha: float, beta: float) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_ab_filter(self, ch, alpha, beta):
+<pre><code class="python">def set_ab_filter(self, ch:int, alpha:float, beta:float) -&gt; None:
         &#39;&#39;&#39;Sets the coefficients of the alpha-beta filter assigned to the PID controller \
         of a specific channel
         
@@ -1508,14 +1512,14 @@ of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_disable"><code class="name flex">
-<span>def <span class="ident">set_disable</span></span>(<span>self, ch)</span>
+<span>def <span class="ident">set_disable</span></span>(<span>self, ch: int)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_disable(self, ch):
+<pre><code class="python">def set_disable(self, ch:int):
         &#39;&#39;&#39;Disables the PID controller of a specific channel
         
         Parameters
@@ -1535,14 +1539,14 @@ of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_disable_all"><code class="name flex">
-<span>def <span class="ident">set_disable_all</span></span>(<span>self)</span>
+<span>def <span class="ident">set_disable_all</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_disable_all(self): 
+<pre><code class="python">def set_disable_all(self) -&gt; None: 
         &#39;&#39;&#39; Disables the PID controller of every channel
         &#39;&#39;&#39;
         cmd = &#34;15,4&#34;
@@ -1552,14 +1556,14 @@ of a specific channel</p>
 <div class="desc"><p>Disables the PID controller of every channel</p></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_enable"><code class="name flex">
-<span>def <span class="ident">set_enable</span></span>(<span>self, ch)</span>
+<span>def <span class="ident">set_enable</span></span>(<span>self, ch: int) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_enable(self, ch):
+<pre><code class="python">def set_enable(self, ch:int) -&gt; None:
         &#39;&#39;&#39;Enables the PID controller of a specific channel
         
         Parameters
@@ -1579,14 +1583,14 @@ of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_enable_all"><code class="name flex">
-<span>def <span class="ident">set_enable_all</span></span>(<span>self)</span>
+<span>def <span class="ident">set_enable_all</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_enable_all(self): 
+<pre><code class="python">def set_enable_all(self) -&gt; None: 
         &#39;&#39;&#39; Enables the PID controller of every channel
         &#39;&#39;&#39;
         cmd = &#34;14,4&#34;
@@ -1596,14 +1600,14 @@ of a specific channel</p>
 <div class="desc"><p>Enables the PID controller of every channel</p></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_in_limit"><code class="name flex">
-<span>def <span class="ident">set_in_limit</span></span>(<span>self, ch, imax, imin)</span>
+<span>def <span class="ident">set_in_limit</span></span>(<span>self, ch: int, imax: float, imin: float) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_in_limit(self, ch, imax, imin):
+<pre><code class="python">def set_in_limit(self, ch:int, imax:float, imin:float) -&gt; None:
         &#39;&#39;&#39;Sets the target temperature limits (in Celsius) for the PID controller \
         of a specific channel
         
@@ -1639,14 +1643,14 @@ of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_json_coefficients"><code class="name flex">
-<span>def <span class="ident">set_json_coefficients</span></span>(<span>self)</span>
+<span>def <span class="ident">set_json_coefficients</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_json_coefficients(self):
+<pre><code class="python">def set_json_coefficients(self) -&gt; None:
         &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `load_json_file` \
         beforehand. Will not work otherwise. 
         &#39;&#39;&#39;
@@ -1681,14 +1685,14 @@ of a specific channel</p>
 beforehand. Will not work otherwise.</p></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_k_filter"><code class="name flex">
-<span>def <span class="ident">set_k_filter</span></span>(<span>self, ch, error, noise)</span>
+<span>def <span class="ident">set_k_filter</span></span>(<span>self, ch: int, error: float, noise: float) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_k_filter(self, ch, error, noise):
+<pre><code class="python">def set_k_filter(self, ch:int, error:float, noise:float) -&gt; None:
         &#39;&#39;&#39;Sets the coefficients of the kalman filter assigned to the temperature \
         measurements of a specific channel
         
@@ -1722,14 +1726,14 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_k_filter_state"><code class="name flex">
-<span>def <span class="ident">set_k_filter_state</span></span>(<span>self, ch, value)</span>
+<span>def <span class="ident">set_k_filter_state</span></span>(<span>self, ch: int, value: float) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_k_filter_state(self, ch, value):
+<pre><code class="python">def set_k_filter_state(self, ch:int, value:float) -&gt; None:
         &#39;&#39;&#39;Sets state of the kalman filter assigned to specific channel
         
         Parameters
@@ -1756,14 +1760,14 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_pid"><code class="name flex">
-<span>def <span class="ident">set_pid</span></span>(<span>self, ch, kp, ki, kd)</span>
+<span>def <span class="ident">set_pid</span></span>(<span>self, ch: int, kp: float, ki: float, kd: float) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_pid(self, ch, kp, ki, kd):
+<pre><code class="python">def set_pid(self, ch:int, kp:float, ki:float, kd:float) -&gt; None:
         &#39;&#39;&#39;Sets the PID coefficients of a specific channel
         
         Parameters
@@ -1801,14 +1805,14 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_target"><code class="name flex">
-<span>def <span class="ident">set_target</span></span>(<span>self, ch, target)</span>
+<span>def <span class="ident">set_target</span></span>(<span>self, ch: int, target: float) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_target(self, ch, target): 
+<pre><code class="python">def set_target(self, ch:int, target:float) -&gt; None: 
         &#39;&#39;&#39;Sets the target temperature of the PID controller of a specific port
         
         Parameters
@@ -1832,14 +1836,14 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_target_all"><code class="name flex">
-<span>def <span class="ident">set_target_all</span></span>(<span>self, targ0, targ1, targ2, targ3)</span>
+<span>def <span class="ident">set_target_all</span></span>(<span>self, targ0: float, targ1: float, targ2: float, targ3: float) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_target_all(self, targ0, targ1, targ2, targ3): 
+<pre><code class="python">def set_target_all(self, targ0:float, targ1:float, targ2:float, targ3:float) -&gt; None: 
         &#39;&#39;&#39;Sets the target temperature for all PID controllers simultaneously
         
         Parameters
@@ -1876,14 +1880,14 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_timeout"><code class="name flex">
-<span>def <span class="ident">set_timeout</span></span>(<span>self, ch, time)</span>
+<span>def <span class="ident">set_timeout</span></span>(<span>self, ch: int, time: float) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_timeout(self, ch, time):
+<pre><code class="python">def set_timeout(self, ch:int, time:float) -&gt; None:
         &#39;&#39;&#39;Sets the time a PID controller will be enabled for a specific channel
         
         Parameters
@@ -1908,14 +1912,14 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_timeout_inf"><code class="name flex">
-<span>def <span class="ident">set_timeout_inf</span></span>(<span>self, ch)</span>
+<span>def <span class="ident">set_timeout_inf</span></span>(<span>self, ch: int) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_timeout_inf(self, ch):
+<pre><code class="python">def set_timeout_inf(self, ch:int) -&gt; None:
         &#39;&#39;&#39;Allow the PID controller at a specific port to run forever
         
         Parameters
@@ -1935,30 +1939,30 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.setup"><code class="name flex">
-<span>def <span class="ident">setup</span></span>(<span>self, type0: str = None, type1: str = None, type2: str = None, type3: str = None)</span>
+<span>def <span class="ident">setup</span></span>(<span>self, type0: str = None, type1: str = None, type2: str = None, type3: str = None) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None):
+<pre><code class="python">def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None) -&gt; None:
         &#39;&#39;&#39;Assigns the sensor types for each port and performs an initial calibration
         of the temperature sensors. Defaults to pre-programmed sensor types if no
         parameters are provided. 
         
         Parameters
         ----------
-        type0 : char
-                Sensor type (N, K, J, etc) of channel 0
+        type0 : str
+                Sensor type (N, K, J, etc) of channel 0. Must be a character.
         
-        type1 : char
+        type1 : str
                 Same as before but for channel 1
         
-        type2 : char
+        type2 : str
                 Same as before but for channel 2
         
-        type3 : char
+        type3 : str
                 Same as before but for channel 3
         &#39;&#39;&#39;
         # Custom types
@@ -1977,13 +1981,13 @@ of the temperature sensors. Defaults to pre-programmed sensor types if no
 parameters are provided. </p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>type0</code></strong> :&ensp;<code>char</code></dt>
-<dd>Sensor type (N, K, J, etc) of channel 0</dd>
-<dt><strong><code>type1</code></strong> :&ensp;<code>char</code></dt>
+<dt><strong><code>type0</code></strong> :&ensp;<code>str</code></dt>
+<dd>Sensor type (N, K, J, etc) of channel 0. Must be a character.</dd>
+<dt><strong><code>type1</code></strong> :&ensp;<code>str</code></dt>
 <dd>Same as before but for channel 1</dd>
-<dt><strong><code>type2</code></strong> :&ensp;<code>char</code></dt>
+<dt><strong><code>type2</code></strong> :&ensp;<code>str</code></dt>
 <dd>Same as before but for channel 2</dd>
-<dt><strong><code>type3</code></strong> :&ensp;<code>char</code></dt>
+<dt><strong><code>type3</code></strong> :&ensp;<code>str</code></dt>
 <dd>Same as before but for channel 3</dd>
 </dl></div>
 </dd>

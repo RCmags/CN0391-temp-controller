@@ -4,6 +4,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
 """
 
 import threading
+from typing import Callable
 
 #=========================================================================================
 
@@ -13,7 +14,7 @@ import threading
 
 class KeyboardThread(threading.Thread):
 	
-	def __init__(self, function = None, name='keyboard-input-thread'):
+	def __init__(self, function:Callable = None, name:str = 'keyboard-input-thread'):
 		'''Initialize thread to receive keyboard inputs
 		
 		Parameters
@@ -35,7 +36,7 @@ class KeyboardThread(threading.Thread):
 		# initialize thread
 		self.start()
 	
-	def run(self):
+	def run(self) -> None:
 		'''Loop that is executed by the thread that listens to keyboard inputs.
 		This loop will continue indefinately until `stop()` is called. 
 		'''
@@ -49,7 +50,7 @@ class KeyboardThread(threading.Thread):
 				self._function( self._input_data ) #waits to get input + Return
 	
 	
-	def setCallback(self, function):
+	def setCallback(self, function:Callable) -> None:
 		''' Set the callback function that is called whenever the user submits an input
 		
 		Parameters
@@ -60,7 +61,7 @@ class KeyboardThread(threading.Thread):
 		self._function = function
 	
 	
-	def input(self):
+	def input(self) -> str:
 		'''Returns the keyboard input provided by the user. Updates whenever the user presses enter
 		
 		Returns
@@ -71,7 +72,7 @@ class KeyboardThread(threading.Thread):
 		return self._input_data
 	
 	
-	def flag(self):
+	def flag(self) -> bool:
 		'''Flag that indicates whether a new keyboard input has been provided and is unread.
 		
 		Returns
@@ -83,14 +84,14 @@ class KeyboardThread(threading.Thread):
 		return self._flag
 	
 	
-	def stop(self):
+	def stop(self) -> None:
 		'''Kills the thread focus on receiving keyboard inputs. Must be called whenever the
 		program has finished to prevent the thread from blocking the program from closing. 
 		'''
 		self._stop.set()
 	
 	
-	def is_active(self):
+	def is_active(self) -> bool:
 		'''Indicates whether the thread is active. 
 		
 		Returns

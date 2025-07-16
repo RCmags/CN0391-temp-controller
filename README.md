@@ -100,8 +100,11 @@ verbose manner. Each function show in the table has an equivalent function in th
 class. For more details, see the documentation for the modules:
 
 - [TempControllerCN0391](python/html/TempControllerCN0391.html) : Contains list of parameters for both Serial and Python API
+
 - [ArduinoSerial](python/html/ArduinoSerial.html)
+
 - [KeyboardThread](python/html/KeyboardThread.html)
+
 - [main](python/html/main.html) : Interactive plot program
 
 
@@ -181,5 +184,6 @@ styled **HTML** pages.
 For more details, see:
 
 - [pdoc3](https://pdoc3.github.io/pdoc/) - Light weight documentation generator for python
+
 - [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) - Style guide for docstrings
 

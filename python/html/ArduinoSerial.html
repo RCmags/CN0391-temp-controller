@@ -44,7 +44,7 @@ with commands that have the form of a comma delimited string:</p>
 <ul>
 <li>The <code>&lt;command&gt;</code> can be a string or a number that indicates a specific function. </li>
 <li>The <code>&lt;channel&gt;</code> is a number that indicates for which device the function is meant to apply to.</li>
-<li>The remaining <code>&lt;values&gt;</code> can be numbers or characters relevant to the aformentioned function.</li>
+<li>The remaining <code>&lt;values&gt;</code> can be numbers or characters relevant to the aforementioned function.</li>
 </ul>
 </section>
 <section>
@@ -67,7 +67,7 @@ with commands that have the form of a comma delimited string:</p>
 </summary>
 <pre><code class="python">class SerialCommunication:
         
-        def __init__(self, port: str, baud_rate: int) -&gt; None:
+        def __init__(self, port:str, baud_rate:int):
                 &#39;&#39;&#39;Initialize serial communication with an Arduino.
                 
                 Parameters
@@ -86,7 +86,7 @@ with commands that have the form of a comma delimited string:</p>
         
         # helpers
         def close(self) -&gt; None:
-                &#39;&#39;&#39;Close the serial connection. It is nessesary to run this command when a program 
+                &#39;&#39;&#39;Close the serial connection. It is necessary to run this command when a program 
                 finished to ensure the serial connection does not stay active. 
                 &#39;&#39;&#39;
                 self.arduino.close()
@@ -116,7 +116,7 @@ with commands that have the form of a comma delimited string:</p>
                 self.arduino.reset_output_buffer()
         
         
-        def _strip_string(self, string: str) -&gt; None:
+        def _strip_string(self, string:str) -&gt; None:
                 &#39;&#39;&#39; Private function remote trailing characters that are send via serial by the Arduino.
                 
                 Parameters
@@ -152,7 +152,7 @@ with commands that have the form of a comma delimited string:</p>
         
         
         # write serial strings
-        def write_serial(self, string: str) -&gt; None:
+        def write_serial(self, string:str) -&gt; None:
                 &#39;&#39;&#39;Write a string via serial to the specified port
                 
                 Parameters
@@ -169,7 +169,7 @@ with commands that have the form of a comma delimited string:</p>
         
         
         # parse command
-        def _parse_serial_string(self, string: str, out: str) -&gt; str | list | dict:
+        def _parse_serial_string(self, string:str, out:str) -&gt; str | list | dict:
                 &#39;&#39;&#39;Private function that parses a serial string and converts it a list of coefficients
                 
                 Parameters
@@ -240,7 +240,7 @@ with commands that have the form of a comma delimited string:</p>
                 
                 param : list[float]
                         returns array of the captured coefficients received from the arduino
-                        
+                
                 str : str
                         returns the raw string received via serial
                 
@@ -271,13 +271,13 @@ hardcoded value if none is provided</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def close(self) -&gt; None:
-        &#39;&#39;&#39;Close the serial connection. It is nessesary to run this command when a program 
+        &#39;&#39;&#39;Close the serial connection. It is necessary to run this command when a program 
         finished to ensure the serial connection does not stay active. 
         &#39;&#39;&#39;
         self.arduino.close()
         self._isActive = False</code></pre>
 </details>
-<div class="desc"><p>Close the serial connection. It is nessesary to run this command when a program
+<div class="desc"><p>Close the serial connection. It is necessary to run this command when a program
 finished to ensure the serial connection does not stay active.</p></div>
 </dd>
 <dt id="ArduinoSerial.SerialCommunication.flush"><code class="name flex">
@@ -344,7 +344,7 @@ finished to ensure the serial connection does not stay active.</p></div>
         
         param : list[float]
                 returns array of the captured coefficients received from the arduino
-                
+        
         str : str
                 returns the raw string received via serial
         
@@ -430,7 +430,7 @@ or if connection times out.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write_serial(self, string: str) -&gt; None:
+<pre><code class="python">def write_serial(self, string:str) -&gt; None:
         &#39;&#39;&#39;Write a string via serial to the specified port
         
         Parameters

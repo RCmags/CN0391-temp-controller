@@ -8,7 +8,7 @@ with commands that have the form of a comma delimited string:
 
 - The `<command>` can be a string or a number that indicates a specific function. 
 - The `<channel>` is a number that indicates for which device the function is meant to apply to.
-- The remaining `<values>` can be numbers or characters relevant to the aformentioned function.  
+- The remaining `<values>` can be numbers or characters relevant to the aforementioned function.  
 """
 
 # Global libraries
@@ -28,7 +28,7 @@ _DELAY    = 1.0  # seconds | Required delay that allows serial command to be sen
 
 class SerialCommunication:
 	
-	def __init__(self, port: str, baud_rate: int) -> None:
+	def __init__(self, port:str, baud_rate:int):
 		'''Initialize serial communication with an Arduino.
 		
 		Parameters
@@ -47,7 +47,7 @@ class SerialCommunication:
 	
 	# helpers
 	def close(self) -> None:
-		'''Close the serial connection. It is nessesary to run this command when a program 
+		'''Close the serial connection. It is necessary to run this command when a program 
 		finished to ensure the serial connection does not stay active. 
 		'''
 		self.arduino.close()
@@ -77,7 +77,7 @@ class SerialCommunication:
 		self.arduino.reset_output_buffer()
 	
 	
-	def _strip_string(self, string: str) -> None:
+	def _strip_string(self, string:str) -> None:
 		''' Private function remote trailing characters that are send via serial by the Arduino.
 		
 		Parameters
@@ -113,7 +113,7 @@ class SerialCommunication:
 	
 	
 	# write serial strings
-	def write_serial(self, string: str) -> None:
+	def write_serial(self, string:str) -> None:
 		'''Write a string via serial to the specified port
 		
 		Parameters
@@ -130,7 +130,7 @@ class SerialCommunication:
 	
 	
 	# parse command
-	def _parse_serial_string(self, string: str, out: str) -> str | list | dict:
+	def _parse_serial_string(self, string:str, out:str) -> str | list | dict:
 		'''Private function that parses a serial string and converts it a list of coefficients
 		
 		Parameters
@@ -201,7 +201,7 @@ class SerialCommunication:
 		
 		param : list[float]
 			returns array of the captured coefficients received from the arduino
-			
+		
 		str : str
 			returns the raw string received via serial
 		

@@ -51,7 +51,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
 <dl>
 <dt id="KeyboardThread.KeyboardThread"><code class="flex name class">
 <span>class <span class="ident">KeyboardThread</span></span>
-<span>(</span><span>function=None, name='keyboard-input-thread')</span>
+<span>(</span><span>function: Callable = None, name: str = 'keyboard-input-thread')</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -60,7 +60,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
 </summary>
 <pre><code class="python">class KeyboardThread(threading.Thread):
         
-        def __init__(self, function = None, name=&#39;keyboard-input-thread&#39;):
+        def __init__(self, function:Callable = None, name:str = &#39;keyboard-input-thread&#39;):
                 &#39;&#39;&#39;Initialize thread to receive keyboard inputs
                 
                 Parameters
@@ -82,7 +82,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                 # initialize thread
                 self.start()
         
-        def run(self):
+        def run(self) -&gt; None:
                 &#39;&#39;&#39;Loop that is executed by the thread that listens to keyboard inputs.
                 This loop will continue indefinately until `stop()` is called. 
                 &#39;&#39;&#39;
@@ -96,7 +96,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                                 self._function( self._input_data ) #waits to get input + Return
         
         
-        def setCallback(self, function):
+        def setCallback(self, function:Callable) -&gt; None:
                 &#39;&#39;&#39; Set the callback function that is called whenever the user submits an input
                 
                 Parameters
@@ -107,7 +107,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                 self._function = function
         
         
-        def input(self):
+        def input(self) -&gt; str:
                 &#39;&#39;&#39;Returns the keyboard input provided by the user. Updates whenever the user presses enter
                 
                 Returns
@@ -118,7 +118,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                 return self._input_data
         
         
-        def flag(self):
+        def flag(self) -&gt; bool:
                 &#39;&#39;&#39;Flag that indicates whether a new keyboard input has been provided and is unread.
                 
                 Returns
@@ -130,14 +130,14 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                 return self._flag
         
         
-        def stop(self):
+        def stop(self) -&gt; None:
                 &#39;&#39;&#39;Kills the thread focus on receiving keyboard inputs. Must be called whenever the
                 program has finished to prevent the thread from blocking the program from closing. 
                 &#39;&#39;&#39;
                 self._stop.set()
         
         
-        def is_active(self):
+        def is_active(self) -&gt; bool:
                 &#39;&#39;&#39;Indicates whether the thread is active. 
                 
                 Returns
@@ -176,14 +176,14 @@ Must have the form <code>def function(string)</code> that takes a string
 <h3>Methods</h3>
 <dl>
 <dt id="KeyboardThread.KeyboardThread.flag"><code class="name flex">
-<span>def <span class="ident">flag</span></span>(<span>self)</span>
+<span>def <span class="ident">flag</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def flag(self):
+<pre><code class="python">def flag(self) -&gt; bool:
         &#39;&#39;&#39;Flag that indicates whether a new keyboard input has been provided and is unread.
         
         Returns
@@ -203,14 +203,14 @@ Must have the form <code>def function(string)</code> that takes a string
 </dl></div>
 </dd>
 <dt id="KeyboardThread.KeyboardThread.input"><code class="name flex">
-<span>def <span class="ident">input</span></span>(<span>self)</span>
+<span>def <span class="ident">input</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def input(self):
+<pre><code class="python">def input(self) -&gt; str:
         &#39;&#39;&#39;Returns the keyboard input provided by the user. Updates whenever the user presses enter
         
         Returns
@@ -228,14 +228,14 @@ Must have the form <code>def function(string)</code> that takes a string
 </dl></div>
 </dd>
 <dt id="KeyboardThread.KeyboardThread.is_active"><code class="name flex">
-<span>def <span class="ident">is_active</span></span>(<span>self)</span>
+<span>def <span class="ident">is_active</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_active(self):
+<pre><code class="python">def is_active(self) -&gt; bool:
         &#39;&#39;&#39;Indicates whether the thread is active. 
         
         Returns
@@ -262,14 +262,14 @@ False when <code>stop()</code> is called and the thread is closed.</dd>
 </dl></div>
 </dd>
 <dt id="KeyboardThread.KeyboardThread.run"><code class="name flex">
-<span>def <span class="ident">run</span></span>(<span>self)</span>
+<span>def <span class="ident">run</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def run(self):
+<pre><code class="python">def run(self) -&gt; None:
         &#39;&#39;&#39;Loop that is executed by the thread that listens to keyboard inputs.
         This loop will continue indefinately until `stop()` is called. 
         &#39;&#39;&#39;
@@ -286,14 +286,14 @@ False when <code>stop()</code> is called and the thread is closed.</dd>
 This loop will continue indefinately until <code>stop()</code> is called.</p></div>
 </dd>
 <dt id="KeyboardThread.KeyboardThread.setCallback"><code class="name flex">
-<span>def <span class="ident">setCallback</span></span>(<span>self, function)</span>
+<span>def <span class="ident">setCallback</span></span>(<span>self, function: Callable) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setCallback(self, function):
+<pre><code class="python">def setCallback(self, function:Callable) -&gt; None:
         &#39;&#39;&#39; Set the callback function that is called whenever the user submits an input
         
         Parameters
@@ -311,14 +311,14 @@ This loop will continue indefinately until <code>stop()</code> is called.</p></d
 </dl></div>
 </dd>
 <dt id="KeyboardThread.KeyboardThread.stop"><code class="name flex">
-<span>def <span class="ident">stop</span></span>(<span>self)</span>
+<span>def <span class="ident">stop</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def stop(self):
+<pre><code class="python">def stop(self) -&gt; None:
         &#39;&#39;&#39;Kills the thread focus on receiving keyboard inputs. Must be called whenever the
         program has finished to prevent the thread from blocking the program from closing. 
         &#39;&#39;&#39;
