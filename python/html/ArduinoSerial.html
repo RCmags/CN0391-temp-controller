@@ -58,7 +58,7 @@ with commands that have the form of a comma delimited string:</p>
 <dl>
 <dt id="ArduinoSerial.SerialCommunication"><code class="flex name class">
 <span>class <span class="ident">SerialCommunication</span></span>
-<span>(</span><span>port, baud_rate)</span>
+<span>(</span><span>port: str, baud_rate: int)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -67,7 +67,7 @@ with commands that have the form of a comma delimited string:</p>
 </summary>
 <pre><code class="python">class SerialCommunication:
         
-        def __init__(self, port, baud_rate):
+        def __init__(self, port: str, baud_rate: int) -&gt; None:
                 &#39;&#39;&#39;Initialize serial communication with an Arduino.
                 
                 Parameters
@@ -85,7 +85,7 @@ with commands that have the form of a comma delimited string:</p>
         
         
         # helpers
-        def close(self):
+        def close(self) -&gt; None:
                 &#39;&#39;&#39;Close the serial connection. It is nessesary to run this command when a program 
                 finished to ensure the serial connection does not stay active. 
                 &#39;&#39;&#39;
@@ -93,7 +93,7 @@ with commands that have the form of a comma delimited string:</p>
                 self._isActive = False
         
         
-        def is_active(self):
+        def is_active(self) -&gt; None:
                 &#39;&#39;&#39;Returns whether the serial connection is active (True) or disabled (False)
                 
                 Returns
@@ -103,20 +103,20 @@ with commands that have the form of a comma delimited string:</p>
                 return self._isActive
         
         
-        def flush(self):
+        def flush(self) -&gt; None:
                 &#39;&#39;&#39; Block program execution and wait for serial commands to be written
                 &#39;&#39;&#39;
                 self.arduino.flush()
         
         
-        def reset(self): 
+        def reset(self) -&gt; None: 
                 &#39;&#39;&#39; Reset the input and output buffers of the serial connection. 
                 &#39;&#39;&#39;
                 self.arduino.reset_input_buffer()
                 self.arduino.reset_output_buffer()
         
         
-        def _strip_string(self, string):
+        def _strip_string(self, string: str) -&gt; None:
                 &#39;&#39;&#39; Private function remote trailing characters that are send via serial by the Arduino.
                 
                 Parameters
@@ -135,7 +135,7 @@ with commands that have the form of a comma delimited string:</p>
         
         
         # read serial strings
-        def read_serial(self): 
+        def read_serial(self) -&gt; str: 
                 &#39;&#39;&#39; Read any incoming serial commands at the specified port. This is a blocking function
                 that waits until data is received, or the connection times out. 
                 
@@ -145,14 +145,14 @@ with commands that have the form of a comma delimited string:</p>
                         String that contains the captured data. Returns &#34;&#34; if no data is captured
                         or if connection times out.
                 &#39;&#39;&#39;
-                data = self.arduino.readline().decode(&#39;utf-8&#39;) # blocks unless timeout is given
-                self.arduino.flush()                            # clear buffers
+                data = self.arduino.readline().decode(&#39;utf-8&#39;)  # blocks unless timeout is given
+                self.arduino.flush()                                                    # clear buffers
                 data = self._strip_string(data)
                 return data
         
         
         # write serial strings
-        def write_serial(self, string):
+        def write_serial(self, string: str) -&gt; None:
                 &#39;&#39;&#39;Write a string via serial to the specified port
                 
                 Parameters
@@ -169,7 +169,7 @@ with commands that have the form of a comma delimited string:</p>
         
         
         # parse command
-        def _parse_serial_string(self, string, out):
+        def _parse_serial_string(self, string: str, out: str) -&gt; str | list | dict:
                 &#39;&#39;&#39;Private function that parses a serial string and converts it a list of coefficients
                 
                 Parameters
@@ -196,7 +196,7 @@ with commands that have the form of a comma delimited string:</p>
                         return string_arr
 
                         # outputs
-                output = np.array( [] )
+                output = []
                 parseIsGood = True
                 
                 # convert parameters
@@ -210,12 +210,10 @@ with commands that have the form of a comma delimited string:</p>
                                 try:
                                         number = float(element)
                                 except:
-                                        number = 0                                                      # default value
+                                        number = 0      # default value
                                         parseIsGood = False
                                         break;
-                                
-                                output = np.append(output, number)
-                                output = output.reshape(-1,1)                   # array flip to vertical
+                                output.append(number)
                 
                 if out == &#39;param&#39;:
                         return output
@@ -225,7 +223,7 @@ with commands that have the form of a comma delimited string:</p>
                           &#39;str&#39;: string, &#39;str_arr&#39;: string_arr} 
         
         
-        def read_data(self, out=None):
+        def read_data(self, out:str=None) -&gt; str | list | dict:
                 &#39;&#39;&#39;Read any incoming serial commands and parse them to useful data
                 
                 Parameters
@@ -240,13 +238,13 @@ with commands that have the form of a comma delimited string:</p>
                         If no parameter is specified, the function returns a dictionary with \
                         all data from a parsed serial command
                 
-                param : Array[float]
-                        returns Array[float] of the captured coefficients received from the arduino
+                param : list[float]
+                        returns array of the captured coefficients received from the arduino
                         
                 str : str
                         returns the raw string received via serial
                 
-                str_arr : Array[str]
+                str_arr : list[str]
                         returns the received serial command split by a comma (,) delimiter 
                 &#39;&#39;&#39;
                 string = self.read_serial()
@@ -265,14 +263,14 @@ hardcoded value if none is provided</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="ArduinoSerial.SerialCommunication.close"><code class="name flex">
-<span>def <span class="ident">close</span></span>(<span>self)</span>
+<span>def <span class="ident">close</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def close(self):
+<pre><code class="python">def close(self) -&gt; None:
         &#39;&#39;&#39;Close the serial connection. It is nessesary to run this command when a program 
         finished to ensure the serial connection does not stay active. 
         &#39;&#39;&#39;
@@ -283,14 +281,14 @@ hardcoded value if none is provided</dd>
 finished to ensure the serial connection does not stay active.</p></div>
 </dd>
 <dt id="ArduinoSerial.SerialCommunication.flush"><code class="name flex">
-<span>def <span class="ident">flush</span></span>(<span>self)</span>
+<span>def <span class="ident">flush</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def flush(self):
+<pre><code class="python">def flush(self) -&gt; None:
         &#39;&#39;&#39; Block program execution and wait for serial commands to be written
         &#39;&#39;&#39;
         self.arduino.flush()</code></pre>
@@ -298,14 +296,14 @@ finished to ensure the serial connection does not stay active.</p></div>
 <div class="desc"><p>Block program execution and wait for serial commands to be written</p></div>
 </dd>
 <dt id="ArduinoSerial.SerialCommunication.is_active"><code class="name flex">
-<span>def <span class="ident">is_active</span></span>(<span>self)</span>
+<span>def <span class="ident">is_active</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_active(self):
+<pre><code class="python">def is_active(self) -&gt; None:
         &#39;&#39;&#39;Returns whether the serial connection is active (True) or disabled (False)
         
         Returns
@@ -322,14 +320,14 @@ finished to ensure the serial connection does not stay active.</p></div>
 </dl></div>
 </dd>
 <dt id="ArduinoSerial.SerialCommunication.read_data"><code class="name flex">
-<span>def <span class="ident">read_data</span></span>(<span>self, out=None)</span>
+<span>def <span class="ident">read_data</span></span>(<span>self, out: str = None) ‑> str | list | dict</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_data(self, out=None):
+<pre><code class="python">def read_data(self, out:str=None) -&gt; str | list | dict:
         &#39;&#39;&#39;Read any incoming serial commands and parse them to useful data
         
         Parameters
@@ -344,13 +342,13 @@ finished to ensure the serial connection does not stay active.</p></div>
                 If no parameter is specified, the function returns a dictionary with \
                 all data from a parsed serial command
         
-        param : Array[float]
-                returns Array[float] of the captured coefficients received from the arduino
+        param : list[float]
+                returns array of the captured coefficients received from the arduino
                 
         str : str
                 returns the raw string received via serial
         
-        str_arr : Array[str]
+        str_arr : list[str]
                 returns the received serial command split by a comma (,) delimiter 
         &#39;&#39;&#39;
         string = self.read_serial()
@@ -368,23 +366,23 @@ Can be: None, "param", "str", "str_arr"</dd>
 <dt><strong><code>None</code></strong> :&ensp;<code>Dict</code></dt>
 <dd>If no parameter is specified, the function returns a dictionary with
 all data from a parsed serial command</dd>
-<dt><strong><code>param</code></strong> :&ensp;<code>Array[float]</code></dt>
-<dd>returns Array[float] of the captured coefficients received from the arduino</dd>
+<dt><strong><code>param</code></strong> :&ensp;<code>list[float]</code></dt>
+<dd>returns array of the captured coefficients received from the arduino</dd>
 <dt><strong><code>str</code></strong> :&ensp;<code>str</code></dt>
 <dd>returns the raw string received via serial</dd>
-<dt><strong><code>str_arr</code></strong> :&ensp;<code>Array[str]</code></dt>
+<dt><strong><code>str_arr</code></strong> :&ensp;<code>list[str]</code></dt>
 <dd>returns the received serial command split by a comma (,) delimiter</dd>
 </dl></div>
 </dd>
 <dt id="ArduinoSerial.SerialCommunication.read_serial"><code class="name flex">
-<span>def <span class="ident">read_serial</span></span>(<span>self)</span>
+<span>def <span class="ident">read_serial</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read_serial(self): 
+<pre><code class="python">def read_serial(self) -&gt; str: 
         &#39;&#39;&#39; Read any incoming serial commands at the specified port. This is a blocking function
         that waits until data is received, or the connection times out. 
         
@@ -394,8 +392,8 @@ all data from a parsed serial command</dd>
                 String that contains the captured data. Returns &#34;&#34; if no data is captured
                 or if connection times out.
         &#39;&#39;&#39;
-        data = self.arduino.readline().decode(&#39;utf-8&#39;) # blocks unless timeout is given
-        self.arduino.flush()                            # clear buffers
+        data = self.arduino.readline().decode(&#39;utf-8&#39;)  # blocks unless timeout is given
+        self.arduino.flush()                                                    # clear buffers
         data = self._strip_string(data)
         return data</code></pre>
 </details>
@@ -409,14 +407,14 @@ or if connection times out.</dd>
 </dl></div>
 </dd>
 <dt id="ArduinoSerial.SerialCommunication.reset"><code class="name flex">
-<span>def <span class="ident">reset</span></span>(<span>self)</span>
+<span>def <span class="ident">reset</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def reset(self): 
+<pre><code class="python">def reset(self) -&gt; None: 
         &#39;&#39;&#39; Reset the input and output buffers of the serial connection. 
         &#39;&#39;&#39;
         self.arduino.reset_input_buffer()
@@ -425,14 +423,14 @@ or if connection times out.</dd>
 <div class="desc"><p>Reset the input and output buffers of the serial connection.</p></div>
 </dd>
 <dt id="ArduinoSerial.SerialCommunication.write_serial"><code class="name flex">
-<span>def <span class="ident">write_serial</span></span>(<span>self, string)</span>
+<span>def <span class="ident">write_serial</span></span>(<span>self, string: str) ‑> None</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write_serial(self, string):
+<pre><code class="python">def write_serial(self, string: str) -&gt; None:
         &#39;&#39;&#39;Write a string via serial to the specified port
         
         Parameters
