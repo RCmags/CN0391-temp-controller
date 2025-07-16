@@ -67,7 +67,10 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 ----------
                 port: str
                         Serial port used by the Arduino to communicate with the computer. \
-                        Required if `path` is not provided
+                        Required if `path` is not provided. The Serial port changes with operating system:
+                
+                - On Linux and macOS, use &#39;/dev/ttyACM0&#39; or similar
+                - On Windows, use &#39;COM3&#39; or similar
                 
                 baud_rate: int
                         Baud rate at which the Arduino is configured. Optional parameter that defaults to \
@@ -82,17 +85,21 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 # json file is provided
                 if type(path) == str:
-                        self.load_parameters(path)      # get json_data
+                        self.load_json_file(path)       # get json_data
                         self.serial = ArduinoSerial.SerialCommunication( self.json_data[&#34;serial_port&#34;], \
                                                                          self.json_data[&#34;baud_rate&#34;] )
                         # load data
                         self.setup( *self.json_data[&#34;sensor_types&#34;] )
-                        self.load_coefficients()
+                        self.set_json_coefficients()
                 
                 # no json file
                 elif path == None:
                         self.serial = ArduinoSerial.SerialCommunication(port, baud_rate)
-                        self.json_data = {}
+                        # populate empty dict
+                        self.json_data = self._construct_json()
+                        self.json_data[&#34;serial_port&#34;] = port
+                        self.json_data[&#34;baud_rate&#34;] = baud_rate
+        
         
         # ================ setup ================
         # See: `arduino.ino`   -&gt; setup()
@@ -124,7 +131,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                                 break
         
         
-        def setup(self, type0=None, type1=None, type2=None, type3=None):
+        def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None):
                 &#39;&#39;&#39;Assigns the sensor types for each port and performs an initial calibration
                 of the temperature sensors. Defaults to pre-programmed sensor types if no
                 parameters are provided. 
@@ -143,12 +150,17 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 type3 : char
                         Same as before but for channel 3
                 &#39;&#39;&#39;
-                # check inputs
+                # Custom types
                 if type0 and type1 and type2 and type3:
                         cmd = str(type0) + str(type1) + str(type2) + str(type3)
-                        self._setup(cmd)        # Custom types
+                        self._setup(cmd)
+                # Default types
                 else:
-                        self._setup(&#39;0&#39;)        # Default types
+                        self._setup(&#39;0&#39;)
+                
+                # store types
+                self._set_sensor_type_json()
+        
         
         # ================ wrappers ================
         def close(self):
@@ -162,6 +174,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39; Block program execution and wait for serial commands to be written
                 &#39;&#39;&#39;
                 self.serial.flush()
+        
         
         
         def is_active(self):
@@ -188,6 +201,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 return self._setter(cmd)
         
+        
         # ================ functions ================
                 # private
         def _getter(self, cmd, out=None):
@@ -208,13 +222,13 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                         If no parameter is specified, the function returns a dictionary with \
                         all data from a parsed serial command
                 
-                param : Array[float]
-                        returns Array[float] of the captured coefficients received from the arduino
+                param : list[float]
+                        returns list[float] of the captured coefficients received from the arduino
                         
                 str : str
                         returns the raw string received via serial
                 
-                str_arr : Array[str]
+                str_arr : list[str]
                         returns the received serial command split by a comma (,) delimiter 
                 &#39;&#39;&#39;
                 self.serial.write_serial(cmd)
@@ -235,7 +249,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                temp: Array[float]
+                temp: list[float]
                         Temperature of each port: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;0&#34;
@@ -247,7 +261,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                temp: Array[float]
+                temp: list[float]
                         Temperature of each port: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;1&#34;
@@ -259,7 +273,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                temp: Array[float]
+                temp: list[float]
                         Target temperature of each port: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;2&#34;
@@ -280,7 +294,6 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;3,&#34; + str(ch) + &#34;,&#34; + str(target) 
                 self._setter(cmd) 
-        
         
         def set_target_all(self, targ0, targ1, targ2, targ3): 
                 &#39;&#39;&#39;Sets the target temperature for all PID controllers simultaneously
@@ -313,7 +326,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                coefficients: Array[float]
+                coefficients: list[float]
                         values in the order: [Proportional, Integral, Derivative]
                 &#39;&#39;&#39;
                 cmd = &#34;4,&#34; + str(ch)
@@ -339,6 +352,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;5,&#34; + str(ch) + &#34;,&#34; + str(kp) + &#34;,&#34; + str(ki) + &#34;,&#34; + str(kd)
                 self._setter(cmd)
+                self._set_pid_json(ch, kp, ki, kd)
         
         
                         # input limits
@@ -353,7 +367,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                limits: Array[float]
+                limits: list[float]
                         values in the order: [input_max, input_min]
                 &#34;&#34;&#34;
                 cmd = &#34;6,&#34; + str(ch)
@@ -377,6 +391,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;7,&#34; + str(ch) + &#34;,&#34; + str(imax) + &#34;,&#34; + str(imin)
                 self._setter(cmd)
+                self._set_in_limit_json(ch, imax, imin)
         
         
                 # Filters
@@ -392,7 +407,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                coefficients: Array[float]
+                coefficients: list[float]
                          values in the order: [alpha, beta]
                 &#39;&#39;&#39;
                 cmd = &#34;8,&#34; + str(ch)
@@ -416,6 +431,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;9,&#34; + str(ch) + &#34;,&#34; + str(alpha) + &#34;,&#34; + str(beta)
                 self._setter(cmd)
+                self._set_ab_filter_json(ch, alpha, beta)
         
         
                         # kalman
@@ -430,7 +446,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                Coefficients: Array[float]
+                Coefficients: list[float]
                         values in the order: [error, noise]
                 &#39;&#39;&#39;
                 cmd = &#34;10,&#34; + str(ch)
@@ -455,6 +471,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;11,&#34; + str(ch) + &#34;,&#34; + str(error) + &#34;,&#34; + str(noise)
                 self._setter(cmd)
+                self._set_k_filter_json(ch, error, noise)
         
         
         def set_k_filter_state(self, ch, value):
@@ -479,7 +496,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                types: Array[char]
+                types: list[char]
                         Sensor type of each port: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;13&#34;
@@ -497,6 +514,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;14,&#34; + str(ch)
                 self._setter(cmd)
+                self._set_enable_json(ch)
         
         
         def set_enable_all(self): 
@@ -504,6 +522,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;14,4&#34;
                 self._setter(cmd)
+                self._set_enable_all_json()
         
         
         def set_disable(self, ch):
@@ -516,6 +535,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;15,&#34; + str(ch)
                 self._setter(cmd)
+                self._set_disable_json(ch)
         
         
         def set_disable_all(self): 
@@ -523,6 +543,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;15,4&#34;
                 self._setter(cmd)
+                self._set_disable_all_json()
         
         
         def get_enable(self):
@@ -531,11 +552,11 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                state: Array[bool]
+                state: list[bool]
                         condition of each port: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;16&#34;
-                data = self._getter(cmd, out=&#39;param&#39;)
+                data = self._getter(cmd, out=&#39;param&#39;)#.tolist() -&gt; part of arduinoserial
                 return [elem == True for elem in data]  # convert to boolean
         
         
@@ -545,7 +566,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                times: Array[float]
+                times: list[float]
                         Time each port has been active: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;17&#34;
@@ -557,7 +578,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 
                 Returns
                 -------
-                timeouts: Array[float]
+                timeouts: list[float]
                         Time each port can be active: [port1, port2, port3, port4]
                 &#39;&#39;&#39;
                 cmd = &#34;18&#34;
@@ -577,6 +598,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;19,&#34; + str(ch) + &#34;,&#34; + str(time)
                 self._setter(cmd)
+                self._set_timeout_json(ch, time)
         
         
         def set_timeout_inf(self, ch):
@@ -589,9 +611,14 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;19,&#34; + str(ch) + &#34;,-1&#34;   # send value for infinite time. See `Commands.h`
                 self._setter(cmd)
-
+                self._set_timeout_inf_json(ch)
+        
+        
         # ================ JSON coefficients ================
-        def load_parameters(self, path):
+        
+        #----- Reading -------
+        
+        def load_json_file(self, path):
                 &#39;&#39;&#39;Load the JSON file containing the controller parameters
                 
                 Parameters
@@ -599,12 +626,12 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 path : str
                         Path to the JSON file
                 &#39;&#39;&#39;
-                with open(path) as file:
-                        self.json_data = json.load(file)
+                with open(path) as outfile:
+                        self.json_data = json.load(outfile)
         
         
-        def load_coefficients(self):
-                &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `load_parameters` \
+        def set_json_coefficients(self):
+                &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `load_json_file` \
                 beforehand. Will not work otherwise. 
                 &#39;&#39;&#39;
                 # retrieve data
@@ -644,21 +671,230 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 data : Dict
                         Dictionary with all of the parameters and coefficients parsed from the JSON File.
                 &#39;&#39;&#39;
-                return self.json_data</code></pre>
+                return self.json_data
+        
+        #----- Writing -------
+        
+        def _construct_json(self) -&gt; dict:
+                &#39;&#39;&#39;Constructs a dictionary with the form needed to store the controller parameters.
+                
+                Returns
+                -------
+                data : Dict
+                        dictionary with every value set to `None`
+                &#39;&#39;&#39;
+                coeffs = {
+                        &#34;kp&#34;:    None,
+                        &#34;ki&#34;:    None,
+                        &#34;kd&#34;:    None,
+                        &#34;alpha&#34;: None,
+                        &#34;beta&#34;:  None,
+                        &#34;error&#34;: None,
+                        &#34;noise&#34;: None,
+                        &#34;imax&#34;:  None,
+                        &#34;imin&#34;:  None,
+                        &#34;timeout&#34;: None,
+                        &#34;enable&#34;:  None
+                }
+                data = {
+                        &#34;baud_rate&#34;:    None,
+                        &#34;serial_port&#34;:  None,
+                        &#34;sensor_types&#34;: [None, None, None, None],
+                        &#34;parameters&#34;: [ coeffs.copy(), \
+                                        coeffs.copy(), \
+                                        coeffs.copy(), \
+                                        coeffs.copy() ] # ensure a hard copy [:]
+                }
+                
+                return data
+        
+        
+        def save_json_file(self, path):
+                &#39;&#39;&#39;Save a JSON file with the current controller parameters
+                
+                Parameters
+                ----------
+                path : str
+                        Path to the JSON file
+                &#39;&#39;&#39;
+                with open(path, &#34;w&#34;) as outfile:
+                        json_object = json.dumps(self.json_data, indent=4)
+                        outfile.write(json_object)      # store file
+        
+        #-- functions to store state in JSON file:
+        
+        def get_device_coefficients(self):
+                &#39;&#39;&#39;Gets the coefficients currently loaded on the Arduino and prepares them to be stored
+                in a JSON file.
+                &#39;&#39;&#39;
+                # get enabled ports
+                is_enabled = self.get_enable()
+                timeout = self.get_timeout()
+                
+                # set json data
+                for ch in range(0, 4):
+                        # enable
+                        if is_enabled[ch]:
+                                self._set_enable_json(ch)
+                        else:
+                                self._set_disable_json(ch)
+                        
+                        # set state
+                                # pid
+                        var = self.get_pid(ch)
+                        self._set_pid_json( ch, var[0], var[1], var[2] )
+                        
+                                # alpha-beta filter
+                        var = self.get_ab_filter(ch)
+                        self._set_ab_filter_json( ch, var[0], var[1] )
+                        
+                                # kalman filter
+                        var = self.get_k_filter(ch)
+                        self._set_k_filter_json( ch, var[0], var[1] )
+                        
+                                # input limits
+                        var = self.get_in_limit(ch)
+                        self._set_in_limit_json( ch, var[0], var[1] )
+                        
+                                # timeout
+                        self._set_timeout_json( ch, timeout[ch] )
+        
+        
+        def _set_pid_json(self, ch, kp, ki, kd):
+                &#39;&#39;&#39;Stores the PID coefficients in a dictionary
+                
+                Parameters
+                ----------
+                See `set_pid` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;parameters&#34;][ch][&#34;kp&#34;] = kp
+                self.json_data[&#34;parameters&#34;][ch][&#34;ki&#34;] = ki
+                self.json_data[&#34;parameters&#34;][ch][&#34;kd&#34;] = kd
+        
+        
+        def _set_in_limit_json(self, ch, imax, imin):
+                &#39;&#39;&#39;Stores the input limits in a dictionary
+                
+                Parameters
+                ----------
+                See `set_in_limit` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;parameters&#34;][ch][&#34;imax&#34;] = imax
+                self.json_data[&#34;parameters&#34;][ch][&#34;imin&#34;] = imin
+        
+        
+        def _set_k_filter_json(self, ch, error, noise):
+                &#39;&#39;&#39;Stores the coefficients for a kalman filter in a dictionary
+                
+                Parameters
+                ----------
+                See `set_k_filter` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;parameters&#34;][ch][&#34;error&#34;] = error
+                self.json_data[&#34;parameters&#34;][ch][&#34;noise&#34;] = noise
+        
+        
+        def _set_ab_filter_json(self, ch, alpha, beta):
+                &#39;&#39;&#39;Stores the coefficients for an alpha-beta filter in a dictionary
+                
+                Parameters
+                ----------
+                See `set_ab_filter` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;parameters&#34;][ch][&#34;alpha&#34;] = alpha
+                self.json_data[&#34;parameters&#34;][ch][&#34;beta&#34;] = beta
+        
+        
+        def _set_enable_json(self, ch):
+                &#39;&#39;&#39;Stores whether a PID controller is enabled in a dictionary
+                
+                Parameters
+                ----------
+                See `set_enable` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;parameters&#34;][ch][&#34;enable&#34;] = 1
+        
+        
+        def _set_enable_all_json(self):
+                &#39;&#39;&#39;Stores whether all PID controllers are enabled in a dictionary
+                
+                Parameters
+                ----------
+                See `set_enable_all` for details
+                &#39;&#39;&#39;
+                for ch in range(0,4):
+                        self._set_enable_json(ch)
+        
+        
+        def _set_disable_json(self, ch):
+                &#39;&#39;&#39;Stores whether a PID controller is disabled in a dictionary
+                
+                Parameters
+                ----------
+                See `set_disable` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;parameters&#34;][ch][&#34;enable&#34;] = 0
+        
+        
+        def _set_disable_all_json(self):
+                &#39;&#39;&#39;Stores whether all PID controllers are disabled in a dictionary
+                
+                Parameters
+                ----------
+                See `set_disable_all` for details
+                &#39;&#39;&#39;
+                for ch in range(0,4):
+                        self._set_disable_json(ch)
+        
+        
+        def _set_timeout_json(self, ch, time):
+                &#39;&#39;&#39;Stores the time a PID controller can be enabled in a dictionary
+                
+                Parameters
+                ----------
+                See `set_timeout` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;parameters&#34;][ch][&#34;timeout&#34;] = time
+        
+        
+        def _set_timeout_inf_json(self, ch):
+                &#39;&#39;&#39;Stores whether a PID controller stay on indefinitely in a dictionary
+                
+                Parameters
+                ----------
+                See `set_timeout_inf` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;parameters&#34;][ch][&#34;timeout&#34;] = -1 
+                # Uses default for infinite time.
+                # See: /arduino/Serialcom.ino
+        
+        
+        def _set_sensor_type_json(self):
+                &#39;&#39;&#39;Stores the sensor type for each for in a dictionary
+                
+                Parameters
+                ----------
+                See `set_sensor_type` for details
+                &#39;&#39;&#39;
+                self.json_data[&#34;sensor_types&#34;] = self.get_sensor_type()</code></pre>
 </details>
 <div class="desc"><p>Initialize the temperature controller.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>port</code></strong> :&ensp;<code>str</code></dt>
 <dd>Serial port used by the Arduino to communicate with the computer.
-Required if <code>path</code> is not provided</dd>
-<dt><strong><code>baud_rate</code></strong> :&ensp;<code>int</code></dt>
-<dd>Baud rate at which the Arduino is configured. Optional parameter that defaults to
-hardcoded value if none is provided</dd>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>Path to JSON file containing the controller parameters. Parameter is optional
-and overrides <code>port</code> and <code>baud_rate</code></dd>
-</dl></div>
+Required if <code>path</code> is not provided. The Serial port changes with operating system:</dd>
+</dl>
+<ul>
+<li>On Linux and macOS, use '/dev/ttyACM0' or similar</li>
+<li>On Windows, use 'COM3' or similar</li>
+</ul>
+<p>baud_rate: int
+Baud rate at which the Arduino is configured. Optional parameter that defaults to
+hardcoded value if none is provided</p>
+<p>path : str
+Path to JSON file containing the controller parameters. Parameter is optional
+and overrides <code>port</code> and <code>baud_rate</code></p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="TempControllerCN0391.TempControllerCN0391.close"><code class="name flex">
@@ -712,7 +948,7 @@ the connection does not remain active.</p></div>
         
         Returns
         -------
-        coefficients: Array[float]
+        coefficients: list[float]
                  values in the order: [alpha, beta]
         &#39;&#39;&#39;
         cmd = &#34;8,&#34; + str(ch)
@@ -727,9 +963,56 @@ of a specific channel</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>coefficients</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>coefficients</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>values in the order: [alpha, beta]</dd>
 </dl></div>
+</dd>
+<dt id="TempControllerCN0391.TempControllerCN0391.get_device_coefficients"><code class="name flex">
+<span>def <span class="ident">get_device_coefficients</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_device_coefficients(self):
+        &#39;&#39;&#39;Gets the coefficients currently loaded on the Arduino and prepares them to be stored
+        in a JSON file.
+        &#39;&#39;&#39;
+        # get enabled ports
+        is_enabled = self.get_enable()
+        timeout = self.get_timeout()
+        
+        # set json data
+        for ch in range(0, 4):
+                # enable
+                if is_enabled[ch]:
+                        self._set_enable_json(ch)
+                else:
+                        self._set_disable_json(ch)
+                
+                # set state
+                        # pid
+                var = self.get_pid(ch)
+                self._set_pid_json( ch, var[0], var[1], var[2] )
+                
+                        # alpha-beta filter
+                var = self.get_ab_filter(ch)
+                self._set_ab_filter_json( ch, var[0], var[1] )
+                
+                        # kalman filter
+                var = self.get_k_filter(ch)
+                self._set_k_filter_json( ch, var[0], var[1] )
+                
+                        # input limits
+                var = self.get_in_limit(ch)
+                self._set_in_limit_json( ch, var[0], var[1] )
+                
+                        # timeout
+                self._set_timeout_json( ch, timeout[ch] )</code></pre>
+</details>
+<div class="desc"><p>Gets the coefficients currently loaded on the Arduino and prepares them to be stored
+in a JSON file.</p></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.get_enable"><code class="name flex">
 <span>def <span class="ident">get_enable</span></span>(<span>self)</span>
@@ -745,11 +1028,11 @@ of a specific channel</p>
         
         Returns
         -------
-        state: Array[bool]
+        state: list[bool]
                 condition of each port: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;16&#34;
-        data = self._getter(cmd, out=&#39;param&#39;)
+        data = self._getter(cmd, out=&#39;param&#39;)#.tolist() -&gt; part of arduinoserial
         return [elem == True for elem in data]  # convert to boolean
 
 
@@ -759,7 +1042,7 @@ of a specific channel</p>
 A port can be active (True) or disabled (False)</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>state</code></strong> :&ensp;<code>Array[bool]</code></dt>
+<dt><strong><code>state</code></strong> :&ensp;<code>list[bool]</code></dt>
 <dd>condition of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
@@ -776,7 +1059,7 @@ A port can be active (True) or disabled (False)</p>
         
         Returns
         -------
-        temp: Array[float]
+        temp: list[float]
                 Temperature of each port: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;0&#34;
@@ -785,7 +1068,7 @@ A port can be active (True) or disabled (False)</p>
 <div class="desc"><p>Gets the temperature measurements that have been smoothed by a kalman filter</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>temp</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>temp</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>Temperature of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
@@ -808,7 +1091,7 @@ A port can be active (True) or disabled (False)</p>
         
         Returns
         -------
-        limits: Array[float]
+        limits: list[float]
                 values in the order: [input_max, input_min]
         &#34;&#34;&#34;
         cmd = &#34;6,&#34; + str(ch)
@@ -823,7 +1106,7 @@ of a specific channel</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>limits</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>limits</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>values in the order: [input_max, input_min]</dd>
 </dl></div>
 </dd>
@@ -873,7 +1156,7 @@ and PID controllers.</p>
         
         Returns
         -------
-        Coefficients: Array[float]
+        Coefficients: list[float]
                 values in the order: [error, noise]
         &#39;&#39;&#39;
         cmd = &#34;10,&#34; + str(ch)
@@ -888,7 +1171,7 @@ measurements of a specific channel</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>Coefficients</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>Coefficients</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>values in the order: [error, noise]</dd>
 </dl></div>
 </dd>
@@ -909,7 +1192,7 @@ measurements of a specific channel</p>
         
         Returns
         -------
-        coefficients: Array[float]
+        coefficients: list[float]
                 values in the order: [Proportional, Integral, Derivative]
         &#39;&#39;&#39;
         cmd = &#34;4,&#34; + str(ch)
@@ -924,7 +1207,7 @@ Parameters</p>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>coefficients</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>coefficients</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>values in the order: [Proportional, Integral, Derivative]</dd>
 </dl></div>
 </dd>
@@ -941,7 +1224,7 @@ Parameters</p>
         
         Returns
         -------
-        temp: Array[float]
+        temp: list[float]
                 Temperature of each port: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;1&#34;
@@ -950,7 +1233,7 @@ Parameters</p>
 <div class="desc"><p>Gets the raw temperature measurements of the sensor(s)</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>temp</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>temp</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>Temperature of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
@@ -968,7 +1251,7 @@ Parameters</p>
         
         Returns
         -------
-        types: Array[char]
+        types: list[char]
                 Sensor type of each port: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;13&#34;
@@ -981,7 +1264,7 @@ Parameters</p>
 to each port of the CN0391 </p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>types</code></strong> :&ensp;<code>Array[char]</code></dt>
+<dt><strong><code>types</code></strong> :&ensp;<code>list[char]</code></dt>
 <dd>Sensor type of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
@@ -998,7 +1281,7 @@ to each port of the CN0391 </p>
         
         Returns
         -------
-        temp: Array[float]
+        temp: list[float]
                 Target temperature of each port: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;2&#34;
@@ -1010,7 +1293,7 @@ to each port of the CN0391 </p>
 <div class="desc"><p>Gets the target temperatures of the PID controllers</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>temp</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>temp</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>Target temperature of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
@@ -1027,7 +1310,7 @@ to each port of the CN0391 </p>
         
         Returns
         -------
-        timeouts: Array[float]
+        timeouts: list[float]
                 Time each port can be active: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;18&#34;
@@ -1036,7 +1319,7 @@ to each port of the CN0391 </p>
 <div class="desc"><p>Retrieves the time (in seconds) each port is allowed to control its temperature.</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>timeouts</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>timeouts</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>Time each port can be active: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
@@ -1053,7 +1336,7 @@ to each port of the CN0391 </p>
         
         Returns
         -------
-        times: Array[float]
+        times: list[float]
                 Time each port has been active: [port1, port2, port3, port4]
         &#39;&#39;&#39;
         cmd = &#34;17&#34;
@@ -1062,7 +1345,7 @@ to each port of the CN0391 </p>
 <div class="desc"><p>Retrieves the time (in seconds) each port has been actively controlling its temperature.</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>times</code></strong> :&ensp;<code>Array[float]</code></dt>
+<dt><strong><code>times</code></strong> :&ensp;<code>list[float]</code></dt>
 <dd>Time each port has been active: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
@@ -1090,57 +1373,15 @@ to each port of the CN0391 </p>
 <dd>&nbsp;</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.load_coefficients"><code class="name flex">
-<span>def <span class="ident">load_coefficients</span></span>(<span>self)</span>
+<dt id="TempControllerCN0391.TempControllerCN0391.load_json_file"><code class="name flex">
+<span>def <span class="ident">load_json_file</span></span>(<span>self, path)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def load_coefficients(self):
-        &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `load_parameters` \
-        beforehand. Will not work otherwise. 
-        &#39;&#39;&#39;
-        # retrieve data
-        parameters = self.json_data[&#34;parameters&#34;]
-        
-        for channel, param in enumerate(parameters):
-                # load paramters
-                kp    = param[&#34;kp&#34;]
-                ki    = param[&#34;ki&#34;]
-                kd    = param[&#34;kd&#34;]
-                alpha = param[&#34;alpha&#34;]
-                beta  = param[&#34;beta&#34;]
-                error = param[&#34;error&#34;]
-                noise = param[&#34;noise&#34;]
-                imax  = param[&#34;imax&#34;]
-                imin  = param[&#34;imin&#34;]
-                timeout = param[&#34;timeout&#34;]
-                enable  = param[&#34;enable&#34;]
-                
-                # write state
-                self.set_pid(channel, kp, ki, kd)
-                self.set_ab_filter(channel, alpha, beta)
-                self.set_k_filter(channel, error, noise)
-                self.set_in_limit(channel, imax, imin)
-                self.set_timeout(channel, timeout)
-                
-                if enable:
-                        self.set_enable(channel)</code></pre>
-</details>
-<div class="desc"><p>Load the coefficients contained in the JSON file. Requires Calling <code>load_parameters</code>
-beforehand. Will not work otherwise.</p></div>
-</dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.load_parameters"><code class="name flex">
-<span>def <span class="ident">load_parameters</span></span>(<span>self, path)</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def load_parameters(self, path):
+<pre><code class="python">def load_json_file(self, path):
         &#39;&#39;&#39;Load the JSON file containing the controller parameters
         
         Parameters
@@ -1148,10 +1389,37 @@ beforehand. Will not work otherwise.</p></div>
         path : str
                 Path to the JSON file
         &#39;&#39;&#39;
-        with open(path) as file:
-                self.json_data = json.load(file)</code></pre>
+        with open(path) as outfile:
+                self.json_data = json.load(outfile)</code></pre>
 </details>
 <div class="desc"><p>Load the JSON file containing the controller parameters</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to the JSON file</dd>
+</dl></div>
+</dd>
+<dt id="TempControllerCN0391.TempControllerCN0391.save_json_file"><code class="name flex">
+<span>def <span class="ident">save_json_file</span></span>(<span>self, path)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_json_file(self, path):
+        &#39;&#39;&#39;Save a JSON file with the current controller parameters
+        
+        Parameters
+        ----------
+        path : str
+                Path to the JSON file
+        &#39;&#39;&#39;
+        with open(path, &#34;w&#34;) as outfile:
+                json_object = json.dumps(self.json_data, indent=4)
+                outfile.write(json_object)      # store file</code></pre>
+</details>
+<div class="desc"><p>Save a JSON file with the current controller parameters</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -1180,6 +1448,7 @@ beforehand. Will not work otherwise.</p></div>
                 String that contains serial reply from the Arduino
         &#39;&#39;&#39;
         return self._setter(cmd)
+
 
 # ================ functions ================
         # private</code></pre>
@@ -1221,6 +1490,7 @@ beforehand. Will not work otherwise.</p></div>
         &#39;&#39;&#39;
         cmd = &#34;9,&#34; + str(ch) + &#34;,&#34; + str(alpha) + &#34;,&#34; + str(beta)
         self._setter(cmd)
+        self._set_ab_filter_json(ch, alpha, beta)
 
 
                 # kalman</code></pre>
@@ -1254,7 +1524,8 @@ of a specific channel</p>
                 Channel of the Temperature shield. Options are: {0, 1, 2, 3}
         &#39;&#39;&#39;
         cmd = &#34;15,&#34; + str(ch)
-        self._setter(cmd)</code></pre>
+        self._setter(cmd)
+        self._set_disable_json(ch)</code></pre>
 </details>
 <div class="desc"><p>Disables the PID controller of a specific channel</p>
 <h2 id="parameters">Parameters</h2>
@@ -1275,7 +1546,8 @@ of a specific channel</p>
         &#39;&#39;&#39; Disables the PID controller of every channel
         &#39;&#39;&#39;
         cmd = &#34;15,4&#34;
-        self._setter(cmd)</code></pre>
+        self._setter(cmd)
+        self._set_disable_all_json()</code></pre>
 </details>
 <div class="desc"><p>Disables the PID controller of every channel</p></div>
 </dd>
@@ -1296,7 +1568,8 @@ of a specific channel</p>
                 Channel of the Temperature shield. Options are: {0, 1, 2, 3}
         &#39;&#39;&#39;
         cmd = &#34;14,&#34; + str(ch)
-        self._setter(cmd)</code></pre>
+        self._setter(cmd)
+        self._set_enable_json(ch)</code></pre>
 </details>
 <div class="desc"><p>Enables the PID controller of a specific channel</p>
 <h2 id="parameters">Parameters</h2>
@@ -1317,7 +1590,8 @@ of a specific channel</p>
         &#39;&#39;&#39; Enables the PID controller of every channel
         &#39;&#39;&#39;
         cmd = &#34;14,4&#34;
-        self._setter(cmd)</code></pre>
+        self._setter(cmd)
+        self._set_enable_all_json()</code></pre>
 </details>
 <div class="desc"><p>Enables the PID controller of every channel</p></div>
 </dd>
@@ -1346,6 +1620,7 @@ of a specific channel</p>
         &#39;&#39;&#39;
         cmd = &#34;7,&#34; + str(ch) + &#34;,&#34; + str(imax) + &#34;,&#34; + str(imin)
         self._setter(cmd)
+        self._set_in_limit_json(ch, imax, imin)
 
 
         # Filters
@@ -1362,6 +1637,48 @@ of a specific channel</p>
 <dt><strong><code>imin</code></strong> :&ensp;<code>float</code></dt>
 <dd>Minimum allowable target temperature (in Celsius)</dd>
 </dl></div>
+</dd>
+<dt id="TempControllerCN0391.TempControllerCN0391.set_json_coefficients"><code class="name flex">
+<span>def <span class="ident">set_json_coefficients</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_json_coefficients(self):
+        &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `load_json_file` \
+        beforehand. Will not work otherwise. 
+        &#39;&#39;&#39;
+        # retrieve data
+        parameters = self.json_data[&#34;parameters&#34;]
+        
+        for channel, param in enumerate(parameters):
+                # load paramters
+                kp    = param[&#34;kp&#34;]
+                ki    = param[&#34;ki&#34;]
+                kd    = param[&#34;kd&#34;]
+                alpha = param[&#34;alpha&#34;]
+                beta  = param[&#34;beta&#34;]
+                error = param[&#34;error&#34;]
+                noise = param[&#34;noise&#34;]
+                imax  = param[&#34;imax&#34;]
+                imin  = param[&#34;imin&#34;]
+                timeout = param[&#34;timeout&#34;]
+                enable  = param[&#34;enable&#34;]
+                
+                # write state
+                self.set_pid(channel, kp, ki, kd)
+                self.set_ab_filter(channel, alpha, beta)
+                self.set_k_filter(channel, error, noise)
+                self.set_in_limit(channel, imax, imin)
+                self.set_timeout(channel, timeout)
+                
+                if enable:
+                        self.set_enable(channel)</code></pre>
+</details>
+<div class="desc"><p>Load the coefficients contained in the JSON file. Requires Calling <code>load_json_file</code>
+beforehand. Will not work otherwise.</p></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.set_k_filter"><code class="name flex">
 <span>def <span class="ident">set_k_filter</span></span>(<span>self, ch, error, noise)</span>
@@ -1388,7 +1705,8 @@ of a specific channel</p>
                 0 &lt; noise &lt; 1
         &#39;&#39;&#39;
         cmd = &#34;11,&#34; + str(ch) + &#34;,&#34; + str(error) + &#34;,&#34; + str(noise)
-        self._setter(cmd)</code></pre>
+        self._setter(cmd)
+        self._set_k_filter_json(ch, error, noise)</code></pre>
 </details>
 <div class="desc"><p>Sets the coefficients of the kalman filter assigned to the temperature
 measurements of a specific channel</p>
@@ -1464,6 +1782,7 @@ measurements of a specific channel</p>
         &#39;&#39;&#39;
         cmd = &#34;5,&#34; + str(ch) + &#34;,&#34; + str(kp) + &#34;,&#34; + str(ki) + &#34;,&#34; + str(kd)
         self._setter(cmd)
+        self._set_pid_json(ch, kp, ki, kd)
 
 
                 # input limits</code></pre>
@@ -1576,7 +1895,8 @@ measurements of a specific channel</p>
                 Time (in seconds) the controller will be active
         &#39;&#39;&#39;
         cmd = &#34;19,&#34; + str(ch) + &#34;,&#34; + str(time)
-        self._setter(cmd)</code></pre>
+        self._setter(cmd)
+        self._set_timeout_json(ch, time)</code></pre>
 </details>
 <div class="desc"><p>Sets the time a PID controller will be enabled for a specific channel</p>
 <h2 id="parameters">Parameters</h2>
@@ -1604,7 +1924,8 @@ measurements of a specific channel</p>
                 Channel of the Temperature shield. Options are: {0, 1, 2, 3}
         &#39;&#39;&#39;
         cmd = &#34;19,&#34; + str(ch) + &#34;,-1&#34;   # send value for infinite time. See `Commands.h`
-        self._setter(cmd)</code></pre>
+        self._setter(cmd)
+        self._set_timeout_inf_json(ch)</code></pre>
 </details>
 <div class="desc"><p>Allow the PID controller at a specific port to run forever</p>
 <h2 id="parameters">Parameters</h2>
@@ -1614,14 +1935,14 @@ measurements of a specific channel</p>
 </dl></div>
 </dd>
 <dt id="TempControllerCN0391.TempControllerCN0391.setup"><code class="name flex">
-<span>def <span class="ident">setup</span></span>(<span>self, type0=None, type1=None, type2=None, type3=None)</span>
+<span>def <span class="ident">setup</span></span>(<span>self, type0: str = None, type1: str = None, type2: str = None, type3: str = None)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setup(self, type0=None, type1=None, type2=None, type3=None):
+<pre><code class="python">def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None):
         &#39;&#39;&#39;Assigns the sensor types for each port and performs an initial calibration
         of the temperature sensors. Defaults to pre-programmed sensor types if no
         parameters are provided. 
@@ -1640,12 +1961,16 @@ measurements of a specific channel</p>
         type3 : char
                 Same as before but for channel 3
         &#39;&#39;&#39;
-        # check inputs
+        # Custom types
         if type0 and type1 and type2 and type3:
                 cmd = str(type0) + str(type1) + str(type2) + str(type3)
-                self._setup(cmd)        # Custom types
+                self._setup(cmd)
+        # Default types
         else:
-                self._setup(&#39;0&#39;)        # Default types</code></pre>
+                self._setup(&#39;0&#39;)
+        
+        # store types
+        self._set_sensor_type_json()</code></pre>
 </details>
 <div class="desc"><p>Assigns the sensor types for each port and performs an initial calibration
 of the temperature sensors. Defaults to pre-programmed sensor types if no
@@ -1676,10 +2001,11 @@ parameters are provided. </p>
 <ul>
 <li>
 <h4><code><a title="TempControllerCN0391.TempControllerCN0391" href="#TempControllerCN0391.TempControllerCN0391">TempControllerCN0391</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.close" href="#TempControllerCN0391.TempControllerCN0391.close">close</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.flush" href="#TempControllerCN0391.TempControllerCN0391.flush">flush</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.get_ab_filter" href="#TempControllerCN0391.TempControllerCN0391.get_ab_filter">get_ab_filter</a></code></li>
+<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_device_coefficients" href="#TempControllerCN0391.TempControllerCN0391.get_device_coefficients">get_device_coefficients</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.get_enable" href="#TempControllerCN0391.TempControllerCN0391.get_enable">get_enable</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.get_filter" href="#TempControllerCN0391.TempControllerCN0391.get_filter">get_filter</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.get_in_limit" href="#TempControllerCN0391.TempControllerCN0391.get_in_limit">get_in_limit</a></code></li>
@@ -1692,8 +2018,8 @@ parameters are provided. </p>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.get_timeout" href="#TempControllerCN0391.TempControllerCN0391.get_timeout">get_timeout</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.get_timer" href="#TempControllerCN0391.TempControllerCN0391.get_timer">get_timer</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.is_active" href="#TempControllerCN0391.TempControllerCN0391.is_active">is_active</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.load_coefficients" href="#TempControllerCN0391.TempControllerCN0391.load_coefficients">load_coefficients</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.load_parameters" href="#TempControllerCN0391.TempControllerCN0391.load_parameters">load_parameters</a></code></li>
+<li><code><a title="TempControllerCN0391.TempControllerCN0391.load_json_file" href="#TempControllerCN0391.TempControllerCN0391.load_json_file">load_json_file</a></code></li>
+<li><code><a title="TempControllerCN0391.TempControllerCN0391.save_json_file" href="#TempControllerCN0391.TempControllerCN0391.save_json_file">save_json_file</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.send_serial_command" href="#TempControllerCN0391.TempControllerCN0391.send_serial_command">send_serial_command</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.set_ab_filter" href="#TempControllerCN0391.TempControllerCN0391.set_ab_filter">set_ab_filter</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.set_disable" href="#TempControllerCN0391.TempControllerCN0391.set_disable">set_disable</a></code></li>
@@ -1701,6 +2027,7 @@ parameters are provided. </p>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.set_enable" href="#TempControllerCN0391.TempControllerCN0391.set_enable">set_enable</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.set_enable_all" href="#TempControllerCN0391.TempControllerCN0391.set_enable_all">set_enable_all</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.set_in_limit" href="#TempControllerCN0391.TempControllerCN0391.set_in_limit">set_in_limit</a></code></li>
+<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_json_coefficients" href="#TempControllerCN0391.TempControllerCN0391.set_json_coefficients">set_json_coefficients</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.set_k_filter" href="#TempControllerCN0391.TempControllerCN0391.set_k_filter">set_k_filter</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.set_k_filter_state" href="#TempControllerCN0391.TempControllerCN0391.set_k_filter_state">set_k_filter_state</a></code></li>
 <li><code><a title="TempControllerCN0391.TempControllerCN0391.set_pid" href="#TempControllerCN0391.TempControllerCN0391.set_pid">set_pid</a></code></li>

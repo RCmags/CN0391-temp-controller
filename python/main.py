@@ -7,9 +7,39 @@ import time
 import KeyboardThread as kb
 import TempControllerCN0391 as cntl
 
-#=========================================================================================
+#===================================================================================================
+
+def vert_array(arr: list) -> np.ndarray:
+	'''Convert an horizontal array into a vertical numpy array. This function is well suited to
+	transform parsed data into a form that is easily plotted by matplotlib. 
+	
+	Returns
+	-------
+	output : np.array
+		Numpy array with the shape: [[]...[]]
+	'''
+	return np.array(arr).reshape(-1,1) 
+
+#===================================================================================================
 
 def main(window, ylims, path=None, nsamples=10):
+	'''Interactive plot that displays temperature measurement in real time. Terminal can be used
+	at the same time to send commands to the Arduino and modify the behavior of controller.
+	
+	Parameters
+	----------
+	window : float
+		Horizontal size of x-axis of the real time plot
+	
+	ylims : list
+		Range of visible temperatures in the real time plot; [minimum, maximum]
+	
+	path : str
+		path to json file that contains the parameters to configure the controller
+	
+	nsamples : int
+		number of data samples used to generate the first points in the plot.
+	'''
 	# ---- Serial ----
 	controller = cntl.TempControllerCN0391(path=path)
 	
@@ -21,7 +51,7 @@ def main(window, ylims, path=None, nsamples=10):
 	time_init = 0
 	time.sleep(2)			# wait for serial to reload
 	
-	y_init = sum( [controller.get_filter() for i in range(nsamples)] ) / nsamples
+	y_init = sum( [vert_array(controller.get_filter()) for i in range(nsamples)] ) / nsamples
 	n_data = np.size(y_init)
 	
 	# figure
@@ -62,6 +92,7 @@ def main(window, ylims, path=None, nsamples=10):
 			y = y_init.copy()
 		else:
 			ynew = controller.get_filter()	# breaks when interrupt is called
+			ynew = vert_array(ynew)			# transform to vertical numpy array
 			y = np.hstack( (y, ynew) )
 		
 		time_zero = time_now - time_init
@@ -86,25 +117,10 @@ def main(window, ylims, path=None, nsamples=10):
 	controller.serial.reset()
 	controller.serial.close()
 	keythread.stop()
-	
-#=========================================================================================
+
+#===================================================================================================
 
 if __name__ == '__main__':
 	main(path='coefficients.json', window=120, ylims=[20, 80])
 
-"""
-Note: the Serial port changes with operating system:
-		On Linux and macOS, use '/dev/ttyACM0' or similar
-		On Windows, use 'COM3' or similar
 
-PORT        String of the Serial port used by the arduino
-BAUD_RATE   Baud rate used by the arduino. Must match the value in "Constants.h"
-X_WINDOW    Horizontal size of x-axis of the real time plot
-Y_LIMS      Range of visible temperatures in the real time plot; [minimum, maximum]
-"""
-
-# Q: how to store data into file? <--- part of GUI backend? 
-# time, filter_temp, target
-# num , num        , num
-# 
-# note, data could be collected when serial calls are performed. 

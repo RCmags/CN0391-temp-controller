@@ -11,9 +11,10 @@ with commands that have the form of a comma delimited string:
 - The remaining `<values>` can be numbers or characters relevant to the aformentioned function.  
 """
 
+# Global libraries
 import serial
-import numpy as np
 import time
+
 # NOTE: keyboard inputs are separate from receiving and sending serial commands.
 
 #--- CONSTANTS ---
@@ -27,7 +28,7 @@ _DELAY    = 1.0  # seconds | Required delay that allows serial command to be sen
 
 class SerialCommunication:
 	
-	def __init__(self, port, baud_rate):
+	def __init__(self, port: str, baud_rate: int) -> None:
 		'''Initialize serial communication with an Arduino.
 		
 		Parameters
@@ -45,7 +46,7 @@ class SerialCommunication:
 	
 	
 	# helpers
-	def close(self):
+	def close(self) -> None:
 		'''Close the serial connection. It is nessesary to run this command when a program 
 		finished to ensure the serial connection does not stay active. 
 		'''
@@ -53,7 +54,7 @@ class SerialCommunication:
 		self._isActive = False
 	
 	
-	def is_active(self):
+	def is_active(self) -> None:
 		'''Returns whether the serial connection is active (True) or disabled (False)
 		
 		Returns
@@ -63,20 +64,20 @@ class SerialCommunication:
 		return self._isActive
 	
 	
-	def flush(self):
+	def flush(self) -> None:
 		''' Block program execution and wait for serial commands to be written
 		'''
 		self.arduino.flush()
 	
 	
-	def reset(self): 
+	def reset(self) -> None: 
 		''' Reset the input and output buffers of the serial connection. 
 		'''
 		self.arduino.reset_input_buffer()
 		self.arduino.reset_output_buffer()
 	
 	
-	def _strip_string(self, string):
+	def _strip_string(self, string: str) -> None:
 		''' Private function remote trailing characters that are send via serial by the Arduino.
 		
 		Parameters
@@ -95,7 +96,7 @@ class SerialCommunication:
 	
 	
 	# read serial strings
-	def read_serial(self): 
+	def read_serial(self) -> str: 
 		''' Read any incoming serial commands at the specified port. This is a blocking function
 		that waits until data is received, or the connection times out. 
 		
@@ -105,14 +106,14 @@ class SerialCommunication:
 			String that contains the captured data. Returns "" if no data is captured
 			or if connection times out.
 		'''
-		data = self.arduino.readline().decode('utf-8') # blocks unless timeout is given
-		self.arduino.flush()				# clear buffers
+		data = self.arduino.readline().decode('utf-8') 	# blocks unless timeout is given
+		self.arduino.flush()							# clear buffers
 		data = self._strip_string(data)
 		return data
 	
 	
 	# write serial strings
-	def write_serial(self, string):
+	def write_serial(self, string: str) -> None:
 		'''Write a string via serial to the specified port
 		
 		Parameters
@@ -129,7 +130,7 @@ class SerialCommunication:
 	
 	
 	# parse command
-	def _parse_serial_string(self, string, out):
+	def _parse_serial_string(self, string: str, out: str) -> str | list | dict:
 		'''Private function that parses a serial string and converts it a list of coefficients
 		
 		Parameters
@@ -156,7 +157,7 @@ class SerialCommunication:
 			return string_arr
 
 			# outputs
-		output = np.array( [] )
+		output = []
 		parseIsGood = True
 		
 		# convert parameters
@@ -170,12 +171,10 @@ class SerialCommunication:
 				try:
 					number = float(element)
 				except:
-					number = 0 							# default value
+					number = 0 	# default value
 					parseIsGood = False
 					break;
-				
-				output = np.append(output, number)
-				output = output.reshape(-1,1) 			# array flip to vertical
+				output.append(number)
 		
 		if out == 'param':
 			return output
@@ -185,7 +184,7 @@ class SerialCommunication:
 		          'str': string, 'str_arr': string_arr} 
 	
 	
-	def read_data(self, out=None):
+	def read_data(self, out:str=None) -> str | list | dict:
 		'''Read any incoming serial commands and parse them to useful data
 		
 		Parameters
@@ -200,18 +199,17 @@ class SerialCommunication:
 			If no parameter is specified, the function returns a dictionary with \
 			all data from a parsed serial command
 		
-		param : Array[float]
-			returns Array[float] of the captured coefficients received from the arduino
+		param : list[float]
+			returns array of the captured coefficients received from the arduino
 			
 		str : str
 			returns the raw string received via serial
 		
-		str_arr : Array[str]
+		str_arr : list[str]
 			returns the received serial command split by a comma (,) delimiter 
 		'''
 		string = self.read_serial()
 		return self._parse_serial_string(string, out)
-	
 
 
 
