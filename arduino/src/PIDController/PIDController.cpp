@@ -101,9 +101,10 @@ void PIDcontroller::updateFilter(float input) {
 
 //==== Input Limits ====
 
+// NOTE: cannot constrain() normalized values as these are satured at the PID controller output
+
 float PIDcontroller::normalize(float input) {
-	float output = input*in_scale + in_offset; // Beware sign of offset
-	return constrain(output, 0, 1);            // saturate
+	return input*in_scale + in_offset; // Beware sign of offset
 }
 
 void PIDcontroller::setInputLimits(float imax, float imin) {
@@ -112,7 +113,7 @@ void PIDcontroller::setInputLimits(float imax, float imin) {
 		imax = IN_DIFF_MIN;      // imax = IN_DIFF_MIN
 		imin = 0;                // imin = 0
 	}
-
+	
 	in_scale = 1.0/(imax - imin); // This code is suceptible to run-time errors if ram is full.
 	in_offset = -imin * in_scale;
 }

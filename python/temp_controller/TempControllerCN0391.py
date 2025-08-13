@@ -2,14 +2,16 @@
 This module is a wrapper for the serial commands needed to adjust all of the parameters
 of a temperature controller built with the CN0391 temperature shield and an Arduino Uno.
 """
-# Note: Serial commands are specified in "Commands.h" within the Arduino sketch. 
+# Note: 
+# - Serial commands are specified in "Commands.h" within the Arduino sketch. 
+# - Use the following TAG to for-loops for optimization: [FORLOOP]
 
 # Global libraries
 import time
 import json
 
 # local file
-from temp_controller import ArduinoSerial
+import ArduinoSerial
 
 #--- CONSTANTS ---
 _DEFAULT_BAUD = 9600
@@ -18,7 +20,8 @@ _DEFAULT_BAUD = 9600
 
 class TempControllerCN0391:
 
-	def __init__(self, port:str = None, baud_rate:int = _DEFAULT_BAUD, path:str = None):
+	def __init__(self, port:str = None, baud_rate:int = _DEFAULT_BAUD, path:str = None,
+	             sensor_types:list = None ):
 		'''Initialize the temperature controller.
 		
 		__Note:__ The Serial port changes with operating system:   
@@ -29,45 +32,57 @@ class TempControllerCN0391:
 		Parameters
 		----------
 		port: str
-			Serial port used by the Arduino to communicate with the computer. \
+			Serial port used by the Arduino to communicate with the computer.
 			Required if `path` is not provided. 
 		
 		baud_rate: int
-			Baud rate at which the Arduino is configured. Optional parameter that defaults to \
+			Baud rate at which the Arduino is configured. Optional parameter that defaults to
 			hardcoded value if none is provided
 		
 		path : str
-			Path to JSON file containing the controller parameters. Parameter is optional \
+			Path to JSON file containing the controller parameters. Parameter is optional
 			and overrides `port` and `baud_rate`
+		
+		sensor_types: list(str)
+			List of characters that indicate the type of sensor connected to each channel of the 
+			CN0391 sensor module. Each element in the list corresponds to the port with the same
+			index. That is: `[ch0, ch1, ch2, ch3]`. Options for the sensor types are: 
+			`T, J, K, E, S, R, N, B`.
 		'''
 		# initialize dictionary
 		self.json_data = {}
 		
 		# json file is provided
-		if type(path) == str:
-			self.load_json_file(path)	# get json_data
+		if path != None:
+			self._load_json_file(path)
 			self.serial = ArduinoSerial.SerialCommunication( self.json_data["serial_port"], \
 			                                                 self.json_data["baud_rate"] )
-			# load data
-			self.setup( *self.json_data["sensor_types"] )
-			self.set_json_coefficients()
+			# send and save data
+			self._setup( self.json_data["sensor_types"] )
+			self._set_json_coefficients()
 		
 		# no json file
-		elif path == None:
-			self.serial = ArduinoSerial.SerialCommunication(port, baud_rate)
+		elif path == None and port != None:
 			# populate empty dict
 			self.json_data = self._construct_json()
 			self.json_data["serial_port"] = port
 			self.json_data["baud_rate"] = baud_rate
-	
+			
+			# send serial commands
+			self.serial = ArduinoSerial.SerialCommunication(port, baud_rate)
+			self._setup( sensor_types );
+			self._get_device_coefficients()
+		
+		else:
+			raise ValueError("Did not specify a Serial Port!")
 	
 	# ================ setup ================
 	# See: `arduino.ino`   -> setup()
     #      `SerialCom.ino` -> readSensorTypes()
 	
-	def _setup(self, cmd:str) -> None:
-		'''Private implementation of setup(). Captures and sends serial commands \
-		to configure sensor types. Calibration is performed automatically by the Arduino. 
+	def _setup_arduino(self, cmd:str) -> None:
+		'''Captures and sends serial commands to configure the sensor types on the Arduino.
+		Sensor calibration is also performed automatically by the Arduino. 
 		
 		Parameters
 		----------
@@ -76,9 +91,9 @@ class TempControllerCN0391:
 		'''
 		# delay to initialize device
 		self.serial.flush()
-		time.sleep(2) 
+		time.sleep(2)
 		
-		# check and send response
+		# check and send response | [TAG] -> Add timeout to prevent blocking code?
 		while True:
 			data = self.serial.read_serial()
 			print(data)
@@ -91,45 +106,37 @@ class TempControllerCN0391:
 				break
 	
 	
-	def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None) -> None:
+	def _setup(self, sensor_types:list) -> None:
 		'''Assigns the sensor types for each port and performs an initial calibration
 		of the temperature sensors. Defaults to pre-programmed sensor types if no
 		parameters are provided. 
 		
 		Parameters
 		----------
-		type0 : str
-			Sensor type (N, K, J, etc) of channel 0. Must be a character.
-		
-		type1 : str
-			Same as before but for channel 1
-		
-		type2 : str
-			Same as before but for channel 2
-		
-		type3 : str
-			Same as before but for channel 3
+		sensor_types: list(str)
+			List of characters with the sensor type for each port. 
+			See `Constants.h` in Arduino code for allowable types.
 		'''
-		# Custom types
-		if type0 and type1 and type2 and type3:
-			cmd = str(type0) + str(type1) + str(type2) + str(type3)
-			self._setup(cmd)
 		# Default types
-		else:
-			self._setup('0')
+		if sensor_types == None:
+			self._setup_arduino('0')
 		
-		# synchronize parameters with arduino
+		# Custom types
+		else:
+			# check inputs.
+			for char in sensor_types:
+				if char in ('T', 'J', 'K', 'E', 'S', 'R', 'N', 'B'):
+					continue
+				else:
+					self.serial.close() # gracefully stop connection
+					ValueError("Provided an incorrect sensor type for the Arduino setup")
+			
+			# send types
+			cmd = "".join(sensor_types) # Concatenate inputs. Ex: "RNTJ"
+			self._setup_arduino(cmd)
+		
 		self._set_sensor_type_json()
-		self._get_device_coefficients()
 	
-	# Wrapper that mimics a for loop to increase speed. Use the following TAG to find calls. 
-	# [FORLOOP]
-	def _unwrap_loop(self, func:callable) -> None:
-		# run for all channels
-		func(0)
-		func(1)
-		func(2)
-		func(3)
 	
 	# ================ wrappers ================
 	def close(self) -> None:
@@ -524,8 +531,8 @@ class TempControllerCN0391:
 		'''
 		cmd = "16"
 		data = self._getter(cmd, out='param')
-		return [elem == True for elem in data]	# convert int to boolean | vectorized?
 		#[FORLOOP]
+		return [elem == True for elem in data]
 	
 		# timers
 	def get_timer(self) -> list:
@@ -585,8 +592,8 @@ class TempControllerCN0391:
 	
 	#----- Reading -------
 	
-	def load_json_file(self, path:str) -> None:
-		'''Load the JSON file containing the controller parameters
+	def _load_json_file(self, path:str) -> None:
+		'''Load a JSON file containing the controller parameters.
 		
 		Parameters
 		----------
@@ -597,17 +604,14 @@ class TempControllerCN0391:
 			self.json_data = json.load(outfile)
 	
 	
-	def set_json_coefficients(self) -> None:
-		'''Load the coefficients contained in the JSON file. Requires Calling `load_json_file` \
+	def _set_json_coefficients(self) -> None:
+		'''Load the coefficients contained in the JSON file. Requires Calling `_load_json_file` \
 		beforehand. Will not work otherwise. 
 		'''
 		# retrieve data
 		parameters = self.json_data["parameters"]
 		
 		#[FORLOOP]
-		#def set_params(channel:int, p) -> None:
-		# Convert this loop into lambda callling a function? One loop per parameter?
-		
 		for channel, param in enumerate(parameters):
 			# load paramters
 			kp    = param["kp"]
@@ -711,8 +715,8 @@ class TempControllerCN0391:
 		is_enabled = self.get_enable()
 		timeout = self.get_timeout()
 		
-			# encapsulate getter
-		def get_coeff(ch: int) -> None:
+		#[FORLOOP]
+		for ch in range(0, 4):
 			if is_enabled[ch]:
 				self._set_enable_json(ch)
 			else:
@@ -734,9 +738,7 @@ class TempControllerCN0391:
 				# timeout
 			self._set_timeout_json( ch, timeout[ch] )
 		
-		#[FORLOOP]
-		self._unwrap_loop(get_coeff)
-	
+		
 	def _set_pid_json(self, ch:int, kp:float, ki:float, kd:float) -> None:
 		'''Stores the PID coefficients in a dictionary
 		
@@ -799,12 +801,10 @@ class TempControllerCN0391:
 		----------
 		See `set_enable_all` for details
 		'''
-		'''
+		#[FORLOOP]
 		for ch in range(0,4):	# -> Can unwrap
 			self._set_enable_json(ch)
-		'''
-		self._unwrap_loop(self._set_enable_json)
-		#[FORLOOP]
+	
 	
 	def _set_disable_json(self, ch:int) -> None:
 		'''Stores whether a PID controller is disabled in a dictionary
@@ -823,12 +823,10 @@ class TempControllerCN0391:
 		----------
 		See `set_disable_all` for details
 		'''
-		'''
-		for ch in range(0,4): #-> can unwrap
-			self._set_disable_json(ch)
-		'''
-		self._unwrap_loop(self._set_disable_json)
 		#[FORLOOP]
+		for ch in range(0,4):
+			self._set_disable_json(ch)
+	
 	
 	def _set_timeout_json(self, ch:int, time:float) -> None:
 		'''Stores the time a PID controller can be enabled in a dictionary

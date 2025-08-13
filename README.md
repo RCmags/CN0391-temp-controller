@@ -97,16 +97,9 @@ The parameters for each function are available through the documentation for the
 ## Python API
 The serial commands can also be called via a Python API to execute the functions in an orderly and
 verbose manner. Each function show in the table has an equivalent function in the `TempControllerCN0391` 
-class. For more details, see the documentation for the modules:
+class. For a complete list of details, see:   
 
-- [TempControllerCN0391](python/html/TempControllerCN0391.html) : Contains list of parameters for both Serial and Python API
-
-- [ArduinoSerial](python/html/ArduinoSerial.html)
-
-- [KeyboardThread](python/html/KeyboardThread.html)
-
-- [main](python/html/main.html) : Interactive plot program
-
+[TempController](./python/html/TempController/index.html) | *Python module documentation*
 
 ## Power Control
 The user can choose which digital output pins on the Arduino will be used to control a solid-state relay or a MOSFET. The Arduino activates the chosen electrical switch using a modified pulse-frequecy modulation (PFM) wave, controlling the average power dissipated by the heating element and precisely controlling the temperature.

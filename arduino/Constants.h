@@ -6,10 +6,10 @@
 /* Default PID coefficients: */
 //                             PID       |  INPUT (C) |  FILTER
 //                      kp,   ki,    kd  | imax, imin | alpha, beta
-#define PID_COEFF_1	    0.0,  0.0,   0.0,  0.0,  0.0,   0.0,   0.0
-#define PID_COEFF_2     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,   0.0
-#define PID_COEFF_3     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,   0.0
-#define PID_COEFF_4     0.0,  0.0,   0.0,  0.0,  0.0,   0.0,   0.0
+#define PID_COEFF_1	    0.0,  0.0,   0.0,  5.0,  0.0,   0.0,   0.0
+#define PID_COEFF_2     0.0,  0.0,   0.0,  10.0,  0.0,   0.0,   0.0
+#define PID_COEFF_3     0.0,  0.0,   0.0,  20.0,  0.0,   0.0,   0.0
+#define PID_COEFF_4     0.0,  0.0,   0.0,  30.0,  0.0,   0.0,   0.0
 
 /* PID output pins: */
 //					diginal pin

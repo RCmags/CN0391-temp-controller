@@ -14,11 +14,15 @@ from typing import Callable
 
 class KeyboardThread(threading.Thread):
 	
-	def __init__(self, function:Callable = None, name:str = 'keyboard-input-thread'):
+	def __init__(self, exit:str, function:Callable = None, name:str = 'keyboard-input-thread'):
 		'''Initialize thread to receive keyboard inputs
 		
 		Parameters
 		----------
+		exit: str
+			String that is used to stop capturing user inputs. Once the user enters this string,
+			the thread will close and the input() function will not update. 
+		
 		function: func
 			Callback function that is execution whenever the user provides a keyboard input.
 			Must have the form `def function(string)` that takes a string 
@@ -28,12 +32,17 @@ class KeyboardThread(threading.Thread):
 			label for the thread. If none is given it defaults to a generic name. 
 		'''
 		super(KeyboardThread, self).__init__(name=name, daemon=True)
-		# variables
-		self._function = function
-		self._stop = threading.Event()
-		self._input_data = ""					# initialize to empty string
+		# Variables
+			# inputs
 		self._flag = False
-		# initialize thread
+		self._input_data = ""					# initialize to empty string
+		self._function = function
+			# closing thread
+		self._loop_flag = True
+		self._EXIT_STRING = exit
+		self._stop = threading.Event()
+		
+		# Initialize thread
 		self.start()
 	
 	def run(self) -> None:
@@ -43,8 +52,14 @@ class KeyboardThread(threading.Thread):
 		while self.is_active():
 			# get input
 			self._input_data = input()
+			
 			if self._input_data != "":
 				self._flag = True	# data is unread
+				
+				if self._input_data == self._EXIT_STRING:
+					self._loop_flag = False
+					break
+				
 			# callback
 			if self._function != None:
 				self._function( self._input_data ) #waits to get input + Return
@@ -89,6 +104,7 @@ class KeyboardThread(threading.Thread):
 		program has finished to prevent the thread from blocking the program from closing. 
 		'''
 		self._stop.set()
+		self.join()
 	
 	
 	def is_active(self) -> bool:
@@ -100,7 +116,7 @@ class KeyboardThread(threading.Thread):
 			True when the thread is active and listening to inputs
 			False when `stop()` is called and the thread is closed. 
 		'''
-		return not self._stop.isSet()
+		return (not self._stop.isSet()) and self._loop_flag
 	
 	
 	#def start(self): # begin thread

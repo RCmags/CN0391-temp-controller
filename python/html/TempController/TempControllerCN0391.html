@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.6">
-<title>TempControllerCN0391 API documentation</title>
+<title>TempController.TempControllerCN0391 API documentation</title>
 <meta name="description" content="This module is a wrapper for the serial commands needed to adjust all of the parameters
 of a temperature controller built with the CN0391 temperature …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -34,7 +34,7 @@ el.replaceWith(d);
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>TempControllerCN0391</code></h1>
+<h1 class="title">Module <code>TempController.TempControllerCN0391</code></h1>
 </header>
 <section id="section-intro">
 <p>This module is a wrapper for the serial commands needed to adjust all of the parameters
@@ -49,9 +49,9 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="TempControllerCN0391.TempControllerCN0391"><code class="flex name class">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391"><code class="flex name class">
 <span>class <span class="ident">TempControllerCN0391</span></span>
-<span>(</span><span>port: str = None, baud_rate: str = 9600, path: str = None)</span>
+<span>(</span><span>port: str = None,<br>baud_rate: int = 9600,<br>path: str = None,<br>sensor_types: list = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -60,7 +60,8 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
 </summary>
 <pre><code class="python">class TempControllerCN0391:
 
-        def __init__(self, port:str = None, baud_rate:str = _DEFAULT_BAUD, path:str = None):
+        def __init__(self, port:str = None, baud_rate:int = _DEFAULT_BAUD, path:str = None,
+                     sensor_types:list = None ):
                 &#39;&#39;&#39;Initialize the temperature controller.
                 
                 __Note:__ The Serial port changes with operating system:   
@@ -71,45 +72,57 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 Parameters
                 ----------
                 port: str
-                        Serial port used by the Arduino to communicate with the computer. \
+                        Serial port used by the Arduino to communicate with the computer.
                         Required if `path` is not provided. 
                 
                 baud_rate: int
-                        Baud rate at which the Arduino is configured. Optional parameter that defaults to \
+                        Baud rate at which the Arduino is configured. Optional parameter that defaults to
                         hardcoded value if none is provided
                 
                 path : str
-                        Path to JSON file containing the controller parameters. Parameter is optional \
+                        Path to JSON file containing the controller parameters. Parameter is optional
                         and overrides `port` and `baud_rate`
+                
+                sensor_types: list(str)
+                        List of characters that indicate the type of sensor connected to each channel of the 
+                        CN0391 sensor module. Each element in the list corresponds to the port with the same
+                        index. That is: `[ch0, ch1, ch2, ch3]`. Options for the sensor types are: 
+                        `T, J, K, E, S, R, N, B`.
                 &#39;&#39;&#39;
                 # initialize dictionary
                 self.json_data = {}
                 
                 # json file is provided
-                if type(path) == str:
-                        self.load_json_file(path)       # get json_data
+                if path != None:
+                        self._load_json_file(path)
                         self.serial = ArduinoSerial.SerialCommunication( self.json_data[&#34;serial_port&#34;], \
                                                                          self.json_data[&#34;baud_rate&#34;] )
-                        # load data
-                        self.setup( *self.json_data[&#34;sensor_types&#34;] )
-                        self.set_json_coefficients()
+                        # send and save data
+                        self._setup( self.json_data[&#34;sensor_types&#34;] )
+                        self._set_json_coefficients()
                 
                 # no json file
-                elif path == None:
-                        self.serial = ArduinoSerial.SerialCommunication(port, baud_rate)
+                elif path == None and port != None:
                         # populate empty dict
                         self.json_data = self._construct_json()
                         self.json_data[&#34;serial_port&#34;] = port
                         self.json_data[&#34;baud_rate&#34;] = baud_rate
-        
+                        
+                        # send serial commands
+                        self.serial = ArduinoSerial.SerialCommunication(port, baud_rate)
+                        self._setup( sensor_types );
+                        self._get_device_coefficients()
+                
+                else:
+                        raise ValueError(&#34;Did not specify a Serial Port!&#34;)
         
         # ================ setup ================
         # See: `arduino.ino`   -&gt; setup()
     #      `SerialCom.ino` -&gt; readSensorTypes()
         
-        def _setup(self, cmd:str) -&gt; None:
-                &#39;&#39;&#39;Private implementation of setup(). Captures and sends serial commands \
-                to configure sensor types. Calibration is performed automatically by the Arduino. 
+        def _setup_arduino(self, cmd:str) -&gt; None:
+                &#39;&#39;&#39;Captures and sends serial commands to configure the sensor types on the Arduino.
+                Sensor calibration is also performed automatically by the Arduino. 
                 
                 Parameters
                 ----------
@@ -118,9 +131,9 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 # delay to initialize device
                 self.serial.flush()
-                time.sleep(2) 
+                time.sleep(2)
                 
-                # check and send response
+                # check and send response | [TAG] -&gt; Add timeout to prevent blocking code?
                 while True:
                         data = self.serial.read_serial()
                         print(data)
@@ -133,34 +146,35 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                                 break
         
         
-        def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None) -&gt; None:
+        def _setup(self, sensor_types:list) -&gt; None:
                 &#39;&#39;&#39;Assigns the sensor types for each port and performs an initial calibration
                 of the temperature sensors. Defaults to pre-programmed sensor types if no
                 parameters are provided. 
                 
                 Parameters
                 ----------
-                type0 : str
-                        Sensor type (N, K, J, etc) of channel 0. Must be a character.
-                
-                type1 : str
-                        Same as before but for channel 1
-                
-                type2 : str
-                        Same as before but for channel 2
-                
-                type3 : str
-                        Same as before but for channel 3
+                sensor_types: list(str)
+                        List of characters with the sensor type for each port. 
+                        See `Constants.h` in Arduino code for allowable types.
                 &#39;&#39;&#39;
-                # Custom types
-                if type0 and type1 and type2 and type3:
-                        cmd = str(type0) + str(type1) + str(type2) + str(type3)
-                        self._setup(cmd)
                 # Default types
-                else:
-                        self._setup(&#39;0&#39;)
+                if sensor_types == None:
+                        self._setup_arduino(&#39;0&#39;)
                 
-                # store types
+                # Custom types
+                else:
+                        # check inputs.
+                        for char in sensor_types:
+                                if char in (&#39;T&#39;, &#39;J&#39;, &#39;K&#39;, &#39;E&#39;, &#39;S&#39;, &#39;R&#39;, &#39;N&#39;, &#39;B&#39;):
+                                        continue
+                                else:
+                                        self.serial.close() # gracefully stop connection
+                                        ValueError(&#34;Provided an incorrect sensor type for the Arduino setup&#34;)
+                        
+                        # send types
+                        cmd = &#34;&#34;.join(sensor_types) # Concatenate inputs. Ex: &#34;RNTJ&#34;
+                        self._setup_arduino(cmd)
+                
                 self._set_sensor_type_json()
         
         
@@ -176,8 +190,6 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39; Block program execution and wait for serial commands to be written
                 &#39;&#39;&#39;
                 self.serial.flush()
-        
-        
         
         def is_active(self) -&gt; bool:
                 &#39;&#39;&#39;Returns whether the serial connection is active (True) or disabled (False)
@@ -559,8 +571,8 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 &#39;&#39;&#39;
                 cmd = &#34;16&#34;
                 data = self._getter(cmd, out=&#39;param&#39;)
-                return [elem == True for elem in data]  # convert int to boolean
-        
+                #[FORLOOP]
+                return [elem == True for elem in data]
         
                 # timers
         def get_timer(self) -&gt; list:
@@ -620,8 +632,8 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         #----- Reading -------
         
-        def load_json_file(self, path:str) -&gt; None:
-                &#39;&#39;&#39;Load the JSON file containing the controller parameters
+        def _load_json_file(self, path:str) -&gt; None:
+                &#39;&#39;&#39;Load a JSON file containing the controller parameters.
                 
                 Parameters
                 ----------
@@ -632,13 +644,14 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                         self.json_data = json.load(outfile)
         
         
-        def set_json_coefficients(self) -&gt; None:
-                &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `load_json_file` \
+        def _set_json_coefficients(self) -&gt; None:
+                &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `_load_json_file` \
                 beforehand. Will not work otherwise. 
                 &#39;&#39;&#39;
                 # retrieve data
                 parameters = self.json_data[&#34;parameters&#34;]
                 
+                #[FORLOOP]
                 for channel, param in enumerate(parameters):
                         # load paramters
                         kp    = param[&#34;kp&#34;]
@@ -725,17 +738,25 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
         
         #-- functions to store state in JSON file:
         
-        def get_device_coefficients(self) -&gt; None:
-                &#39;&#39;&#39;Gets the coefficients currently loaded on the Arduino and prepares them to be stored
-                in a JSON file.
+        def _get_device_coefficients(self) -&gt; None:
+                &#39;&#39;&#39;Gets the coefficients currently loaded on the Arduino and saves them to an internal 
+                buffer on the device running this python module. This buffer can then be stored
+                in a JSON file by calling `save_json_file()`. This function is automatically called at the
+                end of the setup() function.
+                
+                __NOTE__: It is always possible to use the function `save_json_file` to store the current
+                buffer. However, it may not always reflect the parameters loaded onto the Arduino. This is 
+                especially true if the Arduino is configured directly via the Serial API, and later 
+                manipulated using the Python API. Calling `get_device_coefficients` synchronizes the 
+                Python API with whatever changes happened beforehand. Its assumed one call before other
+                commands are sent is enough to ensure synchronization.
                 &#39;&#39;&#39;
                 # get enabled ports
                 is_enabled = self.get_enable()
                 timeout = self.get_timeout()
                 
-                # set json data
+                #[FORLOOP]
                 for ch in range(0, 4):
-                        # enable
                         if is_enabled[ch]:
                                 self._set_enable_json(ch)
                         else:
@@ -745,23 +766,19 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                                 # pid
                         var = self.get_pid(ch)
                         self._set_pid_json( ch, var[0], var[1], var[2] )
-                        
                                 # alpha-beta filter
                         var = self.get_ab_filter(ch)
                         self._set_ab_filter_json( ch, var[0], var[1] )
-                        
                                 # kalman filter
                         var = self.get_k_filter(ch)
                         self._set_k_filter_json( ch, var[0], var[1] )
-                        
                                 # input limits
                         var = self.get_in_limit(ch)
                         self._set_in_limit_json( ch, var[0], var[1] )
-                        
                                 # timeout
                         self._set_timeout_json( ch, timeout[ch] )
-        
-        
+                
+                
         def _set_pid_json(self, ch:int, kp:float, ki:float, kd:float) -&gt; None:
                 &#39;&#39;&#39;Stores the PID coefficients in a dictionary
                 
@@ -824,7 +841,8 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 ----------
                 See `set_enable_all` for details
                 &#39;&#39;&#39;
-                for ch in range(0,4):
+                #[FORLOOP]
+                for ch in range(0,4):   # -&gt; Can unwrap
                         self._set_enable_json(ch)
         
         
@@ -845,6 +863,7 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
                 ----------
                 See `set_disable_all` for details
                 &#39;&#39;&#39;
+                #[FORLOOP]
                 for ch in range(0,4):
                         self._set_disable_json(ch)
         
@@ -898,10 +917,15 @@ hardcoded value if none is provided</dd>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
 <dd>Path to JSON file containing the controller parameters. Parameter is optional
 and overrides <code>port</code> and <code>baud_rate</code></dd>
+<dt><strong><code>sensor_types</code></strong> :&ensp;<code>list(str)</code></dt>
+<dd>List of characters that indicate the type of sensor connected to each channel of the
+CN0391 sensor module. Each element in the list corresponds to the port with the same
+index. That is: <code>[ch0, ch1, ch2, ch3]</code>. Options for the sensor types are:
+<code>T, J, K, E, S, R, N, B</code>.</dd>
 </dl></div>
 <h3>Methods</h3>
 <dl>
-<dt id="TempControllerCN0391.TempControllerCN0391.close"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.close"><code class="name flex">
 <span>def <span class="ident">close</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -918,7 +942,7 @@ and overrides <code>port</code> and <code>baud_rate</code></dd>
 <div class="desc"><p>Close the serial connection. Must call at the end of program execution to ensure
 the connection does not remain active.</p></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.flush"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.flush"><code class="name flex">
 <span>def <span class="ident">flush</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -933,7 +957,7 @@ the connection does not remain active.</p></div>
 </details>
 <div class="desc"><p>Block program execution and wait for serial commands to be written</p></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_ab_filter"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_ab_filter"><code class="name flex">
 <span>def <span class="ident">get_ab_filter</span></span>(<span>self, ch: int) ‑> list</span>
 </code></dt>
 <dd>
@@ -971,54 +995,7 @@ of a specific channel</p>
 <dd>values in the order: [alpha, beta]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_device_coefficients"><code class="name flex">
-<span>def <span class="ident">get_device_coefficients</span></span>(<span>self) ‑> None</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_device_coefficients(self) -&gt; None:
-        &#39;&#39;&#39;Gets the coefficients currently loaded on the Arduino and prepares them to be stored
-        in a JSON file.
-        &#39;&#39;&#39;
-        # get enabled ports
-        is_enabled = self.get_enable()
-        timeout = self.get_timeout()
-        
-        # set json data
-        for ch in range(0, 4):
-                # enable
-                if is_enabled[ch]:
-                        self._set_enable_json(ch)
-                else:
-                        self._set_disable_json(ch)
-                
-                # set state
-                        # pid
-                var = self.get_pid(ch)
-                self._set_pid_json( ch, var[0], var[1], var[2] )
-                
-                        # alpha-beta filter
-                var = self.get_ab_filter(ch)
-                self._set_ab_filter_json( ch, var[0], var[1] )
-                
-                        # kalman filter
-                var = self.get_k_filter(ch)
-                self._set_k_filter_json( ch, var[0], var[1] )
-                
-                        # input limits
-                var = self.get_in_limit(ch)
-                self._set_in_limit_json( ch, var[0], var[1] )
-                
-                        # timeout
-                self._set_timeout_json( ch, timeout[ch] )</code></pre>
-</details>
-<div class="desc"><p>Gets the coefficients currently loaded on the Arduino and prepares them to be stored
-in a JSON file.</p></div>
-</dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_enable"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_enable"><code class="name flex">
 <span>def <span class="ident">get_enable</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
@@ -1037,8 +1014,8 @@ in a JSON file.</p></div>
         &#39;&#39;&#39;
         cmd = &#34;16&#34;
         data = self._getter(cmd, out=&#39;param&#39;)
-        return [elem == True for elem in data]  # convert int to boolean
-
+        #[FORLOOP]
+        return [elem == True for elem in data]
 
         # timers</code></pre>
 </details>
@@ -1050,7 +1027,7 @@ A port can be active (True) or disabled (False)</p>
 <dd>condition of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_filter"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_filter"><code class="name flex">
 <span>def <span class="ident">get_filter</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
@@ -1076,7 +1053,7 @@ A port can be active (True) or disabled (False)</p>
 <dd>Temperature of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_in_limit"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_in_limit"><code class="name flex">
 <span>def <span class="ident">get_in_limit</span></span>(<span>self, ch: int) ‑> list</span>
 </code></dt>
 <dd>
@@ -1114,7 +1091,7 @@ of a specific channel</p>
 <dd>values in the order: [input_max, input_min]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_json_data"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_json_data"><code class="name flex">
 <span>def <span class="ident">get_json_data</span></span>(<span>self) ‑> dict</span>
 </code></dt>
 <dd>
@@ -1141,7 +1118,7 @@ and PID controllers.</p>
 <dd>Dictionary with all of the parameters and coefficients parsed from the JSON File.</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_k_filter"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_k_filter"><code class="name flex">
 <span>def <span class="ident">get_k_filter</span></span>(<span>self, ch: int) ‑> list</span>
 </code></dt>
 <dd>
@@ -1179,7 +1156,7 @@ measurements of a specific channel</p>
 <dd>values in the order: [error, noise]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_pid"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_pid"><code class="name flex">
 <span>def <span class="ident">get_pid</span></span>(<span>self, ch: int) ‑> list</span>
 </code></dt>
 <dd>
@@ -1215,7 +1192,7 @@ Parameters</p>
 <dd>values in the order: [Proportional, Integral, Derivative]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_raw"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_raw"><code class="name flex">
 <span>def <span class="ident">get_raw</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
@@ -1241,7 +1218,7 @@ Parameters</p>
 <dd>Temperature of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_sensor_type"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_sensor_type"><code class="name flex">
 <span>def <span class="ident">get_sensor_type</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
@@ -1272,7 +1249,7 @@ to each port of the CN0391 </p>
 <dd>Sensor type of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_target"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_target"><code class="name flex">
 <span>def <span class="ident">get_target</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
@@ -1301,7 +1278,7 @@ to each port of the CN0391 </p>
 <dd>Target temperature of each port: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_timeout"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_timeout"><code class="name flex">
 <span>def <span class="ident">get_timeout</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
@@ -1327,7 +1304,7 @@ to each port of the CN0391 </p>
 <dd>Time each port can be active: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.get_timer"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.get_timer"><code class="name flex">
 <span>def <span class="ident">get_timer</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
@@ -1353,7 +1330,7 @@ to each port of the CN0391 </p>
 <dd>Time each port has been active: [port1, port2, port3, port4]</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.is_active"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.is_active"><code class="name flex">
 <span>def <span class="ident">is_active</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
@@ -1377,33 +1354,7 @@ to each port of the CN0391 </p>
 <dd>&nbsp;</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.load_json_file"><code class="name flex">
-<span>def <span class="ident">load_json_file</span></span>(<span>self, path: str) ‑> None</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def load_json_file(self, path:str) -&gt; None:
-        &#39;&#39;&#39;Load the JSON file containing the controller parameters
-        
-        Parameters
-        ----------
-        path : str
-                Path to the JSON file
-        &#39;&#39;&#39;
-        with open(path) as outfile:
-                self.json_data = json.load(outfile)</code></pre>
-</details>
-<div class="desc"><p>Load the JSON file containing the controller parameters</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
-<dd>Path to the JSON file</dd>
-</dl></div>
-</dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.save_json_file"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.save_json_file"><code class="name flex">
 <span>def <span class="ident">save_json_file</span></span>(<span>self, path: str) ‑> None</span>
 </code></dt>
 <dd>
@@ -1430,7 +1381,7 @@ to each port of the CN0391 </p>
 <dd>Path to the JSON file</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.send_serial_command"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.send_serial_command"><code class="name flex">
 <span>def <span class="ident">send_serial_command</span></span>(<span>self, cmd: str) ‑> str</span>
 </code></dt>
 <dd>
@@ -1469,7 +1420,7 @@ to each port of the CN0391 </p>
 <dd>String that contains serial reply from the Arduino</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_ab_filter"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_ab_filter"><code class="name flex">
 <span>def <span class="ident">set_ab_filter</span></span>(<span>self, ch: int, alpha: float, beta: float) ‑> None</span>
 </code></dt>
 <dd>
@@ -1511,7 +1462,7 @@ of a specific channel</p>
 <dd>Beta coefficient (derivative smoothing): 0 &lt; beta &lt; 1</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_disable"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_disable"><code class="name flex">
 <span>def <span class="ident">set_disable</span></span>(<span>self, ch: int)</span>
 </code></dt>
 <dd>
@@ -1538,7 +1489,7 @@ of a specific channel</p>
 <dd>Channel of the Temperature shield. Options are: {0, 1, 2, 3}</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_disable_all"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_disable_all"><code class="name flex">
 <span>def <span class="ident">set_disable_all</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -1555,7 +1506,7 @@ of a specific channel</p>
 </details>
 <div class="desc"><p>Disables the PID controller of every channel</p></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_enable"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_enable"><code class="name flex">
 <span>def <span class="ident">set_enable</span></span>(<span>self, ch: int) ‑> None</span>
 </code></dt>
 <dd>
@@ -1582,7 +1533,7 @@ of a specific channel</p>
 <dd>Channel of the Temperature shield. Options are: {0, 1, 2, 3}</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_enable_all"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_enable_all"><code class="name flex">
 <span>def <span class="ident">set_enable_all</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -1599,7 +1550,7 @@ of a specific channel</p>
 </details>
 <div class="desc"><p>Enables the PID controller of every channel</p></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_in_limit"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_in_limit"><code class="name flex">
 <span>def <span class="ident">set_in_limit</span></span>(<span>self, ch: int, imax: float, imin: float) ‑> None</span>
 </code></dt>
 <dd>
@@ -1642,49 +1593,7 @@ of a specific channel</p>
 <dd>Minimum allowable target temperature (in Celsius)</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_json_coefficients"><code class="name flex">
-<span>def <span class="ident">set_json_coefficients</span></span>(<span>self) ‑> None</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def set_json_coefficients(self) -&gt; None:
-        &#39;&#39;&#39;Load the coefficients contained in the JSON file. Requires Calling `load_json_file` \
-        beforehand. Will not work otherwise. 
-        &#39;&#39;&#39;
-        # retrieve data
-        parameters = self.json_data[&#34;parameters&#34;]
-        
-        for channel, param in enumerate(parameters):
-                # load paramters
-                kp    = param[&#34;kp&#34;]
-                ki    = param[&#34;ki&#34;]
-                kd    = param[&#34;kd&#34;]
-                alpha = param[&#34;alpha&#34;]
-                beta  = param[&#34;beta&#34;]
-                error = param[&#34;error&#34;]
-                noise = param[&#34;noise&#34;]
-                imax  = param[&#34;imax&#34;]
-                imin  = param[&#34;imin&#34;]
-                timeout = param[&#34;timeout&#34;]
-                enable  = param[&#34;enable&#34;]
-                
-                # write state
-                self.set_pid(channel, kp, ki, kd)
-                self.set_ab_filter(channel, alpha, beta)
-                self.set_k_filter(channel, error, noise)
-                self.set_in_limit(channel, imax, imin)
-                self.set_timeout(channel, timeout)
-                
-                if enable:
-                        self.set_enable(channel)</code></pre>
-</details>
-<div class="desc"><p>Load the coefficients contained in the JSON file. Requires Calling <code>load_json_file</code>
-beforehand. Will not work otherwise.</p></div>
-</dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_k_filter"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_k_filter"><code class="name flex">
 <span>def <span class="ident">set_k_filter</span></span>(<span>self, ch: int, error: float, noise: float) ‑> None</span>
 </code></dt>
 <dd>
@@ -1725,7 +1634,7 @@ measurements of a specific channel</p>
 0 &lt; noise &lt; 1</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_k_filter_state"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_k_filter_state"><code class="name flex">
 <span>def <span class="ident">set_k_filter_state</span></span>(<span>self, ch: int, value: float) ‑> None</span>
 </code></dt>
 <dd>
@@ -1759,7 +1668,7 @@ measurements of a specific channel</p>
 <dd>Value of the filter (in Celsius)</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_pid"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_pid"><code class="name flex">
 <span>def <span class="ident">set_pid</span></span>(<span>self, ch: int, kp: float, ki: float, kd: float) ‑> None</span>
 </code></dt>
 <dd>
@@ -1804,7 +1713,7 @@ measurements of a specific channel</p>
 <dd>Derivative coefficient</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_target"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_target"><code class="name flex">
 <span>def <span class="ident">set_target</span></span>(<span>self, ch: int, target: float) ‑> None</span>
 </code></dt>
 <dd>
@@ -1835,7 +1744,7 @@ measurements of a specific channel</p>
 <dd>Target temperature (in Celsius) for the PID controller of specified channel</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_target_all"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_target_all"><code class="name flex">
 <span>def <span class="ident">set_target_all</span></span>(<span>self, targ0: float, targ1: float, targ2: float, targ3: float) ‑> None</span>
 </code></dt>
 <dd>
@@ -1879,7 +1788,7 @@ measurements of a specific channel</p>
 <dd>Target temperature (in Celsius) for the PID controller of channel 3</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_timeout"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_timeout"><code class="name flex">
 <span>def <span class="ident">set_timeout</span></span>(<span>self, ch: int, time: float) ‑> None</span>
 </code></dt>
 <dd>
@@ -1911,7 +1820,7 @@ measurements of a specific channel</p>
 <dd>Time (in seconds) the controller will be active</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.set_timeout_inf"><code class="name flex">
+<dt id="TempController.TempControllerCN0391.TempControllerCN0391.set_timeout_inf"><code class="name flex">
 <span>def <span class="ident">set_timeout_inf</span></span>(<span>self, ch: int) ‑> None</span>
 </code></dt>
 <dd>
@@ -1938,59 +1847,6 @@ measurements of a specific channel</p>
 <dd>Channel of the Temperature shield. Options are: {0, 1, 2, 3}</dd>
 </dl></div>
 </dd>
-<dt id="TempControllerCN0391.TempControllerCN0391.setup"><code class="name flex">
-<span>def <span class="ident">setup</span></span>(<span>self, type0: str = None, type1: str = None, type2: str = None, type3: str = None) ‑> None</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def setup(self, type0:str=None, type1:str=None, type2:str=None, type3:str=None) -&gt; None:
-        &#39;&#39;&#39;Assigns the sensor types for each port and performs an initial calibration
-        of the temperature sensors. Defaults to pre-programmed sensor types if no
-        parameters are provided. 
-        
-        Parameters
-        ----------
-        type0 : str
-                Sensor type (N, K, J, etc) of channel 0. Must be a character.
-        
-        type1 : str
-                Same as before but for channel 1
-        
-        type2 : str
-                Same as before but for channel 2
-        
-        type3 : str
-                Same as before but for channel 3
-        &#39;&#39;&#39;
-        # Custom types
-        if type0 and type1 and type2 and type3:
-                cmd = str(type0) + str(type1) + str(type2) + str(type3)
-                self._setup(cmd)
-        # Default types
-        else:
-                self._setup(&#39;0&#39;)
-        
-        # store types
-        self._set_sensor_type_json()</code></pre>
-</details>
-<div class="desc"><p>Assigns the sensor types for each port and performs an initial calibration
-of the temperature sensors. Defaults to pre-programmed sensor types if no
-parameters are provided. </p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>type0</code></strong> :&ensp;<code>str</code></dt>
-<dd>Sensor type (N, K, J, etc) of channel 0. Must be a character.</dd>
-<dt><strong><code>type1</code></strong> :&ensp;<code>str</code></dt>
-<dd>Same as before but for channel 1</dd>
-<dt><strong><code>type2</code></strong> :&ensp;<code>str</code></dt>
-<dd>Same as before but for channel 2</dd>
-<dt><strong><code>type3</code></strong> :&ensp;<code>str</code></dt>
-<dd>Same as before but for channel 3</dd>
-</dl></div>
-</dd>
 </dl>
 </dd>
 </dl>
@@ -2001,45 +1857,46 @@ parameters are provided. </p>
 <ul></ul>
 </div>
 <ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="TempController" href="index.html">TempController</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="TempControllerCN0391.TempControllerCN0391" href="#TempControllerCN0391.TempControllerCN0391">TempControllerCN0391</a></code></h4>
-<ul class="">
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.close" href="#TempControllerCN0391.TempControllerCN0391.close">close</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.flush" href="#TempControllerCN0391.TempControllerCN0391.flush">flush</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_ab_filter" href="#TempControllerCN0391.TempControllerCN0391.get_ab_filter">get_ab_filter</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_device_coefficients" href="#TempControllerCN0391.TempControllerCN0391.get_device_coefficients">get_device_coefficients</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_enable" href="#TempControllerCN0391.TempControllerCN0391.get_enable">get_enable</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_filter" href="#TempControllerCN0391.TempControllerCN0391.get_filter">get_filter</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_in_limit" href="#TempControllerCN0391.TempControllerCN0391.get_in_limit">get_in_limit</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_json_data" href="#TempControllerCN0391.TempControllerCN0391.get_json_data">get_json_data</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_k_filter" href="#TempControllerCN0391.TempControllerCN0391.get_k_filter">get_k_filter</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_pid" href="#TempControllerCN0391.TempControllerCN0391.get_pid">get_pid</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_raw" href="#TempControllerCN0391.TempControllerCN0391.get_raw">get_raw</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_sensor_type" href="#TempControllerCN0391.TempControllerCN0391.get_sensor_type">get_sensor_type</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_target" href="#TempControllerCN0391.TempControllerCN0391.get_target">get_target</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_timeout" href="#TempControllerCN0391.TempControllerCN0391.get_timeout">get_timeout</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.get_timer" href="#TempControllerCN0391.TempControllerCN0391.get_timer">get_timer</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.is_active" href="#TempControllerCN0391.TempControllerCN0391.is_active">is_active</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.load_json_file" href="#TempControllerCN0391.TempControllerCN0391.load_json_file">load_json_file</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.save_json_file" href="#TempControllerCN0391.TempControllerCN0391.save_json_file">save_json_file</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.send_serial_command" href="#TempControllerCN0391.TempControllerCN0391.send_serial_command">send_serial_command</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_ab_filter" href="#TempControllerCN0391.TempControllerCN0391.set_ab_filter">set_ab_filter</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_disable" href="#TempControllerCN0391.TempControllerCN0391.set_disable">set_disable</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_disable_all" href="#TempControllerCN0391.TempControllerCN0391.set_disable_all">set_disable_all</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_enable" href="#TempControllerCN0391.TempControllerCN0391.set_enable">set_enable</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_enable_all" href="#TempControllerCN0391.TempControllerCN0391.set_enable_all">set_enable_all</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_in_limit" href="#TempControllerCN0391.TempControllerCN0391.set_in_limit">set_in_limit</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_json_coefficients" href="#TempControllerCN0391.TempControllerCN0391.set_json_coefficients">set_json_coefficients</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_k_filter" href="#TempControllerCN0391.TempControllerCN0391.set_k_filter">set_k_filter</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_k_filter_state" href="#TempControllerCN0391.TempControllerCN0391.set_k_filter_state">set_k_filter_state</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_pid" href="#TempControllerCN0391.TempControllerCN0391.set_pid">set_pid</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_target" href="#TempControllerCN0391.TempControllerCN0391.set_target">set_target</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_target_all" href="#TempControllerCN0391.TempControllerCN0391.set_target_all">set_target_all</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_timeout" href="#TempControllerCN0391.TempControllerCN0391.set_timeout">set_timeout</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.set_timeout_inf" href="#TempControllerCN0391.TempControllerCN0391.set_timeout_inf">set_timeout_inf</a></code></li>
-<li><code><a title="TempControllerCN0391.TempControllerCN0391.setup" href="#TempControllerCN0391.TempControllerCN0391.setup">setup</a></code></li>
+<h4><code><a title="TempController.TempControllerCN0391.TempControllerCN0391" href="#TempController.TempControllerCN0391.TempControllerCN0391">TempControllerCN0391</a></code></h4>
+<ul class="two-column">
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.close" href="#TempController.TempControllerCN0391.TempControllerCN0391.close">close</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.flush" href="#TempController.TempControllerCN0391.TempControllerCN0391.flush">flush</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_ab_filter" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_ab_filter">get_ab_filter</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_enable" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_enable">get_enable</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_filter" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_filter">get_filter</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_in_limit" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_in_limit">get_in_limit</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_json_data" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_json_data">get_json_data</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_k_filter" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_k_filter">get_k_filter</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_pid" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_pid">get_pid</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_raw" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_raw">get_raw</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_sensor_type" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_sensor_type">get_sensor_type</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_target" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_target">get_target</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_timeout" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_timeout">get_timeout</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.get_timer" href="#TempController.TempControllerCN0391.TempControllerCN0391.get_timer">get_timer</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.is_active" href="#TempController.TempControllerCN0391.TempControllerCN0391.is_active">is_active</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.save_json_file" href="#TempController.TempControllerCN0391.TempControllerCN0391.save_json_file">save_json_file</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.send_serial_command" href="#TempController.TempControllerCN0391.TempControllerCN0391.send_serial_command">send_serial_command</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_ab_filter" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_ab_filter">set_ab_filter</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_disable" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_disable">set_disable</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_disable_all" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_disable_all">set_disable_all</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_enable" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_enable">set_enable</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_enable_all" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_enable_all">set_enable_all</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_in_limit" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_in_limit">set_in_limit</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_k_filter" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_k_filter">set_k_filter</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_k_filter_state" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_k_filter_state">set_k_filter_state</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_pid" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_pid">set_pid</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_target" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_target">set_target</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_target_all" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_target_all">set_target_all</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_timeout" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_timeout">set_timeout</a></code></li>
+<li><code><a title="TempController.TempControllerCN0391.TempControllerCN0391.set_timeout_inf" href="#TempController.TempControllerCN0391.TempControllerCN0391.set_timeout_inf">set_timeout_inf</a></code></li>
 </ul>
 </li>
 </ul>

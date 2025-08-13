@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.6">
-<title>temp_controller.KeyboardThread API documentation</title>
+<title>TempController.KeyboardThread API documentation</title>
 <meta name="description" content="Module intended to asynchronously capture user inputs without blocking the execution of other code.
 It was designed for the purpose of sending serial …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -34,7 +34,7 @@ el.replaceWith(d);
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>temp_controller.KeyboardThread</code></h1>
+<h1 class="title">Module <code>TempController.KeyboardThread</code></h1>
 </header>
 <section id="section-intro">
 <p>Module intended to asynchronously capture user inputs without blocking the execution of other code.
@@ -49,9 +49,9 @@ It was designed for the purpose of sending serial commands in real time to an Ar
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="temp_controller.KeyboardThread.KeyboardThread"><code class="flex name class">
+<dt id="TempController.KeyboardThread.KeyboardThread"><code class="flex name class">
 <span>class <span class="ident">KeyboardThread</span></span>
-<span>(</span><span>function: Callable = None, name: str = 'keyboard-input-thread')</span>
+<span>(</span><span>exit: str, function: Callable = None, name: str = 'keyboard-input-thread')</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -60,11 +60,15 @@ It was designed for the purpose of sending serial commands in real time to an Ar
 </summary>
 <pre><code class="python">class KeyboardThread(threading.Thread):
         
-        def __init__(self, function:Callable = None, name:str = &#39;keyboard-input-thread&#39;):
+        def __init__(self, exit:str, function:Callable = None, name:str = &#39;keyboard-input-thread&#39;):
                 &#39;&#39;&#39;Initialize thread to receive keyboard inputs
                 
                 Parameters
                 ----------
+                exit: str
+                        String that is used to stop capturing user inputs. Once the user enters this string,
+                        the thread will close and the input() function will not update. 
+                
                 function: func
                         Callback function that is execution whenever the user provides a keyboard input.
                         Must have the form `def function(string)` that takes a string 
@@ -74,12 +78,17 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                         label for the thread. If none is given it defaults to a generic name. 
                 &#39;&#39;&#39;
                 super(KeyboardThread, self).__init__(name=name, daemon=True)
-                # variables
-                self._function = function
-                self._stop = threading.Event()
-                self._input_data = &#34;&#34;                                   # initialize to empty string
+                # Variables
+                        # inputs
                 self._flag = False
-                # initialize thread
+                self._input_data = &#34;&#34;                                   # initialize to empty string
+                self._function = function
+                        # closing thread
+                self._loop_flag = True
+                self._EXIT_STRING = exit
+                self._stop = threading.Event()
+                
+                # Initialize thread
                 self.start()
         
         def run(self) -&gt; None:
@@ -89,8 +98,14 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                 while self.is_active():
                         # get input
                         self._input_data = input()
+                        
                         if self._input_data != &#34;&#34;:
                                 self._flag = True       # data is unread
+                                
+                                if self._input_data == self._EXIT_STRING:
+                                        self._loop_flag = False
+                                        break
+                                
                         # callback
                         if self._function != None:
                                 self._function( self._input_data ) #waits to get input + Return
@@ -135,6 +150,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                 program has finished to prevent the thread from blocking the program from closing. 
                 &#39;&#39;&#39;
                 self._stop.set()
+                self.join()
         
         
         def is_active(self) -&gt; bool:
@@ -146,7 +162,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
                         True when the thread is active and listening to inputs
                         False when `stop()` is called and the thread is closed. 
                 &#39;&#39;&#39;
-                return not self._stop.isSet()
+                return (not self._stop.isSet()) and self._loop_flag
         
         
         #def start(self): # begin thread
@@ -162,6 +178,9 @@ by overriding the run() method in a subclass.</p>
 <p>Initialize thread to receive keyboard inputs</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
+<dt><strong><code>exit</code></strong> :&ensp;<code>str</code></dt>
+<dd>String that is used to stop capturing user inputs. Once the user enters this string,
+the thread will close and the input() function will not update.</dd>
 <dt><strong><code>function</code></strong> :&ensp;<code>func</code></dt>
 <dd>Callback function that is execution whenever the user provides a keyboard input.
 Must have the form <code>def function(string)</code> that takes a string
@@ -175,7 +194,7 @@ Must have the form <code>def function(string)</code> that takes a string
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="temp_controller.KeyboardThread.KeyboardThread.flag"><code class="name flex">
+<dt id="TempController.KeyboardThread.KeyboardThread.flag"><code class="name flex">
 <span>def <span class="ident">flag</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
@@ -202,7 +221,7 @@ Must have the form <code>def function(string)</code> that takes a string
 <code>False</code> if no new input is available and input() has beed called.</dd>
 </dl></div>
 </dd>
-<dt id="temp_controller.KeyboardThread.KeyboardThread.input"><code class="name flex">
+<dt id="TempController.KeyboardThread.KeyboardThread.input"><code class="name flex">
 <span>def <span class="ident">input</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
@@ -227,7 +246,7 @@ Must have the form <code>def function(string)</code> that takes a string
 <dd>&nbsp;</dd>
 </dl></div>
 </dd>
-<dt id="temp_controller.KeyboardThread.KeyboardThread.is_active"><code class="name flex">
+<dt id="TempController.KeyboardThread.KeyboardThread.is_active"><code class="name flex">
 <span>def <span class="ident">is_active</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
@@ -244,7 +263,7 @@ Must have the form <code>def function(string)</code> that takes a string
                 True when the thread is active and listening to inputs
                 False when `stop()` is called and the thread is closed. 
         &#39;&#39;&#39;
-        return not self._stop.isSet()
+        return (not self._stop.isSet()) and self._loop_flag
 
 
 #def start(self): # begin thread
@@ -261,7 +280,7 @@ Must have the form <code>def function(string)</code> that takes a string
 False when <code>stop()</code> is called and the thread is closed.</dd>
 </dl></div>
 </dd>
-<dt id="temp_controller.KeyboardThread.KeyboardThread.run"><code class="name flex">
+<dt id="TempController.KeyboardThread.KeyboardThread.run"><code class="name flex">
 <span>def <span class="ident">run</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -276,8 +295,14 @@ False when <code>stop()</code> is called and the thread is closed.</dd>
         while self.is_active():
                 # get input
                 self._input_data = input()
+                
                 if self._input_data != &#34;&#34;:
                         self._flag = True       # data is unread
+                        
+                        if self._input_data == self._EXIT_STRING:
+                                self._loop_flag = False
+                                break
+                        
                 # callback
                 if self._function != None:
                         self._function( self._input_data ) #waits to get input + Return</code></pre>
@@ -285,7 +310,7 @@ False when <code>stop()</code> is called and the thread is closed.</dd>
 <div class="desc"><p>Loop that is executed by the thread that listens to keyboard inputs.
 This loop will continue indefinately until <code>stop()</code> is called.</p></div>
 </dd>
-<dt id="temp_controller.KeyboardThread.KeyboardThread.setCallback"><code class="name flex">
+<dt id="TempController.KeyboardThread.KeyboardThread.setCallback"><code class="name flex">
 <span>def <span class="ident">setCallback</span></span>(<span>self, function: Callable) ‑> None</span>
 </code></dt>
 <dd>
@@ -310,7 +335,7 @@ This loop will continue indefinately until <code>stop()</code> is called.</p></d
 <dd>Callback function. See description of the class initializer.</dd>
 </dl></div>
 </dd>
-<dt id="temp_controller.KeyboardThread.KeyboardThread.stop"><code class="name flex">
+<dt id="TempController.KeyboardThread.KeyboardThread.stop"><code class="name flex">
 <span>def <span class="ident">stop</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -322,7 +347,8 @@ This loop will continue indefinately until <code>stop()</code> is called.</p></d
         &#39;&#39;&#39;Kills the thread focus on receiving keyboard inputs. Must be called whenever the
         program has finished to prevent the thread from blocking the program from closing. 
         &#39;&#39;&#39;
-        self._stop.set()</code></pre>
+        self._stop.set()
+        self.join()</code></pre>
 </details>
 <div class="desc"><p>Kills the thread focus on receiving keyboard inputs. Must be called whenever the
 program has finished to prevent the thread from blocking the program from closing.</p></div>
@@ -339,20 +365,20 @@ program has finished to prevent the thread from blocking the program from closin
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="temp_controller" href="index.html">temp_controller</a></code></li>
+<li><code><a title="TempController" href="index.html">TempController</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="temp_controller.KeyboardThread.KeyboardThread" href="#temp_controller.KeyboardThread.KeyboardThread">KeyboardThread</a></code></h4>
+<h4><code><a title="TempController.KeyboardThread.KeyboardThread" href="#TempController.KeyboardThread.KeyboardThread">KeyboardThread</a></code></h4>
 <ul class="two-column">
-<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.flag" href="#temp_controller.KeyboardThread.KeyboardThread.flag">flag</a></code></li>
-<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.input" href="#temp_controller.KeyboardThread.KeyboardThread.input">input</a></code></li>
-<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.is_active" href="#temp_controller.KeyboardThread.KeyboardThread.is_active">is_active</a></code></li>
-<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.run" href="#temp_controller.KeyboardThread.KeyboardThread.run">run</a></code></li>
-<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.setCallback" href="#temp_controller.KeyboardThread.KeyboardThread.setCallback">setCallback</a></code></li>
-<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.stop" href="#temp_controller.KeyboardThread.KeyboardThread.stop">stop</a></code></li>
+<li><code><a title="TempController.KeyboardThread.KeyboardThread.flag" href="#TempController.KeyboardThread.KeyboardThread.flag">flag</a></code></li>
+<li><code><a title="TempController.KeyboardThread.KeyboardThread.input" href="#TempController.KeyboardThread.KeyboardThread.input">input</a></code></li>
+<li><code><a title="TempController.KeyboardThread.KeyboardThread.is_active" href="#TempController.KeyboardThread.KeyboardThread.is_active">is_active</a></code></li>
+<li><code><a title="TempController.KeyboardThread.KeyboardThread.run" href="#TempController.KeyboardThread.KeyboardThread.run">run</a></code></li>
+<li><code><a title="TempController.KeyboardThread.KeyboardThread.setCallback" href="#TempController.KeyboardThread.KeyboardThread.setCallback">setCallback</a></code></li>
+<li><code><a title="TempController.KeyboardThread.KeyboardThread.stop" href="#TempController.KeyboardThread.KeyboardThread.stop">stop</a></code></li>
 </ul>
 </li>
 </ul>

@@ -5,8 +5,8 @@ import time
 import argparse
 
 # local file
-from temp_controller import KeyboardThread as kb
-from temp_controller import TempControllerCN0391 as cntl
+import KeyboardThread as kb
+import TempControllerCN0391 as cntl
 
 #===================================================================================================
 
@@ -151,14 +151,14 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 	controller = cntl.TempControllerCN0391(port=port, path=path)
 	
 	# ---- keyboard inputs ----
-	keythread = kb.KeyboardThread() # starts thread automatically
+	keythread = kb.KeyboardThread(exit="exit") # starts thread automatically
 	
 	# ---- Plots ----
 	# Size of data
 	time_init = 0
 	time.sleep(2)			# wait for serial to reload
 	
-	#print(controller.get_filter())
+		# calibration 
 	y_init = sum( [vert_array(controller.get_filter()) for i in range(nsamples)] ) / nsamples
 	n_data = np.size(y_init)
 	
@@ -168,7 +168,7 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 	
 	# plot graphs
 	figure, ax = plt.subplots()
-	lines = [ ax.plot(x, y, label=f'Port {i+1}')[0] for i in range(n_data) ] 
+	lines = [ ax.plot(x, y, label=f'Channel {i}')[0] for i in range(n_data) ] 
 
 	#---- configure plot ----
 	ax.legend()
@@ -187,7 +187,7 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 			if keythread.flag():
 				key_input = keythread.input()
 				
-				if key_input == "exit":
+				if not keythread.is_active():
 					break
 				elif key_input != "":
 					reply = controller.send_serial_command(key_input)
@@ -225,11 +225,10 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 			break	# exit loop and ensure serial and thread shutdown
 	
 	#---- exit program ----
-	print("CLOSED-PYTHON")
 	controller.set_disable_all()
-	controller.serial.reset()
-	controller.serial.close()
+	controller.close()
 	keythread.stop()
+	print("CLOSED-PYTHON")
 
 #===================================================================================================
 
