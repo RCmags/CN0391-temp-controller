@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.6">
-<title>TempController.KeyboardThread API documentation</title>
+<title>temp_controller.KeyboardThread API documentation</title>
 <meta name="description" content="Module intended to asynchronously capture user inputs without blocking the execution of other code.
 It was designed for the purpose of sending serial …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -34,7 +34,7 @@ el.replaceWith(d);
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>TempController.KeyboardThread</code></h1>
+<h1 class="title">Module <code>temp_controller.KeyboardThread</code></h1>
 </header>
 <section id="section-intro">
 <p>Module intended to asynchronously capture user inputs without blocking the execution of other code.
@@ -49,7 +49,7 @@ It was designed for the purpose of sending serial commands in real time to an Ar
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="TempController.KeyboardThread.KeyboardThread"><code class="flex name class">
+<dt id="temp_controller.KeyboardThread.KeyboardThread"><code class="flex name class">
 <span>class <span class="ident">KeyboardThread</span></span>
 <span>(</span><span>exit: str, function: Callable = None, name: str = 'keyboard-input-thread')</span>
 </code></dt>
@@ -194,7 +194,7 @@ Must have the form <code>def function(string)</code> that takes a string
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="TempController.KeyboardThread.KeyboardThread.flag"><code class="name flex">
+<dt id="temp_controller.KeyboardThread.KeyboardThread.flag"><code class="name flex">
 <span>def <span class="ident">flag</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
@@ -221,7 +221,7 @@ Must have the form <code>def function(string)</code> that takes a string
 <code>False</code> if no new input is available and input() has beed called.</dd>
 </dl></div>
 </dd>
-<dt id="TempController.KeyboardThread.KeyboardThread.input"><code class="name flex">
+<dt id="temp_controller.KeyboardThread.KeyboardThread.input"><code class="name flex">
 <span>def <span class="ident">input</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
@@ -246,7 +246,7 @@ Must have the form <code>def function(string)</code> that takes a string
 <dd>&nbsp;</dd>
 </dl></div>
 </dd>
-<dt id="TempController.KeyboardThread.KeyboardThread.is_active"><code class="name flex">
+<dt id="temp_controller.KeyboardThread.KeyboardThread.is_active"><code class="name flex">
 <span>def <span class="ident">is_active</span></span>(<span>self) ‑> bool</span>
 </code></dt>
 <dd>
@@ -280,7 +280,7 @@ Must have the form <code>def function(string)</code> that takes a string
 False when <code>stop()</code> is called and the thread is closed.</dd>
 </dl></div>
 </dd>
-<dt id="TempController.KeyboardThread.KeyboardThread.run"><code class="name flex">
+<dt id="temp_controller.KeyboardThread.KeyboardThread.run"><code class="name flex">
 <span>def <span class="ident">run</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -310,7 +310,7 @@ False when <code>stop()</code> is called and the thread is closed.</dd>
 <div class="desc"><p>Loop that is executed by the thread that listens to keyboard inputs.
 This loop will continue indefinately until <code>stop()</code> is called.</p></div>
 </dd>
-<dt id="TempController.KeyboardThread.KeyboardThread.setCallback"><code class="name flex">
+<dt id="temp_controller.KeyboardThread.KeyboardThread.setCallback"><code class="name flex">
 <span>def <span class="ident">setCallback</span></span>(<span>self, function: Callable) ‑> None</span>
 </code></dt>
 <dd>
@@ -335,7 +335,7 @@ This loop will continue indefinately until <code>stop()</code> is called.</p></d
 <dd>Callback function. See description of the class initializer.</dd>
 </dl></div>
 </dd>
-<dt id="TempController.KeyboardThread.KeyboardThread.stop"><code class="name flex">
+<dt id="temp_controller.KeyboardThread.KeyboardThread.stop"><code class="name flex">
 <span>def <span class="ident">stop</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -365,20 +365,20 @@ program has finished to prevent the thread from blocking the program from closin
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="TempController" href="index.html">TempController</a></code></li>
+<li><code><a title="temp_controller" href="index.html">temp_controller</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="TempController.KeyboardThread.KeyboardThread" href="#TempController.KeyboardThread.KeyboardThread">KeyboardThread</a></code></h4>
+<h4><code><a title="temp_controller.KeyboardThread.KeyboardThread" href="#temp_controller.KeyboardThread.KeyboardThread">KeyboardThread</a></code></h4>
 <ul class="two-column">
-<li><code><a title="TempController.KeyboardThread.KeyboardThread.flag" href="#TempController.KeyboardThread.KeyboardThread.flag">flag</a></code></li>
-<li><code><a title="TempController.KeyboardThread.KeyboardThread.input" href="#TempController.KeyboardThread.KeyboardThread.input">input</a></code></li>
-<li><code><a title="TempController.KeyboardThread.KeyboardThread.is_active" href="#TempController.KeyboardThread.KeyboardThread.is_active">is_active</a></code></li>
-<li><code><a title="TempController.KeyboardThread.KeyboardThread.run" href="#TempController.KeyboardThread.KeyboardThread.run">run</a></code></li>
-<li><code><a title="TempController.KeyboardThread.KeyboardThread.setCallback" href="#TempController.KeyboardThread.KeyboardThread.setCallback">setCallback</a></code></li>
-<li><code><a title="TempController.KeyboardThread.KeyboardThread.stop" href="#TempController.KeyboardThread.KeyboardThread.stop">stop</a></code></li>
+<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.flag" href="#temp_controller.KeyboardThread.KeyboardThread.flag">flag</a></code></li>
+<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.input" href="#temp_controller.KeyboardThread.KeyboardThread.input">input</a></code></li>
+<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.is_active" href="#temp_controller.KeyboardThread.KeyboardThread.is_active">is_active</a></code></li>
+<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.run" href="#temp_controller.KeyboardThread.KeyboardThread.run">run</a></code></li>
+<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.setCallback" href="#temp_controller.KeyboardThread.KeyboardThread.setCallback">setCallback</a></code></li>
+<li><code><a title="temp_controller.KeyboardThread.KeyboardThread.stop" href="#temp_controller.KeyboardThread.KeyboardThread.stop">stop</a></code></li>
 </ul>
 </li>
 </ul>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.6">
-<title>TempController.ArduinoSerial API documentation</title>
+<title>temp_controller.ArduinoSerial API documentation</title>
 <meta name="description" content="Self contained module to easily communicate with an Arduino over serial. It is intended to be used
 with commands that have the form of a comma …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -34,7 +34,7 @@ el.replaceWith(d);
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>TempController.ArduinoSerial</code></h1>
+<h1 class="title">Module <code>temp_controller.ArduinoSerial</code></h1>
 </header>
 <section id="section-intro">
 <p>Self contained module to easily communicate with an Arduino over serial. It is intended to be used
@@ -56,7 +56,7 @@ with commands that have the form of a comma delimited string:</p>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="TempController.ArduinoSerial.SerialCommunication"><code class="flex name class">
+<dt id="temp_controller.ArduinoSerial.SerialCommunication"><code class="flex name class">
 <span>class <span class="ident">SerialCommunication</span></span>
 <span>(</span><span>port: str, baud_rate: int)</span>
 </code></dt>
@@ -262,7 +262,7 @@ hardcoded value if none is provided</dd>
 </dl></div>
 <h3>Methods</h3>
 <dl>
-<dt id="TempController.ArduinoSerial.SerialCommunication.close"><code class="name flex">
+<dt id="temp_controller.ArduinoSerial.SerialCommunication.close"><code class="name flex">
 <span>def <span class="ident">close</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -280,7 +280,7 @@ hardcoded value if none is provided</dd>
 <div class="desc"><p>Close the serial connection. It is necessary to run this command when a program
 finished to ensure the serial connection does not stay active.</p></div>
 </dd>
-<dt id="TempController.ArduinoSerial.SerialCommunication.flush"><code class="name flex">
+<dt id="temp_controller.ArduinoSerial.SerialCommunication.flush"><code class="name flex">
 <span>def <span class="ident">flush</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -295,7 +295,7 @@ finished to ensure the serial connection does not stay active.</p></div>
 </details>
 <div class="desc"><p>Block program execution and wait for serial commands to be written</p></div>
 </dd>
-<dt id="TempController.ArduinoSerial.SerialCommunication.is_active"><code class="name flex">
+<dt id="temp_controller.ArduinoSerial.SerialCommunication.is_active"><code class="name flex">
 <span>def <span class="ident">is_active</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -319,7 +319,7 @@ finished to ensure the serial connection does not stay active.</p></div>
 <dd>&nbsp;</dd>
 </dl></div>
 </dd>
-<dt id="TempController.ArduinoSerial.SerialCommunication.read_data"><code class="name flex">
+<dt id="temp_controller.ArduinoSerial.SerialCommunication.read_data"><code class="name flex">
 <span>def <span class="ident">read_data</span></span>(<span>self, out: str = None) ‑> str | list | dict</span>
 </code></dt>
 <dd>
@@ -374,7 +374,7 @@ all data from a parsed serial command</dd>
 <dd>returns the received serial command split by a comma (,) delimiter</dd>
 </dl></div>
 </dd>
-<dt id="TempController.ArduinoSerial.SerialCommunication.read_serial"><code class="name flex">
+<dt id="temp_controller.ArduinoSerial.SerialCommunication.read_serial"><code class="name flex">
 <span>def <span class="ident">read_serial</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
@@ -406,7 +406,7 @@ that waits until data is received, or the connection times out. </p>
 or if connection times out.</dd>
 </dl></div>
 </dd>
-<dt id="TempController.ArduinoSerial.SerialCommunication.reset"><code class="name flex">
+<dt id="temp_controller.ArduinoSerial.SerialCommunication.reset"><code class="name flex">
 <span>def <span class="ident">reset</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -422,7 +422,7 @@ or if connection times out.</dd>
 </details>
 <div class="desc"><p>Reset the input and output buffers of the serial connection.</p></div>
 </dd>
-<dt id="TempController.ArduinoSerial.SerialCommunication.write_serial"><code class="name flex">
+<dt id="temp_controller.ArduinoSerial.SerialCommunication.write_serial"><code class="name flex">
 <span>def <span class="ident">write_serial</span></span>(<span>self, string: str) ‑> None</span>
 </code></dt>
 <dd>
@@ -464,21 +464,21 @@ or if connection times out.</dd>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="TempController" href="index.html">TempController</a></code></li>
+<li><code><a title="temp_controller" href="index.html">temp_controller</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="TempController.ArduinoSerial.SerialCommunication" href="#TempController.ArduinoSerial.SerialCommunication">SerialCommunication</a></code></h4>
+<h4><code><a title="temp_controller.ArduinoSerial.SerialCommunication" href="#temp_controller.ArduinoSerial.SerialCommunication">SerialCommunication</a></code></h4>
 <ul class="two-column">
-<li><code><a title="TempController.ArduinoSerial.SerialCommunication.close" href="#TempController.ArduinoSerial.SerialCommunication.close">close</a></code></li>
-<li><code><a title="TempController.ArduinoSerial.SerialCommunication.flush" href="#TempController.ArduinoSerial.SerialCommunication.flush">flush</a></code></li>
-<li><code><a title="TempController.ArduinoSerial.SerialCommunication.is_active" href="#TempController.ArduinoSerial.SerialCommunication.is_active">is_active</a></code></li>
-<li><code><a title="TempController.ArduinoSerial.SerialCommunication.read_data" href="#TempController.ArduinoSerial.SerialCommunication.read_data">read_data</a></code></li>
-<li><code><a title="TempController.ArduinoSerial.SerialCommunication.read_serial" href="#TempController.ArduinoSerial.SerialCommunication.read_serial">read_serial</a></code></li>
-<li><code><a title="TempController.ArduinoSerial.SerialCommunication.reset" href="#TempController.ArduinoSerial.SerialCommunication.reset">reset</a></code></li>
-<li><code><a title="TempController.ArduinoSerial.SerialCommunication.write_serial" href="#TempController.ArduinoSerial.SerialCommunication.write_serial">write_serial</a></code></li>
+<li><code><a title="temp_controller.ArduinoSerial.SerialCommunication.close" href="#temp_controller.ArduinoSerial.SerialCommunication.close">close</a></code></li>
+<li><code><a title="temp_controller.ArduinoSerial.SerialCommunication.flush" href="#temp_controller.ArduinoSerial.SerialCommunication.flush">flush</a></code></li>
+<li><code><a title="temp_controller.ArduinoSerial.SerialCommunication.is_active" href="#temp_controller.ArduinoSerial.SerialCommunication.is_active">is_active</a></code></li>
+<li><code><a title="temp_controller.ArduinoSerial.SerialCommunication.read_data" href="#temp_controller.ArduinoSerial.SerialCommunication.read_data">read_data</a></code></li>
+<li><code><a title="temp_controller.ArduinoSerial.SerialCommunication.read_serial" href="#temp_controller.ArduinoSerial.SerialCommunication.read_serial">read_serial</a></code></li>
+<li><code><a title="temp_controller.ArduinoSerial.SerialCommunication.reset" href="#temp_controller.ArduinoSerial.SerialCommunication.reset">reset</a></code></li>
+<li><code><a title="temp_controller.ArduinoSerial.SerialCommunication.write_serial" href="#temp_controller.ArduinoSerial.SerialCommunication.write_serial">write_serial</a></code></li>
 </ul>
 </li>
 </ul>
