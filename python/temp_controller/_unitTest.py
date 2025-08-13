@@ -100,7 +100,7 @@ print( controller.get_timeout() )
 #==================================================
 print("===========TEST-3")
 
-controller.save_json_file('coefficients_test.json')
+controller.save_json_file('../coefficients_test.json')
 pprint.pprint(controller.get_json_data(), compact=True)
 
 #--------------------- quit
