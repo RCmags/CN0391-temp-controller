@@ -2,7 +2,6 @@
 This module is a wrapper for the serial commands needed to adjust all of the parameters
 of a temperature controller built with the CN0391 temperature shield and an Arduino Uno.
 """
-
 # Note: Serial commands are specified in "Commands.h" within the Arduino sketch. 
 
 # Global libraries
@@ -10,7 +9,7 @@ import time
 import json
 
 # local file
-import ArduinoSerial
+from temp_controller import ArduinoSerial
 
 #--- CONSTANTS ---
 _DEFAULT_BAUD = 9600
@@ -19,7 +18,7 @@ _DEFAULT_BAUD = 9600
 
 class TempControllerCN0391:
 
-	def __init__(self, port:str = None, baud_rate:str = _DEFAULT_BAUD, path:str = None):
+	def __init__(self, port:str = None, baud_rate:int = _DEFAULT_BAUD, path:str = None):
 		'''Initialize the temperature controller.
 		
 		__Note:__ The Serial port changes with operating system:   
@@ -119,9 +118,18 @@ class TempControllerCN0391:
 		else:
 			self._setup('0')
 		
-		# store types
+		# synchronize parameters with arduino
 		self._set_sensor_type_json()
+		self._get_device_coefficients()
 	
+	# Wrapper that mimics a for loop to increase speed. Use the following TAG to find calls. 
+	# [FORLOOP]
+	def _unwrap_loop(self, func:callable) -> None:
+		# run for all channels
+		func(0)
+		func(1)
+		func(2)
+		func(3)
 	
 	# ================ wrappers ================
 	def close(self) -> None:
@@ -135,8 +143,6 @@ class TempControllerCN0391:
 		''' Block program execution and wait for serial commands to be written
 		'''
 		self.serial.flush()
-	
-	
 	
 	def is_active(self) -> bool:
 		'''Returns whether the serial connection is active (True) or disabled (False)
@@ -518,8 +524,8 @@ class TempControllerCN0391:
 		'''
 		cmd = "16"
 		data = self._getter(cmd, out='param')
-		return [elem == True for elem in data]	# convert int to boolean
-	
+		return [elem == True for elem in data]	# convert int to boolean | vectorized?
+		#[FORLOOP]
 	
 		# timers
 	def get_timer(self) -> list:
@@ -597,6 +603,10 @@ class TempControllerCN0391:
 		'''
 		# retrieve data
 		parameters = self.json_data["parameters"]
+		
+		#[FORLOOP]
+		#def set_params(channel:int, p) -> None:
+		# Convert this loop into lambda callling a function? One loop per parameter?
 		
 		for channel, param in enumerate(parameters):
 			# load paramters
@@ -684,17 +694,25 @@ class TempControllerCN0391:
 	
 	#-- functions to store state in JSON file:
 	
-	def get_device_coefficients(self) -> None:
-		'''Gets the coefficients currently loaded on the Arduino and prepares them to be stored
-		in a JSON file.
+	def _get_device_coefficients(self) -> None:
+		'''Gets the coefficients currently loaded on the Arduino and saves them to an internal 
+		buffer on the device running this python module. This buffer can then be stored
+		in a JSON file by calling `save_json_file()`. This function is automatically called at the
+		end of the setup() function.
+		
+		__NOTE__: It is always possible to use the function `save_json_file` to store the current
+		buffer. However, it may not always reflect the parameters loaded onto the Arduino. This is 
+		especially true if the Arduino is configured directly via the Serial API, and later 
+		manipulated using the Python API. Calling `get_device_coefficients` synchronizes the 
+		Python API with whatever changes happened beforehand. Its assumed one call before other
+		commands are sent is enough to ensure synchronization.
 		'''
 		# get enabled ports
 		is_enabled = self.get_enable()
 		timeout = self.get_timeout()
 		
-		# set json data
-		for ch in range(0, 4):
-			# enable
+			# encapsulate getter
+		def get_coeff(ch: int) -> None:
 			if is_enabled[ch]:
 				self._set_enable_json(ch)
 			else:
@@ -704,22 +722,20 @@ class TempControllerCN0391:
 				# pid
 			var = self.get_pid(ch)
 			self._set_pid_json( ch, var[0], var[1], var[2] )
-			
 				# alpha-beta filter
 			var = self.get_ab_filter(ch)
 			self._set_ab_filter_json( ch, var[0], var[1] )
-			
 				# kalman filter
 			var = self.get_k_filter(ch)
 			self._set_k_filter_json( ch, var[0], var[1] )
-			
 				# input limits
 			var = self.get_in_limit(ch)
 			self._set_in_limit_json( ch, var[0], var[1] )
-			
 				# timeout
 			self._set_timeout_json( ch, timeout[ch] )
-	
+		
+		#[FORLOOP]
+		self._unwrap_loop(get_coeff)
 	
 	def _set_pid_json(self, ch:int, kp:float, ki:float, kd:float) -> None:
 		'''Stores the PID coefficients in a dictionary
@@ -783,9 +799,12 @@ class TempControllerCN0391:
 		----------
 		See `set_enable_all` for details
 		'''
-		for ch in range(0,4):
+		'''
+		for ch in range(0,4):	# -> Can unwrap
 			self._set_enable_json(ch)
-	
+		'''
+		self._unwrap_loop(self._set_enable_json)
+		#[FORLOOP]
 	
 	def _set_disable_json(self, ch:int) -> None:
 		'''Stores whether a PID controller is disabled in a dictionary
@@ -804,9 +823,12 @@ class TempControllerCN0391:
 		----------
 		See `set_disable_all` for details
 		'''
-		for ch in range(0,4):
+		'''
+		for ch in range(0,4): #-> can unwrap
 			self._set_disable_json(ch)
-	
+		'''
+		self._unwrap_loop(self._set_disable_json)
+		#[FORLOOP]
 	
 	def _set_timeout_json(self, ch:int, time:float) -> None:
 		'''Stores the time a PID controller can be enabled in a dictionary

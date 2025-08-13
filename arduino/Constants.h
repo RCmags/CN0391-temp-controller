@@ -38,6 +38,8 @@
 /* NOTE: 
 	- Type 'N' sensors are thermocuple wires. 
 	- NUM_PORT defined in "BasicCN0391.h"
+	- Reduce buffer size as much as possible to avoid silent out-of-memory errors.
+	  Errors are known to occur with BUFFER_SIZE>=40 
 */
 //======================================
 
@@ -47,7 +49,7 @@ constexpr uint32_t PULSE_WIDTH = 100000; // Smallest pulse width of frequency-pu
 
 // Serial communication:
 constexpr int 	BAUD_RATE   = 9600;   // speed of serial communication. MUST match value in "main.py"
-constexpr int 	BUFFER_SIZE = 40;     // maximum allowed characters in serial input buffer
+constexpr int 	BUFFER_SIZE = 24;     // maximum allowed characters in serial input buffer
 constexpr int   INPUTS_MAX  = 6;      // <command> <channel> <param1> <param2> <param3> <param4> 
 	// Strings
 #define DELIM_CHAR     ","	     // character used to split serial commands; Wrap with ""

@@ -44,15 +44,128 @@ el.replaceWith(d);
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="main.main"><code class="name flex">
-<span>def <span class="ident">main</span></span>(<span>window, ylims, path=None, nsamples=10)</span>
+<dt id="main.captureInputs"><code class="name flex">
+<span>def <span class="ident">captureInputs</span></span>(<span>) ‑> object</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def main(window, ylims, path=None, nsamples=10):
+<pre><code class="python">def captureInputs() -&gt; object: # need to capture max 3 inputs, 2 have defaults
+        &#39;&#39;&#39;Captures command line parameters provided by the user when calling the script. 
+        For example:
+        
+        ```bash
+        python3 main.py --path &#34;./config.json&#34; --ylims 30, 100 --window 100
+        ```
+        
+        Parameters
+        ----------
+        path : str
+                Optional parameter to set path to the JSON configuration file for the controller
+        
+        ylims: list(float)
+                Optional parameter to set the maximum and minimum values of Y axis.
+        
+        window : float
+                Optional parameter to set the width of the X axis time window. 
+        
+        nsamples : int
+                Optional parameter for the number of data samples used to initially configure the plots. \
+                Must be larger than zero. 
+        
+        Returns
+        -------
+        data : object
+                Object with the data mentioned in the description. It contains the fields: \
+                `path`, `ylims`, and `window`.
+        &#39;&#39;&#39;
+        parser = argparse.ArgumentParser()
+        
+        parser.add_argument(&#34;--path&#34;, type=str, default=None, \
+                            help=&#34;Path to the JSON file with the controller configuration. \
+                                  Ex: &#39;./coefficients.json&#39;&#34;)
+        
+        parser.add_argument(&#39;--ylims&#39;, type=list_of_floats, default=[20, 80], \
+                            help=&#34;minimum and maximum Limits of the Y axis (Celsius): [min, max]&#39;&#34;)
+        
+        parser.add_argument(&#39;--window&#39;, type=float, default=120, \
+                            help=&#34;Width of time window shown in the X axis (Seconds)&#34;)
+
+        parser.add_argument(&#39;--nsamples&#39;, type=positive_int, default=10, \
+                            help=&#34;Number of data samples used to initialize the plot. Must be \
+                                 larger than zero&#34;)
+        
+        return parser.parse_args()      # object with arguments</code></pre>
+</details>
+<div class="desc"><p>Captures command line parameters provided by the user when calling the script.
+For example:</p>
+<pre><code class="language-bash">python3 main.py --path &quot;./config.json&quot; --ylims 30, 100 --window 100
+</code></pre>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Optional parameter to set path to the JSON configuration file for the controller</dd>
+<dt><strong><code>ylims</code></strong> :&ensp;<code>list(float)</code></dt>
+<dd>Optional parameter to set the maximum and minimum values of Y axis.</dd>
+<dt><strong><code>window</code></strong> :&ensp;<code>float</code></dt>
+<dd>Optional parameter to set the width of the X axis time window.</dd>
+<dt><strong><code>nsamples</code></strong> :&ensp;<code>int</code></dt>
+<dd>Optional parameter for the number of data samples used to initially configure the plots.
+Must be larger than zero.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>object</code></dt>
+<dd>Object with the data mentioned in the description. It contains the fields:
+<code>path</code>, <code>ylims</code>, and <code>window</code>.</dd>
+</dl></div>
+</dd>
+<dt id="main.list_of_floats"><code class="name flex">
+<span>def <span class="ident">list_of_floats</span></span>(<span>string: str) ‑> list</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_of_floats(string: str) -&gt; list:
+        &#39;&#39;&#39;Converts a string delimited by commas into an array of strings.
+        
+        Parameters
+        ----------
+        string: str
+                String of delimited parameters
+        
+        Returns
+        -------
+        data : list(str)
+                array of strings
+        &#39;&#39;&#39;
+        return list( map(float, string.split(&#39;,&#39;)) )</code></pre>
+</details>
+<div class="desc"><p>Converts a string delimited by commas into an array of strings.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>string</code></strong> :&ensp;<code>str</code></dt>
+<dd>String of delimited parameters</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>list(str)</code></dt>
+<dd>array of strings</dd>
+</dl></div>
+</dd>
+<dt id="main.main"><code class="name flex">
+<span>def <span class="ident">main</span></span>(<span>window, ylims, path, nsamples)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def main(window, ylims, path, nsamples):
         &#39;&#39;&#39;Interactive plot that displays temperature measurement in real time. Terminal can be used
         at the same time to send commands to the Arduino and modify the behavior of controller.
         
@@ -71,7 +184,11 @@ el.replaceWith(d);
                 number of data samples used to generate the first points in the plot.
         &#39;&#39;&#39;
         # ---- Serial ----
-        controller = cntl.TempControllerCN0391(path=path)
+        try:
+                controller = cntl.TempControllerCN0391(path=path)
+        except:
+                print(&#34;Unable to establish Serial connection - Exiting&#34;)
+                return  # exit function
         
         # ---- keyboard inputs ----
         keythread = kb.KeyboardThread() # starts thread automatically
@@ -97,49 +214,54 @@ el.replaceWith(d);
         ax.set_xlim( [0, window] )
         ax.set_ylim( ylims )
         ax.set_xlabel(&#34;Seconds&#34;)
-        ax.set_ylabel(&#34;Celcius&#34;)
+        ax.set_ylabel(&#34;Celsius&#34;)
 
         plt.ion()
         plt.show()
         
         #---- loop ----
         while controller.is_active():   # check connection
-                # ----- serial inputs -----
-                if keythread.flag():
-                        key_input = keythread.input()
+                try:
+                        # ----- serial inputs -----
+                        if keythread.flag():
+                                key_input = keythread.input()
+                                
+                                if key_input == &#34;exit&#34;:
+                                        break
+                                elif key_input != &#34;&#34;:
+                                        reply = controller.send_serial_command(key_input)
+                                        print(reply)
                         
-                        if key_input == &#34;exit&#34;:
-                                break
-                        elif key_input != &#34;&#34;:
-                                reply = controller.send_serial_command(key_input)
-                                print(reply)
+                        #----- plot -----
+                        time_now = time.time()
+                        
+                        if np.size(x) == 0: 
+                                time_init = time_now
+                                y = y_init.copy()
+                        else:
+                                ynew = controller.get_filter()  # breaks when interrupt is called
+                                ynew = vert_array(ynew)                 # transform to vertical numpy array
+                                y = np.hstack( (y, ynew) )
+                        
+                        time_zero = time_now - time_init
+                        x = np.append(x, time_zero);
+                        
+                        if time_zero &gt; window:
+                                y = y[:, 1:]                            # delete first vertical slice
+                                x = np.delete(x, 0)
+                                ax.set_xlim( [ x[0], x[-1] ] )
+                        
+                        # update plots
+                        for i in range(n_data):
+                                lines[i].set_xdata(x)
+                                lines[i].set_ydata( y[i] )
+                        
+                        figure.canvas.draw()
+                        figure.canvas.flush_events()
                 
-                #----- plot -----
-                time_now = time.time()
-                
-                if np.size(x) == 0: 
-                        time_init = time_now
-                        y = y_init.copy()
-                else:
-                        ynew = controller.get_filter()  # breaks when interrupt is called
-                        ynew = vert_array(ynew)                 # transform to vertical numpy array
-                        y = np.hstack( (y, ynew) )
-                
-                time_zero = time_now - time_init
-                x = np.append(x, time_zero);
-                
-                if time_zero &gt; window:
-                        y = y[:, 1:]                            # delete first vertical slice
-                        x = np.delete(x, 0)
-                        ax.set_xlim( [ x[0], x[-1] ] )
-                
-                # update plots
-                for i in range(n_data):
-                        lines[i].set_xdata(x)
-                        lines[i].set_ydata( y[i] )
-                
-                figure.canvas.draw()
-                figure.canvas.flush_events()
+                except:
+                        print(&#34;Data Transfer Failed - Exiting&#34;)
+                        break   # exit loop
         
         #---- exit program ----
         print(&#34;CLOSED-PYTHON&#34;)
@@ -160,6 +282,45 @@ at the same time to send commands to the Arduino and modify the behavior of cont
 <dd>path to json file that contains the parameters to configure the controller</dd>
 <dt><strong><code>nsamples</code></strong> :&ensp;<code>int</code></dt>
 <dd>number of data samples used to generate the first points in the plot.</dd>
+</dl></div>
+</dd>
+<dt id="main.positive_int"><code class="name flex">
+<span>def <span class="ident">positive_int</span></span>(<span>string: str) ‑> int</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def positive_int(string: str) -&gt; int:
+        &#39;&#39;&#39;Converts a string to positive integer. 
+        
+        Parameters
+        ----------
+        string: str
+                String that contains numbers
+        
+        Returns
+        -------
+        num : int
+                Integer that is at least 1. Can be greater than one.
+        &#39;&#39;&#39;
+        num = int(string)
+        if num &gt; 0:
+                return num
+        else:
+                return 1</code></pre>
+</details>
+<div class="desc"><p>Converts a string to positive integer. </p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>string</code></strong> :&ensp;<code>str</code></dt>
+<dd>String that contains numbers</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Integer that is at least 1. Can be greater than one.</dd>
 </dl></div>
 </dd>
 <dt id="main.vert_array"><code class="name flex">
@@ -201,7 +362,10 @@ transform parsed data into a form that is easily plotted by matplotlib. </p>
 <ul id="index">
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="main.captureInputs" href="#main.captureInputs">captureInputs</a></code></li>
+<li><code><a title="main.list_of_floats" href="#main.list_of_floats">list_of_floats</a></code></li>
 <li><code><a title="main.main" href="#main.main">main</a></code></li>
+<li><code><a title="main.positive_int" href="#main.positive_int">positive_int</a></code></li>
 <li><code><a title="main.vert_array" href="#main.vert_array">vert_array</a></code></li>
 </ul>
 </li>

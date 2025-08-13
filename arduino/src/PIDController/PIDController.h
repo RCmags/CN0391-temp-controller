@@ -4,23 +4,19 @@
 // Macro to restrict constant values
 #define LIMIT(X) X < 0 ? 0 : X > 1 ? 1 : X
 
-// Controller output limits [must match limits of signal generator]
-constexpr float OUT_MAX = 1;
-constexpr float OUT_MIN = 0;
-
 class PIDcontroller {
-  private:
-   	// Parameters:
-   		// pid
-    float gain_p;
-    float gain_i;
-    float gain_d;
+	private:
+	// Parameters: | NOTE: Add default value to prevent run-time errors
+		// pid
+	float gain_p;
+	float gain_i;
+	float gain_d;
 		// filter
-    float alpha;
-    float beta;
+	float alpha;
+	float beta;
 		// limits
-    float in_scale;
-    float in_offset;
+	float in_scale;
+	float in_offset;
 
 	// variables
 		// timer
@@ -37,13 +33,13 @@ class PIDcontroller {
 	void updateFilter(float);
 	float normalize(float);
 
-  public:
-  	// constructors
-  	PIDcontroller() {} // manually set coefficients
-	
-    PIDcontroller(float, float, float, 
-                  float, float,
-                  float, float);
+	public:
+	// constructors
+	PIDcontroller() {} // manually set coefficients
+
+	PIDcontroller(float, float, float, 
+		          float, float,
+		          float, float);
 	
 	// setters
 	void setPIDGains(float, float, float);
@@ -57,10 +53,10 @@ class PIDcontroller {
 	static float getTimeStep();
 
 	// controller functions
-    void setState(float);
-    void update(float, float);
+	void setState(float);
+	void update(float, float);
 	
-    // getter functions
+	// getter functions
 	float output();
 	float filter();
 	float deriv();

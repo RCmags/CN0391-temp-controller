@@ -1,5 +1,5 @@
 """
-Self-contained module to easily communicate with an Arduino over serial. It is intended to be used
+Self contained module to easily communicate with an Arduino over serial. It is intended to be used
 with commands that have the form of a comma delimited string:
 
 ```
@@ -19,12 +19,12 @@ import time
 
 #--- CONSTANTS ---
 _END_CHAR = '\n' # see: arduino/Constants.h
-_TIMEOUT  = 20   # seconds | Time that serial reads are allowed to block code execution. 
-_DELAY    = 1.0  # seconds | Required delay that allows serial command to be sent
+_TIMEOUT  = 60   # seconds | Time that serial reads are allowed to block code execution. 
+_DELAY    = 0.5  # seconds | Required delay that allows serial command to be sent | 1 sec is safe but slow
 
 # NOTE: Time delays need to be long enough to compensate for the slow execution of python
 
-#=========================================================================================
+#===================================================================================================
 
 class SerialCommunication:
 	
@@ -136,11 +136,11 @@ class SerialCommunication:
 		Parameters
 		----------
 		string: str
-			String that contains the comma seperated values to be parsed
+			String that contains the comma separated values to be parsed
 		
 		out: str
 			Optional parameter that determines the type of output. 
-			For more detaills see: read_data()
+			For more details see: read_data()
 		
 		Returns
 		-------

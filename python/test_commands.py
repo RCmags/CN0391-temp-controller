@@ -1,10 +1,14 @@
-import TempControllerCN0391 as cntl
+from temp_controller import TempControllerCN0391 as cntl
 import time
+import pprint
 
 PORT 	  = "/dev/ttyACM0"	# String of the Serial port used by the arduino
 BAUD_RATE = 9600
 controller = cntl.TempControllerCN0391(PORT, BAUD_RATE)
+#controller = cntl.TempControllerCN0391()
 controller.setup('N', 'K', 'J', 'K')
+#time.sleep(10)
+#controller.get_device_coefficients()
 
 # Note: come up with more demanding test routine. Continuous getters or setters.
 # then check results. Loops of data retrieval, etc. 
@@ -102,12 +106,13 @@ print( controller.get_timeout() )
 
 #==================================================
 print("===========TEST-3")
-controller.get_device_coefficients()
-controller.save_json_file('save_const.json')
-print( controller.get_json_data() )
 
+controller.save_json_file('coefficients_test.json')
+#print(controller.get_json_data())
+pprint.pprint(controller.get_json_data(), compact=True)
 
 #--------------------- quit
-controller.serial.reset()
-controller.close()
+controller.set_disable_all()
+#controller.serial.reset()
+controller.serial.close()
 exit()
