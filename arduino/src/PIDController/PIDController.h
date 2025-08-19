@@ -6,7 +6,7 @@
 
 class PIDcontroller {
 	private:
-	// Parameters: | NOTE: Add default value to prevent run-time errors
+	// Parameters:
 		// pid
 	float gain_p;
 	float gain_i;

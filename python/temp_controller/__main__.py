@@ -5,8 +5,17 @@ import time
 import argparse
 
 # local file
-import KeyboardThread as kb
+from comms import KeyboardThread as kb
 import TempControllerCN0391 as cntl
+
+## NOTE: remove CLI interface from basic operation. Split into two files.
+## Turn this file into a backend plotting function.
+## must return plotting figure?
+
+## >> update: export plotter to given figure; command line inputs are not called if file is imported.
+## split plotter test into seperate function; keep CLI inputs in this script.
+
+## Need to print temperature output to csv file.
 
 #===================================================================================================
 

@@ -49,8 +49,10 @@ constexpr uint32_t PULSE_WIDTH = 100000; // Smallest pulse width of frequency-pu
 
 // Serial communication:
 constexpr int 	BAUD_RATE   = 9600;   // speed of serial communication. MUST match value in "main.py"
-constexpr int 	BUFFER_SIZE = 24;     // maximum allowed characters in serial input buffer
-constexpr int   INPUTS_MAX  = 6;      // <command> <channel> <param1> <param2> <param3> <param4> 
+constexpr int 	BUFFER_SIZE = 30;     // maximum allowed characters in serial input buffer
+constexpr int 	INPUTS_MAX  = 6;      // <command> <channel> <param1> <param2> <param3> <param4> 
+constexpr int 	DECIMAL_MAX = 2;			// Maximum number of decimals for serial OUTPUTS; More decimals are rounded.
+
 	// Strings
 #define DELIM_CHAR     ","	     // character used to split serial commands; Wrap with ""
 #define END_LINE_CHAR  '\n'      // character used to detect the end of a string captured via serial

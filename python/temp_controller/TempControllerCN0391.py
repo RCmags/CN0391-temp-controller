@@ -6,17 +6,25 @@ of a temperature controller built with the CN0391 temperature shield and an Ardu
 # - Serial commands are specified in "Commands.h" within the Arduino sketch. 
 # - Use the following TAG to for-loops for optimization: [FORLOOP]
 
+##>>> need to add function to get PID output to signal generator
+
 # Global libraries
 import time
 import json
 
 # local file
-import ArduinoSerial
+from comms import ArduinoSerial
 
 #--- CONSTANTS ---
 _DEFAULT_BAUD = 9600
+_DECIMAL_MAX = 2        # Defined in: "Constants.h" in arduino code. MUST MATCH THIS VALUE.
 
 #===================================================================================================
+
+def round_input(num:float) -> float:
+	return round(num, _DECIMAL_MAX)
+
+#---------------------------------------------------------------------------------------------------
 
 class TempControllerCN0391:
 
@@ -266,8 +274,11 @@ class TempControllerCN0391:
 		target : float
 			Target temperature (in Celsius) for the PID controller of specified channel
 		'''
+		target = round_input(target)
+		
 		cmd = "3," + str(ch) + "," + str(target) 
 		self._setter(cmd) 
+	
 	
 	def set_target_all(self, targ0:float, targ1:float, targ2:float, targ3:float) -> None: 
 		'''Sets the target temperature for all PID controllers simultaneously
@@ -286,6 +297,11 @@ class TempControllerCN0391:
 		targ3 : float
 			Target temperature (in Celsius) for the PID controller of channel 3
 		'''
+		targ0 = round_input(targ0)
+		targ1 = round_input(targ1)
+		targ2 = round_input(targ2)
+		targ3 = round_input(targ3)
+
 		cmd = "3,4," + str(targ0) + "," + str(targ1) + "," + str(targ2) + "," + str(targ3)
 		self._setter(cmd)
 	
@@ -324,6 +340,10 @@ class TempControllerCN0391:
 		kd : float
 			Derivative coefficient
 		'''
+		kp = round_input(kp)
+		ki = round_input(ki)
+		kd = round_input(kd)
+		
 		cmd = "5," + str(ch) + "," + str(kp) + "," + str(ki) + "," + str(kd)
 		self._setter(cmd)
 		self._set_pid_json(ch, kp, ki, kd)
@@ -363,6 +383,9 @@ class TempControllerCN0391:
 		imin : float
 			Minimum allowable target temperature (in Celsius)
 		'''
+		imax = round_input(imax)
+		imin = round_input(imin)
+		
 		cmd = "7," + str(ch) + "," + str(imax) + "," + str(imin)
 		self._setter(cmd)
 		self._set_in_limit_json(ch, imax, imin)
@@ -403,6 +426,9 @@ class TempControllerCN0391:
 		beta : float
 			Beta coefficient (derivative smoothing): 0 < beta < 1
 		'''
+		alpha = round_input(alpha)
+		beta = round_input(beta)
+		
 		cmd = "9," + str(ch) + "," + str(alpha) + "," + str(beta)
 		self._setter(cmd)
 		self._set_ab_filter_json(ch, alpha, beta)
@@ -443,6 +469,9 @@ class TempControllerCN0391:
 			Process noise parameter. A smaller value smooths the data at the cost of lag: \
 			0 < noise < 1
 		'''
+		error = round_input(error)
+		noise = round_input(noise)
+		
 		cmd = "11," + str(ch) + "," + str(error) + "," + str(noise)
 		self._setter(cmd)
 		self._set_k_filter_json(ch, error, noise)
@@ -459,6 +488,8 @@ class TempControllerCN0391:
 		value : float
 			Value of the filter (in Celsius)
 		'''
+		value = round_input(value)
+		
 		cmd = "12," + str(ch) + "," + str(value)
 		self._setter(cmd)
 	
@@ -570,6 +601,8 @@ class TempControllerCN0391:
 		time : float
 			Time (in seconds) the controller will be active
 		'''
+		time = round_input(time)
+		
 		cmd = "19," + str(ch) + "," + str(time)
 		self._setter(cmd)
 		self._set_timeout_json(ch, time)

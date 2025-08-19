@@ -1,3 +1,4 @@
+
 # NOTE: convert code and command line option to "main.py"
 
 # local import
@@ -10,9 +11,9 @@ import pprint
 PORT 	  = "/dev/ttyACM0"	# String of the Serial port used by the arduino
 BAUD_RATE = 9600
 
-controller = cntl.TempControllerCN0391(port=PORT, baud_rate=BAUD_RATE) # test1 -> must load constants.h -> does?
+#controller = cntl.TempControllerCN0391(port=PORT, baud_rate=BAUD_RATE) # test1 -> must load constants.h -> does?
 #controller = cntl.TempControllerCN0391() # test2
-#controller = cntl.TempControllerCN0391(path="coefficients.json") # test3
+controller = cntl.TempControllerCN0391(path="./json/coefficients_load.json") # test3
 """
 #--- test functions ---
 print("===========TEST-1")

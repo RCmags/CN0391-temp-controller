@@ -1,5 +1,7 @@
 #include "Commands.h"
 
+//>>> need to add function to get PID output to signal generator
+
 //--------------- STRING SERIAL PRINTING ---------------
 
 template <typename number_t>
@@ -7,7 +9,7 @@ void printArray( number_t arr[], const uint8_t END ) {
 	const uint8_t END_DELIM = END - 1;
 	// elements
 	for( uint8_t i = 0; i < END; i += 1 ) {
-		Serial.print( arr[i] );
+		Serial.print( arr[i], DECIMAL_MAX );	// need to set decimals; 3 MAX?
 		if( i < END_DELIM ) {
 			Serial.print( F(DELIM_CHAR) ); 
 		}
