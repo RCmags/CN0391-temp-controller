@@ -78,7 +78,7 @@ def check_num_array( data:list, length:int ) -> bool:
 	return check
 
 
-def check_num_func( obj:object, func:str, num_output:int, msg:str="", ch=None ) -> list:
+def check_num_func( obj:object, func:str, num_output:int, msg:str="", ch:int=None ) -> list:
 	print("\n>>>> " + func + msg)
 	
 	# select correct function
@@ -95,7 +95,7 @@ def check_num_func( obj:object, func:str, num_output:int, msg:str="", ch=None ) 
 	return data
 
 
-def check_num_func_ch( obj:object, func:str, num_output:int ) -> list:
+def check_num_func_channel( obj:object, func:str, num_output:int ) -> list:
 	output = []
 	
 	for ch in range(0, 4):
@@ -106,12 +106,12 @@ def check_num_func_ch( obj:object, func:str, num_output:int ) -> list:
 	return output
 
 
-def check_sensor_type( obj:object ) -> None:
+def check_sensor_type( obj:object ) -> list:
 	print("\n>>>> get_sensor_type")
 	data = obj.controller.get_sensor_type()
 	check = [isinstance(data, str) and len(elem) == 1 for elem in data]
 	obj.assertTrue(check, "Unacceptable sensor types. They are not single letters")
-	# capture output; return?
+	return list(data)
 
 
 def printSpacer():
@@ -131,11 +131,12 @@ def set_function( obj:object, func:str, msg:str="", *args ) -> None:
 	getattr(obj.controller, func)(*args) 	# Call setter function
 
 
-def set_function_ch_random( obj:object, func:str, ninputs:int ) -> None:
+def set_function_ch_random( obj:object, func:str, num_input:int, \
+                                        nmin:float, nmax:float ) -> None:
 	output = []
 	
 	for ch in range(0, 4):
-		inputs = [ random_float() for i in range(0, ninputs) ]
+		inputs = [ random_float(nmin, nmax) for i in range(0, num_input) ]
 		
 		if len(inputs) == 1:
 			output.append(*inputs)
@@ -154,40 +155,29 @@ def check_equality( obj:object, inputs:list, outputs:list ) -> None:
 	obj.assertTrue(check, "Sent input and received output do not match")
 
 
-def print_results( inputs:list, outputs:list ) -> None:
+def print_results( inputs:list, outputs:list, isWarn=False ) -> None:
+	if isWarn:
+		print("[WARNING] MUST MANUALLY INSPECT")
+	
 	print("\n### Net results:")
 	print("Inputs:  ", inputs)
 	print("Outputs: ", outputs)
 
 
-def check_getter_ch( obj:object, setter:str, num_set:int, \
-                                 getter:str, num_get:int  ) -> None:
+def check_getter_channel( obj:object, setter:str, num_set:int, \
+                                 getter:str, num_get:int, \
+                                 isIter:bool=False,
+                                 nmin:float=0, nmax:float=1  ) -> None:
 	
-	print("setter:", setter)
-	inputs = set_function_ch_random(obj, setter, num_set)
-	#inputs = set_function_ch_random(obj, "set_target", 1)
+	inputs = set_function_ch_random(obj, setter, num_set, nmin, nmax)
 	
-	print("getter", getter)
-	outputs = check_num_func_ch(obj, "get_target", 4)
-	#outputs = check_num_func(obj, "get_target", 4)
-	
+	if isIter:
+		outputs = check_num_func_channel(obj, getter, num_get)
+	else:
+		outputs = check_num_func(obj, getter, num_get)
 	
 	print_results(inputs, outputs)
 	check_equality(obj, inputs, outputs)
-
-"""
-inputs = set_function_ch_random(self, "set_target", 1)
-outputs = check_num_func(self, "get_target", 4)
-print_results(inputs, outputs)
-check_equality(self, inputs, outputs)
-"""
-
-"""
-inputs = set_function_ch_random(self, "set_pid", 3)
-outputs = check_num_func_ch(self, "get_pid", 3)
-print_results(inputs, outputs)
-check_equality(self, inputs, outputs)
-"""
 
 #---------------------------------------------------------------------------------------------------
 
@@ -229,22 +219,22 @@ class TestPythonAPI(unittest.TestCase):
 		
 		# Per channel calls:
 		with self.subTest():
-			check_num_func_ch(self, "get_pid", 3)
+			check_num_func_channel(self, "get_pid", 3)
 		
 		printSpacer()
 		
 		with self.subTest():
-			check_num_func_ch(self, "get_in_limit", 2)
+			check_num_func_channel(self, "get_in_limit", 2)
 		
 		printSpacer()
 		
 		with self.subTest():
-			check_num_func_ch(self, "get_ab_filter", 2)
+			check_num_func_channel(self, "get_ab_filter", 2)
 		
 		printSpacer()
 		
 		with self.subTest():
-			check_num_func_ch(self, "get_k_filter", 2)
+			check_num_func_channel(self, "get_k_filter", 2)
 		
 		# close connection gracefully
 		self.controller.close()
@@ -261,26 +251,41 @@ class TestPythonAPI(unittest.TestCase):
 		# Single calls:
 		
 		with self.subTest():
-			check_getter_ch(self, "set_target", 1, \
-			                      "get_target", 4)
-			"""
-			inputs = set_function_ch_random(self, "set_target", 1)
-			outputs = check_num_func(self, "get_target", 4)
-			print_results(inputs, outputs)
-			check_equality(self, inputs, outputs)
-			"""
+			check_getter_channel(self, "set_target", 1, "get_target", 4)
 		
-		#printSpacer()
+		printSpacer()
 		
 		with self.subTest():
-			#check_getter_ch(self, "set_pid", 3, \
-			#                      "get_pid", 3)
-			"""
-			inputs = set_function_ch_random(self, "set_pid", 3)
-			outputs = check_num_func_ch(self, "get_pid", 3)
-			print_results(inputs, outputs)
-			check_equality(self, inputs, outputs)
-			"""
+			check_getter_channel(self, "set_pid", 3, "get_pid", 3, isIter=True)
+		
+		printSpacer()
+		
+		with self.subTest():
+			inputs = set_function_ch_random(self, "set_in_limit", 2, nmin=10, nmax=100)
+			outputs = check_num_func_channel(self, "get_in_limit", 2) 
+			print_results(inputs, outputs, isWarn=True)
+		
+		printSpacer()
+		
+		with self.subTest():
+			check_getter_channel(self, "set_ab_filter", 2, "get_ab_filter", 2, isIter=True)
+		
+		printSpacer()
+		
+		with self.subTest():
+			check_getter_channel(self, "set_k_filter", 2, "get_k_filter", 2, isIter=True)
+		
+		printSpacer()
+		
+		with self.subTest():
+			check_getter_channel(self, "set_timeout", 1, "get_timeout", 4)
+		
+		printSpacer()
+		
+		with self.subTest():
+			inputs = set_function_ch_random(self, "set_k_filter_state", 1, nmin=10, nmax=100)
+			outputs = check_num_func_channel(self, "get_filter", 4) 
+			print_results(inputs, outputs, isWarn=True)
 		
 		printSpacer()
 		
@@ -289,13 +294,13 @@ class TestPythonAPI(unittest.TestCase):
 	
 	"""
 	# by channel
-	controller.set_target(0, 45)			-> random floats
-	controller.set_pid(0, 4, 2, 3)			-> random floats
+	[+]controller.set_target(0, 45)			-> random floats
+	[+]controller.set_pid(0, 4, 2, 3)			-> random floats
 	controller.set_in_limit(0, 50, 25)		-> random floats
-	controller.set_ab_filter(0, 0.1, 0.2)	-> random floats
-	controller.set_k_filter(0, 0.3, 0.4)	-> random floats
+	[+]controller.set_ab_filter(0, 0.1, 0.2)	-> random floats
+	[+]controller.set_k_filter(0, 0.3, 0.4)	-> random floats
 	controller.set_k_filter_state(0, 100)	-> random floats
-	controller.set_timeout(0, 100)			-> random floats
+	[x]controller.set_timeout(0, 100)			-> random floats
 	
 		# no parameters besides: ch
 	controller.set_enable(0)
@@ -321,6 +326,21 @@ if __name__ == '__main__':
 # NOTE: convert code and command line option to "main.py"
 
 #===================================================================================================
+
+
+""" TARGET EXAMPLE
+inputs = set_function_ch_random(self, "set_target", 1)
+outputs = check_num_func(self, "get_target", 4) ## Singular function call, no channel input
+print_results(inputs, outputs)
+check_equality(self, inputs, outputs)
+"""
+
+""" PID EXAMPLE
+inputs = set_function_ch_random(self, "set_pid", 3)
+outputs = check_num_func_channel(self, "get_pid", 3) ## multiple function calls
+print_results(inputs, outputs)
+check_equality(self, inputs, outputs)
+"""
 
 """
 with self.subTest():
