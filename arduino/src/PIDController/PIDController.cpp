@@ -122,7 +122,7 @@ void PIDcontroller::getInputLimits( float output[] ) {
 	// Zero division prevented in setter
 	float inv = 1 / in_scale;
 	float imin = -in_offset * inv;
-	float imax = inv - imin;
+	float imax = inv + imin;	// negative included with imin
 	// return limits
 	output[0] = imax;
 	output[1] = imin;

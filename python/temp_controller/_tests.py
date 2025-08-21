@@ -132,7 +132,7 @@ def set_function( obj:object, func:str, msg:str="", *args ) -> None:
 
 
 def set_function_ch_random( obj:object, func:str, num_input:int, \
-                                        nmin:float, nmax:float ) -> None:
+                                        nmin:float=0, nmax:float=1 ) -> None:
 	output = []
 	
 	for ch in range(0, 4):
@@ -156,28 +156,14 @@ def check_equality( obj:object, inputs:list, outputs:list ) -> None:
 
 
 def print_results( inputs:list, outputs:list, isWarn=False ) -> None:
+	print("\n### Net results:")
+	
 	if isWarn:
 		print("[WARNING] MUST MANUALLY INSPECT")
 	
-	print("\n### Net results:")
 	print("Inputs:  ", inputs)
 	print("Outputs: ", outputs)
 
-
-def check_getter_channel( obj:object, setter:str, num_set:int, \
-                                 getter:str, num_get:int, \
-                                 isIter:bool=False,
-                                 nmin:float=0, nmax:float=1  ) -> None:
-	
-	inputs = set_function_ch_random(obj, setter, num_set, nmin, nmax)
-	
-	if isIter:
-		outputs = check_num_func_channel(obj, getter, num_get)
-	else:
-		outputs = check_num_func(obj, getter, num_get)
-	
-	print_results(inputs, outputs)
-	check_equality(obj, inputs, outputs)
 
 #---------------------------------------------------------------------------------------------------
 
@@ -249,42 +235,58 @@ class TestPythonAPI(unittest.TestCase):
 		printSpacer()
 		
 		# Single calls:
-		
 		with self.subTest():
-			check_getter_channel(self, "set_target", 1, "get_target", 4)
+			inputs = set_function_ch_random(self, "set_target", 1)
+			outputs = check_num_func(self, "get_target", 4)
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
 		with self.subTest():
-			check_getter_channel(self, "set_pid", 3, "get_pid", 3, isIter=True)
+			inputs = set_function_ch_random(self, "set_pid", 3)
+			outputs = check_num_func_channel(self, "get_pid", 3) # multiple function calls
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
-		with self.subTest():
+		with self.subTest(): # Had to fix arduino getter | prone to lack of ram errors
 			inputs = set_function_ch_random(self, "set_in_limit", 2, nmin=10, nmax=100)
 			outputs = check_num_func_channel(self, "get_in_limit", 2) 
 			print_results(inputs, outputs, isWarn=True)
+			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
 		with self.subTest():
-			check_getter_channel(self, "set_ab_filter", 2, "get_ab_filter", 2, isIter=True)
+			inputs = set_function_ch_random(self, "set_ab_filter", 2)
+			outputs = check_num_func_channel(self, "get_ab_filter", 2) # multiple function calls
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
 		with self.subTest():
-			check_getter_channel(self, "set_k_filter", 2, "get_k_filter", 2, isIter=True)
+			inputs = set_function_ch_random(self, "set_k_filter", 2)
+			outputs = check_num_func_channel(self, "get_k_filter", 2) # multiple function calls
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
 		with self.subTest():
-			check_getter_channel(self, "set_timeout", 1, "get_timeout", 4)
+			inputs = set_function_ch_random(self, "set_timeout", 1)
+			outputs = check_num_func(self, "get_timeout", 4)
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
-		with self.subTest():
+		## Manual check
+		with self.subTest(): ## This just needs to change the output. 
 			inputs = set_function_ch_random(self, "set_k_filter_state", 1, nmin=10, nmax=100)
-			outputs = check_num_func_channel(self, "get_filter", 4) 
+			outputs = check_num_func(self, "get_filter", 4) 
 			print_results(inputs, outputs, isWarn=True)
 		
 		printSpacer()
@@ -300,7 +302,7 @@ class TestPythonAPI(unittest.TestCase):
 	[+]controller.set_ab_filter(0, 0.1, 0.2)	-> random floats
 	[+]controller.set_k_filter(0, 0.3, 0.4)	-> random floats
 	controller.set_k_filter_state(0, 100)	-> random floats
-	[x]controller.set_timeout(0, 100)			-> random floats
+	[+]controller.set_timeout(0, 100)			-> random floats
 	
 		# no parameters besides: ch
 	controller.set_enable(0)
