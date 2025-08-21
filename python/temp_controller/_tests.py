@@ -6,7 +6,7 @@ import time
 from pprint import pprint
 import unittest
 import argparse
-from random import random
+from random import uniform
 
 
 # Note: Turn into function that recieves baud rate, port, and other information.
@@ -122,7 +122,7 @@ def printSpacer():
 # NOTE: need to send known data, then get said data, and check if its the same.
 
 def random_float( nmin:float=0, nmax:float=1 ) -> float:
-	return round(nmin + random()*nmax, cntl._DECIMAL_MAX)
+	return round( uniform(nmin, nmax), cntl._DECIMAL_MAX)
 
 
 def set_function( obj:object, func:str, msg:str="", *args ) -> None:
@@ -155,7 +155,12 @@ def check_equality( obj:object, inputs:list, outputs:list ) -> None:
 	obj.assertTrue(check, "Sent input and received output do not match")
 
 
-def print_results( inputs:list, outputs:list, isWarn=False ) -> None:
+def check_smaller( obj:object, inputs:list, outputs:list ) -> None:
+	check = all( inputs[ch] > outputs[ch] for ch in range(0,4) )
+	obj.assertTrue(check, "Sent input is not larger than output")
+
+
+def print_results( inputs:list, outputs:list, isWarn=False, isSmaller=False ) -> None:
 	print("\n### Net results:")
 	
 	if isWarn:
@@ -163,6 +168,9 @@ def print_results( inputs:list, outputs:list, isWarn=False ) -> None:
 	
 	print("Inputs:  ", inputs)
 	print("Outputs: ", outputs)
+	
+	if isSmaller:
+		print("\n[NOTE] Outputs merely need to be smaller or similar to inputs")
 
 
 #---------------------------------------------------------------------------------------------------
@@ -232,11 +240,41 @@ class TestPythonAPI(unittest.TestCase):
 		print("<<< Setters >>>")
 		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD)
 		
+		# enable ports for subsequent tests
+		printSpacer()
+		
+		with self.subTest():
+			set_function_ch_random(self, "set_enable", 0)
+			inputs = [True, True, True, True]
+			outputs = check_num_func(self, "get_enable", 4)
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
+		
+		printSpacer()
+		
+		with self.subTest():
+			set_function_ch_random(self, "set_disable", 0)
+			inputs = [False, False, False, False]
+			outputs = check_num_func(self, "get_enable", 4)
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
+		
+		printSpacer()
+		
+		#controller.set_timeout_inf(0)
+		
+		with self.subTest():
+			set_function_ch_random(self, "set_disable", 0)
+			inputs = [False, False, False, False]
+			outputs = check_num_func(self, "get_enable", 4)
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
+		
 		printSpacer()
 		
 		# Single calls:
 		with self.subTest():
-			inputs = set_function_ch_random(self, "set_target", 1)
+			inputs = set_function_ch_random(self, "set_target", 1, nmin=-50, nmax=500)
 			outputs = check_num_func(self, "get_target", 4)
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
@@ -244,7 +282,7 @@ class TestPythonAPI(unittest.TestCase):
 		printSpacer()
 		
 		with self.subTest():
-			inputs = set_function_ch_random(self, "set_pid", 3)
+			inputs = set_function_ch_random(self, "set_pid", 3, nmin=0, nmax=100)
 			outputs = check_num_func_channel(self, "get_pid", 3) # multiple function calls
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
@@ -260,7 +298,8 @@ class TestPythonAPI(unittest.TestCase):
 		printSpacer()
 		
 		with self.subTest():
-			inputs = set_function_ch_random(self, "set_ab_filter", 2)
+			inputs = set_function_ch_random(self, "set_ab_filter", 2, \
+			                                        nmin=0.1, nmax=1) # cannot be zero
 			outputs = check_num_func_channel(self, "get_ab_filter", 2) # multiple function calls
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
@@ -268,18 +307,21 @@ class TestPythonAPI(unittest.TestCase):
 		printSpacer()
 		
 		with self.subTest():
-			inputs = set_function_ch_random(self, "set_k_filter", 2)
+			inputs = set_function_ch_random(self, "set_k_filter", 2, \
+			                                       nmin=0.1, nmax=1) # cannot be zero 
 			outputs = check_num_func_channel(self, "get_k_filter", 2) # multiple function calls
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
-		with self.subTest():
-			inputs = set_function_ch_random(self, "set_timeout", 1)
+		with self.subTest(): # Timeout values can begin change if the number is too large. Beware.
+			inputs = set_function_ch_random(self, "set_timeout", 1, nmin=0, nmax=10000000)
+			#time.sleep(60) -> 
 			outputs = check_num_func(self, "get_timeout", 4)
-			print_results(inputs, outputs)
-			check_equality(self, inputs, outputs)
+			print_results(inputs, outputs, isWarn=True, isSmaller=True)
+			print("\n[NOTE] Floats are not perfect repre")
+			check_smaller(self, inputs, outputs)
 		
 		printSpacer()
 		
@@ -287,8 +329,10 @@ class TestPythonAPI(unittest.TestCase):
 		with self.subTest(): ## This just needs to change the output. 
 			inputs = set_function_ch_random(self, "set_k_filter_state", 1, nmin=10, nmax=100)
 			outputs = check_num_func(self, "get_filter", 4) 
-			print_results(inputs, outputs, isWarn=True)
-		
+			
+			print_results(inputs, outputs, isWarn=True, isSmaller=True)
+			check_smaller(self, inputs, outputs)
+			
 		printSpacer()
 		
 		# close connection gracefully
@@ -298,15 +342,15 @@ class TestPythonAPI(unittest.TestCase):
 	# by channel
 	[+]controller.set_target(0, 45)			-> random floats
 	[+]controller.set_pid(0, 4, 2, 3)			-> random floats
-	controller.set_in_limit(0, 50, 25)		-> random floats
+	[+]controller.set_in_limit(0, 50, 25)		-> random floats
 	[+]controller.set_ab_filter(0, 0.1, 0.2)	-> random floats
 	[+]controller.set_k_filter(0, 0.3, 0.4)	-> random floats
-	controller.set_k_filter_state(0, 100)	-> random floats
+	[+]controller.set_k_filter_state(0, 100)	-> random floats
 	[+]controller.set_timeout(0, 100)			-> random floats
 	
 		# no parameters besides: ch
-	controller.set_enable(0)
-	controller.set_disable(0)
+	[+]controller.set_enable(0)
+	[+]controller.set_disable(0)
 	controller.set_timeout_inf(0)
 	
 	# no channel
