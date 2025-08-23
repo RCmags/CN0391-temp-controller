@@ -1,0 +1,64 @@
+{
+    "baud_rate": 9600,
+    "serial_port": "/dev/ttyACM0",
+    "sensor_types": [
+        "N",
+        "T",
+        "K",
+        "N"
+    ],
+    "parameters": [
+        {
+            "kp": 44.44,
+            "ki": 68.49,
+            "kd": 76.27,
+            "alpha": 0.6,
+            "beta": 0.28,
+            "error": 0.81,
+            "noise": 0.17,
+            "imax": 19.1,
+            "imin": 82.6,
+            "timeout": 220679.11,
+            "enable": 1
+        },
+        {
+            "kp": 73.02,
+            "ki": 7.45,
+            "kd": 98.21,
+            "alpha": 0.13,
+            "beta": 0.31,
+            "error": 0.56,
+            "noise": 0.38,
+            "imax": 29.13,
+            "imin": 99.67,
+            "timeout": 849984.21,
+            "enable": 1
+        },
+        {
+            "kp": 75.56,
+            "ki": 51.03,
+            "kd": 3.18,
+            "alpha": 0.94,
+            "beta": 0.28,
+            "error": 0.5,
+            "noise": 0.7,
+            "imax": 86.52,
+            "imin": 30.98,
+            "timeout": 266829.01,
+            "enable": 1
+        },
+        {
+            "kp": 66.37,
+            "ki": 19.05,
+            "kd": 71.58,
+            "alpha": 0.58,
+            "beta": 0.93,
+            "error": 0.44,
+            "noise": 0.88,
+            "imax": 43.43,
+            "imin": 67.0,
+            "timeout": 783022.07,
+            "enable": 1
+        }
+    ]
+}

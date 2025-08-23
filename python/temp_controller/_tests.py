@@ -8,7 +8,6 @@ import unittest
 import argparse
 from random import uniform
 
-
 # Note: Turn into function that recieves baud rate, port, and other information.
 # Use GUI app to procure this information.
 
@@ -37,9 +36,12 @@ parser.add_argument('--json_save_path', type=str, \
 cmds = parser.parse_args()
 """
 
+#--- setup ----
 PORT="/dev/ttyACM0"
 BAUD_RATE=9600
 PATH_LOAD="./json/coefficients_load.json"
+
+#--- save tests ---
 PATH_SAVE="./json/coefficients_save.json"
 
 #===================================================================================================
@@ -47,7 +49,7 @@ PATH_SAVE="./json/coefficients_save.json"
 # Prevent random test order
 #unittest.TestLoader.sortTestMethodsUsing = None
 
-""" [WORKING]
+# [WORKING]
 class TestConstructors(unittest.TestCase):
 
 	def test_constructor_none(self):
@@ -68,9 +70,10 @@ class TestConstructors(unittest.TestCase):
 		print("\n>> test_constructor_path")
 		controller = cntl.TempControllerCN0391(path=PATH_LOAD)
 		controller.close()
-"""
 
 #===================================================================================================
+
+##---> Move functions to constructor? -> Create class that received values??
 
 def check_num_array( data:list, length:int ) -> bool:
 	check = len(data) == length and \
@@ -106,7 +109,7 @@ def check_num_func_channel( obj:object, func:str, num_output:int ) -> list:
 	return output
 
 
-def check_sensor_type( obj:object ) -> list:
+def check_sensor_type( obj:object ) -> list: ##----------->>>>>>>>>>>>>>>> need to set 
 	print("\n>>>> get_sensor_type")
 	data = obj.controller.get_sensor_type()
 	check = [isinstance(data, str) and len(elem) == 1 for elem in data]
@@ -122,7 +125,9 @@ def printSpacer():
 # NOTE: need to send known data, then get said data, and check if its the same.
 
 def random_float( nmin:float=0, nmax:float=1 ) -> float:
-	return round( uniform(nmin, nmax), cntl._DECIMAL_MAX)
+	num = uniform(nmin, nmax)
+	num = round(num, cntl._DECIMAL_MAX) # Arduino uses float32, while python uses float64
+	return num
 
 
 def set_function( obj:object, func:str, msg:str="", *args ) -> None:
@@ -162,25 +167,22 @@ def check_smaller( obj:object, inputs:list, outputs:list ) -> None:
 
 def print_results( inputs:list, outputs:list, isWarn=False, isSmaller=False ) -> None:
 	print("\n### Net results:")
-	
-	if isWarn:
-		print("[WARNING] MUST MANUALLY INSPECT")
-	
 	print("Inputs:  ", inputs)
 	print("Outputs: ", outputs)
+	
+	if isWarn:
+		print("\n[WARNING] MUST MANUALLY INSPECT")
 	
 	if isSmaller:
 		print("\n[NOTE] Outputs merely need to be smaller or similar to inputs")
 
-
-#---------------------------------------------------------------------------------------------------
+#===================================================================================================
 
 class TestPythonAPI(unittest.TestCase):
 	
 	def setUp(self):
 		print("\n>> test_python_api")
 	
-	"""
 	def test_getters(self):
 		print(">>> Getters <<<")
 		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD)
@@ -232,41 +234,49 @@ class TestPythonAPI(unittest.TestCase):
 		
 		# close connection gracefully
 		self.controller.close()
-	"""
 	
 	#-----------------------------------------------------------------------------------------------
 	
 	def test_setters(self):
 		print("<<< Setters >>>")
-		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD)
+		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD) # path does not define types
+		
+		printSpacer()
+		
+		with self.subTest():
+			set_function_ch_random(self, "set_disable", num_input=0)
+			inputs = [False, False, False, False]
+			outputs = check_num_func(self, "get_enable", num_output=4)
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
+		
+		printSpacer()
 		
 		# enable ports for subsequent tests
-		printSpacer()
-		
 		with self.subTest():
-			set_function_ch_random(self, "set_enable", 0)
+			set_function_ch_random(self, "set_enable", num_input=0)
 			inputs = [True, True, True, True]
-			outputs = check_num_func(self, "get_enable", 4)
+			outputs = check_num_func(self, "get_enable", num_output=4)
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
 		with self.subTest():
-			set_function_ch_random(self, "set_disable", 0)
-			inputs = [False, False, False, False]
-			outputs = check_num_func(self, "get_enable", 4)
+			set_function_ch_random(self, "set_timeout_inf", num_input=0)
+			inputs = [-1, -1, -1, -1]
+			outputs = check_num_func(self, "get_timeout", num_output=4)
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
-		#controller.set_timeout_inf(0)
-		
 		with self.subTest():
-			set_function_ch_random(self, "set_disable", 0)
-			inputs = [False, False, False, False]
-			outputs = check_num_func(self, "get_enable", 4)
+			inputs = [ random_float(nmin=0, nmax=100) for i in range(0, 4) ]
+			set_function(self, "set_target_all", "", *inputs)
+			
+			outputs = check_num_func(self, "get_target", num_output=4)
+			
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
 		
@@ -274,240 +284,119 @@ class TestPythonAPI(unittest.TestCase):
 		
 		# Single calls:
 		with self.subTest():
-			inputs = set_function_ch_random(self, "set_target", 1, nmin=-50, nmax=500)
-			outputs = check_num_func(self, "get_target", 4)
+			inputs = set_function_ch_random(self, "set_target", \
+			                                      num_input=1, nmin=-50, nmax=500)
+			
+			outputs = check_num_func(self, "get_target", num_output=4)
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
 		with self.subTest():
-			inputs = set_function_ch_random(self, "set_pid", 3, nmin=0, nmax=100)
-			outputs = check_num_func_channel(self, "get_pid", 3) # multiple function calls
+			inputs = set_function_ch_random(self, "set_pid", \
+			                                      num_input=3, nmin=0, nmax=100)
+			
+			outputs = check_num_func_channel(self, "get_pid", num_output=3) # multiple function calls
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
+		
+		printSpacer()
+		
+		with self.subTest():
+			inputs = set_function_ch_random(self, "set_ab_filter", \
+			                                      num_input=2, nmin=0.1, nmax=1) # cannot be zero
+			
+			outputs = check_num_func_channel(self, "get_ab_filter", num_output=2) # multiple function calls
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
+		
+		printSpacer()
+		
+		with self.subTest():
+			inputs = set_function_ch_random(self, "set_k_filter", \
+			                                      num_input=2, nmin=0.1, nmax=1) # cannot be zero 
+			
+			outputs = check_num_func_channel(self, "get_k_filter", num_output=2) # multiple function calls
+			print_results(inputs, outputs)
+			check_equality(self, inputs, outputs)
+		
+		printSpacer()
+		
+		with self.subTest():
+			set_function_ch_random(self, "set_timeout_inf", num_input=0)
+			outputs = check_num_func(self, "get_timeout", num_output=4)
+			
+			inputs = [-1, -1, -1 , -1] 				# See: "constants.h" for TIME_INF constant
 			print_results(inputs, outputs)
 			check_equality(self, inputs, outputs)
 		
 		printSpacer()
 		
 		with self.subTest(): # Had to fix arduino getter | prone to lack of ram errors
-			inputs = set_function_ch_random(self, "set_in_limit", 2, nmin=10, nmax=100)
-			outputs = check_num_func_channel(self, "get_in_limit", 2) 
+			inputs = set_function_ch_random(self, "set_in_limit", \
+			                                      num_input=2, nmin=10, nmax=100)
+			
+			outputs = check_num_func_channel(self, "get_in_limit", num_output=2) 
 			print_results(inputs, outputs, isWarn=True)
-			check_equality(self, inputs, outputs)
-		
-		printSpacer()
-		
-		with self.subTest():
-			inputs = set_function_ch_random(self, "set_ab_filter", 2, \
-			                                        nmin=0.1, nmax=1) # cannot be zero
-			outputs = check_num_func_channel(self, "get_ab_filter", 2) # multiple function calls
-			print_results(inputs, outputs)
-			check_equality(self, inputs, outputs)
-		
-		printSpacer()
-		
-		with self.subTest():
-			inputs = set_function_ch_random(self, "set_k_filter", 2, \
-			                                       nmin=0.1, nmax=1) # cannot be zero 
-			outputs = check_num_func_channel(self, "get_k_filter", 2) # multiple function calls
-			print_results(inputs, outputs)
-			check_equality(self, inputs, outputs)
+			
+			# need to ensure inputs are different enough; cannot have nearly the same inputs
+			IN_DIFF_MIN = 1 # defined in "arduino/src/PIDcontroller/PIDcontroller.cpp" 
+			
+			check = [ inputs[ch] == outputs[ch] or outputs[ch] == [1, 0] \
+			          for ch in range(0,4) ]
+			
+			self.assertTrue(check, "Sent input does not match output or result in default output")
 		
 		printSpacer()
 		
 		with self.subTest(): # Timeout values can begin change if the number is too large. Beware.
-			inputs = set_function_ch_random(self, "set_timeout", 1, nmin=0, nmax=10000000)
-			#time.sleep(60) -> 
-			outputs = check_num_func(self, "get_timeout", 4)
+			inputs = set_function_ch_random(self, "set_timeout", \
+			                                      num_input=1, nmin=100000, nmax=1000000)
+			
+			outputs = check_num_func(self, "get_timeout", num_output=4)
+			
 			print_results(inputs, outputs, isWarn=True, isSmaller=True)
-			print("\n[NOTE] Floats are not perfect repre")
-			check_smaller(self, inputs, outputs)
+			print("\n[NOTE] Floats are not perfect representations of large numbers.")
+			print("Inputs use float64 (Python) while Outputs (Arduino) use float32")
+			
+			# Comparison
+			PERCENT = 0.1 
+			check = [abs((inputs[ch] - outputs[ch])/outputs[ch]) < PERCENT for ch in range(0,4)]
+			check = all(check)
+			self.assertTrue(check, "Sent input is approximatley similar to the output")
 		
 		printSpacer()
 		
-		## Manual check
-		with self.subTest(): ## This just needs to change the output. 
-			inputs = set_function_ch_random(self, "set_k_filter_state", 1, nmin=10, nmax=100)
-			outputs = check_num_func(self, "get_filter", 4) 
+		## Is this function useful? Needlessly biases sensor output
+		with self.subTest(): 
+			inputs = set_function_ch_random(self, "set_k_filter_state", \
+			                                      num_input=1, nmin=10, nmax=100)
 			
+			outputs = check_num_func(self, "get_filter", num_output=4) 
 			print_results(inputs, outputs, isWarn=True, isSmaller=True)
-			check_smaller(self, inputs, outputs)
-			
+		
 		printSpacer()
+		
+		#----- saving
+		
+		with self.subTest():
+			print("<<<< Saved coefficients to: " + PATH_SAVE)
+			self.controller.save_json_file(PATH_SAVE)
+			data = self.controller.get_json_data()
+			pprint(data, compact=True)
 		
 		# close connection gracefully
-		self.controller.close()
-	
-	"""
-	# by channel
-	[+]controller.set_target(0, 45)			-> random floats
-	[+]controller.set_pid(0, 4, 2, 3)			-> random floats
-	[+]controller.set_in_limit(0, 50, 25)		-> random floats
-	[+]controller.set_ab_filter(0, 0.1, 0.2)	-> random floats
-	[+]controller.set_k_filter(0, 0.3, 0.4)	-> random floats
-	[+]controller.set_k_filter_state(0, 100)	-> random floats
-	[+]controller.set_timeout(0, 100)			-> random floats
-	
-		# no parameters besides: ch
-	[+]controller.set_enable(0)
-	[+]controller.set_disable(0)
-	controller.set_timeout_inf(0)
-	
-	# no channel
-	controller.set_target_all(10, 20, 30, 40) -> random floats
-	
-	# no input
-	controller.set_enable_all()
-	controller.set_disable_all()
-	"""
+		with self.subTest():
+			self.controller.set_disable_all()
+			self.controller.close()
+			print(">>>> CLOSED CONNECTION <<<<")
 
 #===================================================================================================
 
 if __name__ == '__main__':
+	# wrap unitest into class
 	unittest.main()
-	#turn off serial
-
-#------------------
-
-# NOTE: convert code and command line option to "main.py"
 
 #===================================================================================================
-
-
-""" TARGET EXAMPLE
-inputs = set_function_ch_random(self, "set_target", 1)
-outputs = check_num_func(self, "get_target", 4) ## Singular function call, no channel input
-print_results(inputs, outputs)
-check_equality(self, inputs, outputs)
-"""
-
-""" PID EXAMPLE
-inputs = set_function_ch_random(self, "set_pid", 3)
-outputs = check_num_func_channel(self, "get_pid", 3) ## multiple function calls
-print_results(inputs, outputs)
-check_equality(self, inputs, outputs)
-"""
-
-"""
-with self.subTest():
---arrays--
-	[+]get_filter()
-	[+]get_raw()
-	[+]print( controller.get_target() )
-	[+]print( controller.get_timeout() )
-
-
---array|no_number--
-	print( controller.get_sensor_type() ) # string characters
-	[+]print( controller.get_enable() )  # bool -> works as int
-
---array|per channel--
-	[+]print( controller.get_pid(1) )
-	[+]print( controller.get_in_limit(1) )
-	[+]print( controller.get_ab_filter(1) )
-	[+]print( controller.get_k_filter(1) )
-"""
-
-"""
-
-controller = cntl.TempControllerCN0391(port=PORT, baud_rate=BAUD_RATE) # test1 -> must load constants.h -> does?
-#controller = cntl.TempControllerCN0391() # test2
-#controller = cntl.TempControllerCN0391(path="coefficients.json") # test3
-
-#--- test functions ---
-print("===========TEST-1")
-
-print( controller.get_filter() )
-print( controller.get_raw() )
-
-***controller.set_target(1, 45)
-print( controller.get_target() )
-
-***controller.set_target_all(10, 20, 30, 40)
-print( controller.get_target() )
-
-***controller.set_pid(0, 4, 2, 3)
-controller.set_pid(1, 5, 6, 7)
-controller.set_pid(3, 8, 9, 10)
-print( controller.get_pid(0) )
-
-***controller.set_in_limit(0, 50, 25)
-print( controller.get_in_limit(0) )
-
-***controller.set_ab_filter(0, 0.1, 0.2)
-print( controller.get_ab_filter(0) )
-
-***controller.set_k_filter(0, 0.3, 0.4)
-print( controller.get_k_filter(0) )
-
-***controller.set_k_filter_state(0, 100)
-print( controller.get_filter() )
-
-print( controller.get_sensor_type() )
-
-***controller.set_enable(0)
-print( controller.get_enable() )
-
-***controller.set_enable_all()
-print( controller.get_enable() )
-
-***controller.set_disable(0)
-print( controller.get_enable() )
-
-***controller.set_disable_all()
-print( controller.get_enable() )
-
-print( controller.get_timer() )
-
-***controller.set_timeout(0, 100)
-print( controller.get_timeout() )
-
-***controller.set_timeout_inf(0)
-print( controller.get_timeout() )
-
-#==================================================
-print("===========TEST-2")
-
-controller.set_target(0, 45)
-controller.set_target_all(10, 20, 30, 40)
-controller.set_pid(0, 4, 2, 3)
-controller.set_in_limit(0, 50, 25)
-controller.set_ab_filter(0, 0.1, 0.2)
-controller.set_k_filter(0, 0.3, 0.4)
-controller.set_k_filter_state(0, 100)
-controller.set_enable(0)
-controller.set_enable_all()
-controller.set_disable(0)
-controller.set_disable_all()
-controller.set_timeout(0, 100)
-controller.set_timeout_inf(0)
-controller.set_enable_all()
-controller.set_timeout(2, 100)
-controller.set_k_filter(1, 0.35, 0.412)
-
-#time.sleep(10)
-print( controller.get_filter() )
-print( controller.get_raw() )
-print( controller.get_target() )
-print( controller.get_pid(1) )
-print( controller.get_in_limit(1) )
-print( controller.get_ab_filter(1) )
-print( controller.get_k_filter(1) )
-print( controller.get_sensor_type() )
-print( controller.get_enable() )
-print( controller.get_timeout() )
-
-#==================================================
-print("===========TEST-3")
-
-controller.save_json_file('../coefficients_test.json')
-pprint.pprint(controller.get_json_data(), compact=True)
-
-#--------------------- quit
-controller.set_disable_all()
-controller.close()
-exit()
-
-
-"""
 

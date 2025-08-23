@@ -1,7 +1,7 @@
 {
 	"baud_rate":    9600,
 	"serial_port":  "/dev/ttyACM0",
-	"sensor_types": ["N", "N", "N", "N"],
+	"sensor_types": ["N", "T", "K", "N"],
 	
 	"parameters": [
 		{

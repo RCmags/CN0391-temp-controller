@@ -67,7 +67,7 @@ class TempControllerCN0391:
 			                                                 self.json_data["baud_rate"] )
 			# send and save data
 			self._setup( self.json_data["sensor_types"] )
-			self._set_json_coefficients()
+			self._set_json_coefficients() ### need to fix JSON setter
 		
 		# no json file
 		elif path == None and port != None:
@@ -79,7 +79,7 @@ class TempControllerCN0391:
 			# send serial commands
 			self.serial = ArduinoSerial.SerialCommunication(port, baud_rate)
 			self._setup( sensor_types );
-			self._get_device_coefficients()
+			self._get_device_coefficients() ### need to fix JSON setter
 		
 		else:
 			raise ValueError("Did not specify a Serial Port!")
