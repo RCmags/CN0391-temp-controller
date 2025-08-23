@@ -35,7 +35,7 @@ parser.add_argument('--json_save_path', type=str, \
 
 cmds = parser.parse_args()
 """
-
+#[EXTERNAL-INPUT]
 #--- setup ----
 PORT="/dev/ttyACM0"
 BAUD_RATE=9600
@@ -51,30 +51,31 @@ PATH_SAVE="./json/coefficients_save.json"
 
 # [WORKING]
 class TestConstructors(unittest.TestCase):
-
+	
 	def test_constructor_none(self):
-		print("\n>> test_constructor_none")
+		print("\n>>>> test_constructor_none")
 		with self.assertRaises(Exception):
 			controller = cntl.TempControllerCN0391()
 	
 	#-----------------------------------------------------------------------------------------------
 	
 	def test_constructor_port(self):
-		print("\n>> test_constructor_port")
-		controller = cntl.TempControllerCN0391(port=PORT, baud_rate=BAUD_RATE)
+		print("\n>>>> test_constructor_port")
+		controller = cntl.TempControllerCN0391(port=PORT, baud_rate=BAUD_RATE) #[EXTERNAL-INPUT]
 		controller.close()
 	
 	#-----------------------------------------------------------------------------------------------
 	
 	def test_constructor_path(self):
-		print("\n>> test_constructor_path")
-		controller = cntl.TempControllerCN0391(path=PATH_LOAD)
+		print("\n>>>> test_constructor_path")
+		controller = cntl.TempControllerCN0391(path=PATH_LOAD) #[EXTERNAL-INPUT]
 		controller.close()
 
 #===================================================================================================
 
 ##---> Move functions to constructor? -> Create class that received values??
 
+# [WORKING]
 def check_num_array( data:list, length:int ) -> bool:
 	check = len(data) == length and \
 	        all( isinstance(num, float) or isinstance(num, int) for num in data )
@@ -180,12 +181,10 @@ def print_results( inputs:list, outputs:list, isWarn=False, isSmaller=False ) ->
 
 class TestPythonAPI(unittest.TestCase):
 	
-	def setUp(self):
-		print("\n>> test_python_api")
-	
 	def test_getters(self):
-		print(">>> Getters <<<")
-		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD)
+		printSpacer()
+		print("\n>>> Getters <<<")
+		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD) #[EXTERNAL-INPUT]
 		
 		printSpacer()
 		
@@ -238,7 +237,8 @@ class TestPythonAPI(unittest.TestCase):
 	#-----------------------------------------------------------------------------------------------
 	
 	def test_setters(self):
-		print("<<< Setters >>>")
+		printSpacer()
+		print("\n<<< Setters >>>")
 		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD) # path does not define types
 		
 		printSpacer()
@@ -343,7 +343,7 @@ class TestPythonAPI(unittest.TestCase):
 			# need to ensure inputs are different enough; cannot have nearly the same inputs
 			IN_DIFF_MIN = 1 # defined in "arduino/src/PIDcontroller/PIDcontroller.cpp" 
 			
-			check = [ inputs[ch] == outputs[ch] or outputs[ch] == [1, 0] \
+			check = [ inputs[ch] == outputs[ch] or outputs[ch] == [IN_DIFF_MIN, 0] \
 			          for ch in range(0,4) ]
 			
 			self.assertTrue(check, "Sent input does not match output or result in default output")
@@ -390,13 +390,11 @@ class TestPythonAPI(unittest.TestCase):
 		with self.subTest():
 			self.controller.set_disable_all()
 			self.controller.close()
-			print(">>>> CLOSED CONNECTION <<<<")
+			print("\n>>>> CLOSED CONNECTION <<<<")
 
 #===================================================================================================
 
 if __name__ == '__main__':
 	# wrap unitest into class
 	unittest.main()
-
-#===================================================================================================
 
