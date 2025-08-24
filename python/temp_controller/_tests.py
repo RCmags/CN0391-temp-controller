@@ -11,69 +11,20 @@ from random import uniform
 # Note: Turn into function that recieves baud rate, port, and other information.
 # Use GUI app to procure this information.
 
-#===================================================================================================
-
 # Note: Keep unit test logic encapsulated; 
-# User MUST specify port and baud rate; Will not work otherwise
-# wrap CLI inputs into functions; call in main function;
-# let main function be imported into other files as module 
+# [+] User MUST specify port and baud rate; Will not work otherwise
+# [+]wrap CLI inputs into functions; call in main function;
+# [+]let main function be imported into other files as module 
 
-""" [UNUSED]
-parser = argparse.ArgumentParser()
-
-parser.add_argument('--port', type=str, \
-	                 help="Path where json configuration file is located")
-
-parser.add_argument('--baud_rate', type=str, \
-	                 help="Path where json configuration file is located")
-
-parser.add_argument('--json_load_path', type=str, \
-	                 help="Path where json configuration file is located")
-
-parser.add_argument('--json_save_path', type=str, \
-	                 help="Path where the json file for testing will be saved")
-
-cmds = parser.parse_args()
-"""
 #[EXTERNAL-INPUT]
-#--- setup ----
+"""
 PORT="/dev/ttyACM0"
 BAUD_RATE=9600
 PATH_LOAD="./json/coefficients_load.json"
-
-#--- save tests ---
 PATH_SAVE="./json/coefficients_save.json"
+"""
 
 #===================================================================================================
-
-# Prevent random test order
-#unittest.TestLoader.sortTestMethodsUsing = None
-
-# [WORKING]
-class TestConstructors(unittest.TestCase):
-	
-	def test_constructor_none(self):
-		print("\n>>>> test_constructor_none")
-		with self.assertRaises(Exception):
-			controller = cntl.TempControllerCN0391()
-	
-	#-----------------------------------------------------------------------------------------------
-	
-	def test_constructor_port(self):
-		print("\n>>>> test_constructor_port")
-		controller = cntl.TempControllerCN0391(port=PORT, baud_rate=BAUD_RATE) #[EXTERNAL-INPUT]
-		controller.close()
-	
-	#-----------------------------------------------------------------------------------------------
-	
-	def test_constructor_path(self):
-		print("\n>>>> test_constructor_path")
-		controller = cntl.TempControllerCN0391(path=PATH_LOAD) #[EXTERNAL-INPUT]
-		controller.close()
-
-#===================================================================================================
-
-##---> Move functions to constructor? -> Create class that received values??
 
 # [WORKING]
 def check_num_array( data:list, length:int ) -> bool:
@@ -110,7 +61,7 @@ def check_num_func_channel( obj:object, func:str, num_output:int ) -> list:
 	return output
 
 
-def check_sensor_type( obj:object ) -> list: ##----------->>>>>>>>>>>>>>>> need to set 
+def check_sensor_type( obj:object ) -> list:
 	print("\n>>>> get_sensor_type")
 	data = obj.controller.get_sensor_type()
 	check = [isinstance(data, str) and len(elem) == 1 for elem in data]
@@ -121,9 +72,6 @@ def check_sensor_type( obj:object ) -> list: ##----------->>>>>>>>>>>>>>>> need 
 def printSpacer():
 	print("\n---------------------")
 
-#---------------------------------------------------------------------------------------------------
-
-# NOTE: need to send known data, then get said data, and check if its the same.
 
 def random_float( nmin:float=0, nmax:float=1 ) -> float:
 	num = uniform(nmin, nmax)
@@ -179,12 +127,53 @@ def print_results( inputs:list, outputs:list, isWarn=False, isSmaller=False ) ->
 
 #===================================================================================================
 
-class TestPythonAPI(unittest.TestCase):
+class LoadParameters(unittest.TestCase):
+	
+	# constants
+	PORT = None
+	BAUD_RATE = None
+	PATH_LOAD = None
+	PATH_SAVE = None
+	
+	@classmethod
+	def constants(cls, port:str, baud_rate:int, path_load:str, path_save:str=None) -> None:
+		cls.PORT = port
+		cls.BAUD_RATE = baud_rate
+		cls.PATH_LOAD = path_load
+		cls.PATH_SAVE = path_save
+
+#===================================================================================================
+
+# [WORKING]
+class TestConstructors(LoadParameters):
+	
+	def test_constructor_none(self):
+		print("\n>>>> test_constructor_none")
+		with self.assertRaises(Exception):
+			controller = cntl.TempControllerCN0391()	# Ensure this raises an error
+	
+	#-----------------------------------------------------------------------------------------------
+	
+	def test_constructor_port(self):
+		print("\n>>>> test_constructor_port")
+		controller = cntl.TempControllerCN0391(port=self.PORT, baud_rate=self.BAUD_RATE) #[EXTERNAL-INPUT]
+		controller.close()
+	
+	#-----------------------------------------------------------------------------------------------
+	
+	def test_constructor_path(self):
+		print("\n>>>> test_constructor_path")
+		controller = cntl.TempControllerCN0391(path=self.PATH_LOAD) #[EXTERNAL-INPUT]
+		controller.close()
+
+#===================================================================================================
+
+class TestPythonAPI(LoadParameters):
 	
 	def test_getters(self):
 		printSpacer()
 		print("\n>>> Getters <<<")
-		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD) #[EXTERNAL-INPUT]
+		self.controller = cntl.TempControllerCN0391(path=self.PATH_LOAD) #[EXTERNAL-INPUT]
 		
 		printSpacer()
 		
@@ -239,7 +228,7 @@ class TestPythonAPI(unittest.TestCase):
 	def test_setters(self):
 		printSpacer()
 		print("\n<<< Setters >>>")
-		self.controller = cntl.TempControllerCN0391(path=PATH_LOAD) # path does not define types
+		self.controller = cntl.TempControllerCN0391(path=self.PATH_LOAD) # path does not define types
 		
 		printSpacer()
 		
@@ -381,8 +370,8 @@ class TestPythonAPI(unittest.TestCase):
 		#----- saving
 		
 		with self.subTest():
-			print("<<<< Saved coefficients to: " + PATH_SAVE)
-			self.controller.save_json_file(PATH_SAVE)
+			print("<<<< Saved coefficients to: " + self.PATH_SAVE)
+			self.controller.save_json_file(self.PATH_SAVE)
 			data = self.controller.get_json_data()
 			pprint(data, compact=True)
 		
@@ -394,7 +383,46 @@ class TestPythonAPI(unittest.TestCase):
 
 #===================================================================================================
 
+def captureInputs() -> object:
+	parser = argparse.ArgumentParser()
+	
+	# Inputs
+	parser.add_argument('--port', type=str, required=True, \
+	                    help="Port where the Arduino is connected")
+	
+	parser.add_argument('--baud_rate', type=int, required=True, \
+	                    help="Baud rate at which the Arduino's serial is configured")
+	
+	parser.add_argument('--path_load', type=str, \
+	                    default="./json/coefficients_load.json", \
+	                    help="Path where json configuration file is located")
+	
+	parser.add_argument('--path_save', type=str, \
+	                    default="./json/coefficients_save.json", \
+	                    help="Path where the json file for testing will be saved")
+	
+	# Outputs
+	#return parser.parse_args()
+	return parser.parse_known_args()
+
+
+def testAPI(port:str, baud_rate:int, path_load:str, path_save:str, unittest_args:object) -> None:
+	# configure
+	TestConstructors.constants(port, baud_rate, path_load)
+	TestPythonAPI.constants(port, baud_rate, path_load, path_save)
+	# Run tests
+	_argv = [''] + unittest_args
+	unittest.main( argv=_argv )
+
+#===================================================================================================
+
 if __name__ == '__main__':
-	# wrap unitest into class
-	unittest.main()
+	args, unittest_args = captureInputs()
+	
+	testAPI(args.port,      \
+	        args.baud_rate, \
+	        args.path_load, \
+	        args.path_save, \
+	        unittest_args)
+
 

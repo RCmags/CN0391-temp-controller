@@ -243,7 +243,6 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 
 if __name__ == '__main__':
 	data = captureInputs()
-	print(data)
 	# capture serial data and plot it
 	main(port=data.port,       \
 	     path=data.path,       \
