@@ -5,11 +5,16 @@
 //--------------- STRING SERIAL PRINTING ---------------
 
 template <typename number_t>
-void printArray( number_t arr[], const uint8_t END ) {
+void printArray( number_t arr[], const uint8_t END, bool is_number=true ) {
 	const uint8_t END_DELIM = END - 1;
 	// elements
 	for( uint8_t i = 0; i < END; i += 1 ) {
-		Serial.print( arr[i], DECIMAL_MAX );	// need to set decimals; 3 MAX?
+		if( is_number ) {
+			Serial.print( arr[i], DECIMAL_MAX );
+		} else {
+			Serial.print( arr[i] );	 // Decimals do not apply for other types
+		}
+		
 		if( i < END_DELIM ) {
 			Serial.print( F(DELIM_CHAR) ); 
 		}
@@ -17,11 +22,11 @@ void printArray( number_t arr[], const uint8_t END ) {
 	Serial.println();
 }
 
-template <typename number_t>
-void printPorts( const __FlashStringHelper * label, number_t data[] ) { // <F(label)>, <array> 
+template <typename number_t>  // INPUTS: <F(label)>, <array>, ...
+void printPorts( const __FlashStringHelper * label, number_t data[], bool is_number=true ) { 
 	Serial.print( label );
 	Serial.print( F(DELIM_CHAR) );
-	printArray(data, NUM_PORT);
+	printArray(data, NUM_PORT, is_number);
 }
 
 void printParameters( const __FlashStringHelper * label, float         data[],
@@ -110,7 +115,7 @@ void parseStringCommand( char buffer[],     float target[],  float measure[],
 		
 		else if( function == GET_SENSOR_TYPE ) {
 			char data[NUM_PORT]; CN391_getPortType(data);
-			printPorts( F("SENSOR_TYPES"), data);
+			printPorts( F("SENSOR_TYPES"), data, false);
 			return;
 		}
 		

@@ -116,13 +116,16 @@ def captureInputs() -> object:
 	parser.add_argument('--nsamples', type=positive_int, default=10, \
 	                    help="Number of data samples used to initialize the plot. Must be \
 	                         larger than zero")
+	# Data
+	parser.add_argument('--path_measure', type=str, default="./temp-measure.txt", \
+	                    help="Path to the file that stores temperature measurements")
 	
 	# object with arguments
 	return parser.parse_args()
 
 #===================================================================================================
 
-def vert_array(arr: list) -> np.ndarray:
+def vert_array(arr:list) -> np.ndarray:
 	'''Convert an horizontal array into a vertical numpy array. This function is well suited to
 	transform parsed data into a form that is easily plotted by matplotlib. 
 	
@@ -133,9 +136,25 @@ def vert_array(arr: list) -> np.ndarray:
 	'''
 	return np.array(arr).reshape(-1,1) 
 
+def round_string(elem:float) -> str:
+	"""Convert a floating point number to a string that is rounded to the decimal points used by
+	the python API.
+	
+	Parameters
+	----------
+	elem: float
+		Number to round and convert
+	
+	Returns
+	-------
+	output: str
+		string with the rounded and converted number
+	"""
+	return str( round(elem, cntl._DECIMAL_MAX) )
+
 #===================================================================================================
 
-def main(port:str, path:str, window:float, ylims:list, nsamples:int):
+def main(port:str, path:str, window:float, ylims:list, nsamples:int, path_measure:str) -> None:
 	'''Interactive plot that displays temperature measurement in real time. Terminal can be used
 	at the same time to send commands to the Arduino and modify the behavior of controller.
 	
@@ -189,6 +208,11 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 	plt.ion()
 	plt.show()
 	
+	# open file
+	file = open(path_measure, 'w')
+	file.write("==== seconds | celcius ====\n")
+	file.write("time, temp_ch0, temp_ch1, temp_ch2, temp_ch3\n")
+	
 	#---- loop ----
 	while controller.is_active(): 	# check connection
 		try:
@@ -207,7 +231,9 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 			
 			if np.size(x) == 0: 
 				time_init = time_now
-				y = y_init.copy()
+				y_new = y_init
+				#y = y_init.copy()
+				y = y_new.copy()
 			else:
 				ynew = controller.get_filter()	# breaks when interrupt is called
 				ynew = vert_array(ynew)			# transform to vertical numpy array
@@ -229,6 +255,13 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 			figure.canvas.draw()
 			figure.canvas.flush_events()
 		
+			# save data to file
+			y_new_flat = y_new.flatten()
+			str_array = [round_string(num) for num in y_new_flat]
+			str_array = ",".join( str_array )
+			str_output = round_string( x[-1] ) + "," + str_array + "\n"
+			file.write(str_output)
+		
 		except:
 			print("Data Transfer Failed - Exiting")
 			break	# exit loop and ensure serial and thread shutdown
@@ -237,16 +270,19 @@ def main(port:str, path:str, window:float, ylims:list, nsamples:int):
 	controller.set_disable_all()
 	controller.close()
 	keythread.stop()
+	file.close()
 	print("CLOSED-PYTHON")
 
 #===================================================================================================
 
 if __name__ == '__main__':
 	data = captureInputs()
+	
 	# capture serial data and plot it
-	main(port=data.port,       \
-	     path=data.path,       \
-	     window=data.window,   \
-	     ylims=data.ylims,     \
-	     nsamples=data.nsamples)
+	main(port=data.port,         \
+	     path=data.path,         \
+	     window=data.window,     \
+	     ylims=data.ylims,       \
+	     nsamples=data.nsamples, \
+	     path_measure=data.path_measure)
 
